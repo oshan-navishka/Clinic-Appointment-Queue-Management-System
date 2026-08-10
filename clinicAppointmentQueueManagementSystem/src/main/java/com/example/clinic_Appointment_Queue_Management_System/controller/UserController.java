@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin
@@ -35,6 +37,12 @@ public class UserController {
 
         return new CommonResponse(0, userDataDTO, "User has been logged in successfully");
 
+    }
+
+    @GetMapping(value = "allUsers", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getAllUsers(){
+        List<UserDTO> userDTOS = userService.getAllUsers();
+        return new CommonResponse(0, userDTOS, "Users fetched successfully");
     }
 
 }

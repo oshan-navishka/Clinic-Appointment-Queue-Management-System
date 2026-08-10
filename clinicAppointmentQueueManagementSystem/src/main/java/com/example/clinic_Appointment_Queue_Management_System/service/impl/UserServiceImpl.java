@@ -1,6 +1,7 @@
 package com.example.clinic_Appointment_Queue_Management_System.service.impl;
 
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
+import com.example.clinic_Appointment_Queue_Management_System.dto.UserDataDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
@@ -10,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -66,6 +69,30 @@ public class UserServiceImpl implements UserService {
             );
         }catch (Exception e){
             log.error("Error fetching user details {}", username);
+            throw e;
+        }
+    }
+
+    @Override
+    public List<UserDTO> getAllUsers() {
+        log.info("Fetching all users");
+        try {
+            List<UserDTO> userDTOS = new ArrayList<>();
+            List<User> users = userRepository.findAll();
+
+            for (User user : users) {
+                UserDTO userDTO = new UserDTO();
+                userDTO.setUserId(user.getUserId());
+                userDTO.setUsername(user.getUsername());
+                userDTO.setPassword(user.getPassword());
+                userDTO.setUserEmail(user.getUserEmail());
+                userDTO.setUserRole(user.getUserRole());
+                userDTO.setStatus(user.getStatus());
+                userDTOS.add(userDTO);
+            }
+            return userDTOS;
+        } catch (Exception e) {
+            log.error("Error fetching all users");
             throw e;
         }
     }
