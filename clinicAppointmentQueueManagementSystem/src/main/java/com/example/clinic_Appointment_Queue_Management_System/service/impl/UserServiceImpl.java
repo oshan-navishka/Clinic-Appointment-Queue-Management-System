@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,6 +36,36 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         }catch (Exception e){
             log.error("Error saving user {}", userDTO);
+            throw e;
+        }
+    }
+
+    @Override
+    public UserDTO getUserDetails(String username, String password) {
+        log.info("Fetching user {}", username);
+        try{
+            Optional<User> userOptional = userRepository.findByUsername(username);
+            if (userOptional.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+
+            User userDetails = userOptional.get();
+
+            if (!passwordEncoder.matches(password, userDetails.getPassword())) {
+                throw new RuntimeException("Invalid password");
+            }
+            log.info("Fetching user details {}", username);
+
+            return new UserDTO(
+                    userDetails.getUserId(),
+                    userDetails.getUsername(),
+                    userDetails.getPassword(),
+                    userDetails.getUserEmail(),
+                    userDetails.getUserRole(),
+                    userDetails.getStatus()
+            );
+        }catch (Exception e){
+            log.error("Error fetching user details {}", username);
             throw e;
         }
     }
