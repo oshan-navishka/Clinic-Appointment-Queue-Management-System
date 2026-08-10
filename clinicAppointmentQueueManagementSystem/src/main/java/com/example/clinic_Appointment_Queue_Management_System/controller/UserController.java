@@ -45,4 +45,10 @@ public class UserController {
         return new CommonResponse(0, userDTOS, "Users fetched successfully");
     }
 
+    @PutMapping(value = "updateUsers", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse updateUsers(@RequestBody UserDTO userDTO){
+        userService.updateUser(userDTO);
+        return new CommonResponse(0, "User has been updated successfully");
+    }
+
 }
