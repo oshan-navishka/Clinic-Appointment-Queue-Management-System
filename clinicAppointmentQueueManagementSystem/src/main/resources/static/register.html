@@ -499,13 +499,13 @@
             <p>Fill in your details to get started.</p>
         </div>
 
-        <form class="register-form" action="#" method="POST">
+        <form class="register-form" onsubmit="handleRegister(); return false;">
             <!-- username -->
             <div class="input-group">
                 <label for="username"><i class="fas fa-user-tag"></i> Username</label>
                 <div class="input-field">
                     <i class="fas fa-user-circle"></i>
-                    <input type="text" id="username" placeholder="jane_doe" value="jane_doe">
+                    <input type="text" id="username" placeholder="jane_doe">
                 </div>
             </div>
 
@@ -514,16 +514,16 @@
                 <label for="userEmail"><i class="fas fa-envelope"></i> Email</label>
                 <div class="input-field">
                     <i class="fas fa-envelope"></i>
-                    <input type="email" id="userEmail" placeholder="jane.doe@clinic.com" value="jane.doe@clinic.com">
+                    <input type="email" id="userEmail" placeholder="jane.doe@clinic.com">
                 </div>
             </div>
 
             <!-- password -->
             <div class="input-group">
-                <label for="userPassword"><i class="fas fa-lock"></i> Password</label>
+                <label for="password"><i class="fas fa-lock"></i> Password</label>
                 <div class="input-field">
                     <i class="fas fa-key"></i>
-                    <input type="password" id="userPassword" placeholder="Min 8 characters" value="password123">
+                    <input type="password" id="password" placeholder="Min 8 characters">
                     <span class="password-toggle" id="toggleRegPass">
                             <i class="fas fa-eye-slash"></i>
                         </span>
@@ -543,21 +543,6 @@
                 </div>
             </div>
 
-            <!-- status (ENUM: ACTIVE, INACTIVE) -->
-            <div class="input-group">
-                <label><i class="fas fa-toggle-on"></i> Status</label>
-                <div class="status-group">
-                    <label class="status-option">
-                        <input type="radio" name="status" value="ACTIVE" checked>
-                        <span class="status-badge active">ACTIVE</span>
-                    </label>
-                    <label class="status-option">
-                        <input type="radio" name="status" value="INACTIVE">
-                        <span class="status-badge inactive">INACTIVE</span>
-                    </label>
-                </div>
-            </div>
-
             <!-- terms & conditions -->
             <div class="form-options">
                 <label class="terms-check">
@@ -572,16 +557,17 @@
             </button>
 
             <div class="login-prompt">
-                Already have an account? <a href="#">Sign in</a>
+                Already have an account? <a href="login.html">Sign in</a>
             </div>
         </form>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
     (function() {
         const toggle = document.getElementById('toggleRegPass');
-        const passField = document.getElementById('userPassword');
+        const passField = document.getElementById('password');
         if (toggle && passField) {
             toggle.addEventListener('click', function() {
                 const isPassword = passField.getAttribute('type') === 'password';
@@ -590,6 +576,31 @@
             });
         }
     })();
+
+    function handleRegister() {
+        const users = {
+            username: $('#username').val().trim(),
+            password: $('#password').val().trim(),
+            userEmail: $('#userEmail').val().trim(),
+            userRole: $('#userRole').val().trim()
+        };
+
+        $.ajax({
+            url: "http://localhost:8080/api/users/register",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(users),
+            success: function(data) {
+                console.log(data);
+                alert(data.message || "Register successful");
+                document.querySelector('.register-form').reset();
+            },
+            error: function (data){
+                console.error("Error registering user: ", data);
+                alert("Register failed. Please try again!");
+            }
+        });
+    }
 </script>
 </body>
 </html>
