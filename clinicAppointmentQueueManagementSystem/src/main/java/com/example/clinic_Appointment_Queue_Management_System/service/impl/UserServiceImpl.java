@@ -1,7 +1,6 @@
 package com.example.clinic_Appointment_Queue_Management_System.service.impl;
 
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
-import com.example.clinic_Appointment_Queue_Management_System.dto.UserDataDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
