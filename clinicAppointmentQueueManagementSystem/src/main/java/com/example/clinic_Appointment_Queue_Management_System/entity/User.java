@@ -24,4 +24,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Doctor doctor;
+
 }
