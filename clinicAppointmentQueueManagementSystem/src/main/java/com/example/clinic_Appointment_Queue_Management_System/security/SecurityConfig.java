@@ -39,6 +39,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users/allUsers").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/users/updateUsers").permitAll()
 
+                        .requestMatchers(HttpMethod.POST, "/api/doctors/addDct").permitAll()
+
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )

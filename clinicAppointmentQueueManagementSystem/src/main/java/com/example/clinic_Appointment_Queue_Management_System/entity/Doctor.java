@@ -1,10 +1,7 @@
 package com.example.clinic_Appointment_Queue_Management_System.entity;
 
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,5 +23,7 @@ public class Doctor {
     private String specialization;
     private String licenseNumber;
     private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
     private Status status;
 }

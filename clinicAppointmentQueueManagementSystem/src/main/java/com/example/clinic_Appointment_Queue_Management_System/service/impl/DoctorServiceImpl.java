@@ -3,6 +3,7 @@ package com.example.clinic_Appointment_Queue_Management_System.service.impl;
 import com.example.clinic_Appointment_Queue_Management_System.dto.DoctorDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.Doctor;
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import com.example.clinic_Appointment_Queue_Management_System.repository.DoctorRepository;
 import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
 import com.example.clinic_Appointment_Queue_Management_System.service.DoctorService;
@@ -37,7 +38,7 @@ public class DoctorServiceImpl implements DoctorService {
             doctor.setSpecialization(doctorDTO.getSpecialization());
             doctor.setLicenseNumber(doctorDTO.getLicenseNumber());
             doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
-            doctor.setStatus(doctorDTO.getStatus());
+            doctor.setStatus(Status.ACTIVE);
 
             doctorRepository.save(doctor);
         }catch (Exception e){
