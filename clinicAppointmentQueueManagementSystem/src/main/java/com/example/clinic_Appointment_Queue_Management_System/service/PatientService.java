@@ -1,6 +1,7 @@
 package com.example.clinic_Appointment_Queue_Management_System.service;
 
-import org.springframework.stereotype.Service;
+import com.example.clinic_Appointment_Queue_Management_System.dto.PatientDTO;
 
 public interface PatientService {
+    void savePatient(PatientDTO patientDTO);
 }
