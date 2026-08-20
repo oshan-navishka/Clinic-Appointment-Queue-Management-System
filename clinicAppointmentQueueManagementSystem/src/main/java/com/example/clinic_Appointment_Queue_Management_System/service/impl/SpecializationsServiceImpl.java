@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class SpecializationsServiceImpl implements SpecializationsService {
     private final SpecializationsRepository specializationsRepository;
     @Override
-    public void save_specialization(SpecializationsDTO specializationsDTO) {
+    public void saveSpecialization(SpecializationsDTO specializationsDTO) {
         log.info("In SpecializationsServiceImpl.save_specialization");
         try {
             long count = specializationsRepository.count();
