@@ -21,6 +21,7 @@ public class PatientController {
 
     @PostMapping(value = "/savePatient", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse savePatient(@RequestBody PatientDTO patientDTO) {
+        log.info("Saving Patient {}", patientDTO);
         patientService.savePatient(patientDTO);
         return new CommonResponse(0, "Patient saved successfully");
     }

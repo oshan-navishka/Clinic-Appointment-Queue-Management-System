@@ -43,6 +43,8 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/patients/savePatient").permitAll()
 
+                        .requestMatchers(HttpMethod.POST, "/api/specializations/saveSpecialization").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/api/clinicBranches/addBranch").permitAll()
 
                         .requestMatchers("/error").permitAll()

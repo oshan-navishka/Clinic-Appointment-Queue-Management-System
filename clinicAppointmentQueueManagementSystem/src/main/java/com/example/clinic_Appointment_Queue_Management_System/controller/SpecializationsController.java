@@ -5,6 +5,8 @@ import com.example.clinic_Appointment_Queue_Management_System.dto.Specialization
 import com.example.clinic_Appointment_Queue_Management_System.service.SpecializationsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SpecializationsController {
     private final SpecializationsService specializationsService;
 
+    @PostMapping(value = "/saveSpecialization", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse saveSpecialization(SpecializationsDTO specializationsDTO) {
         log.info("Saving specialization: {}", specializationsDTO.toString());
         specializationsService.saveSpecialization(specializationsDTO);
