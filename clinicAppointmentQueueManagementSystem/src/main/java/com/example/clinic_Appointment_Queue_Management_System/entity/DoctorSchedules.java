@@ -1,5 +1,6 @@
 package com.example.clinic_Appointment_Queue_Management_System.entity;
 
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,5 +28,5 @@ public class DoctorSchedules {
     private int maxAppointments;
 
     @Enumerated(EnumType.STRING)
-    private String status;
+    private Status status;
 }
