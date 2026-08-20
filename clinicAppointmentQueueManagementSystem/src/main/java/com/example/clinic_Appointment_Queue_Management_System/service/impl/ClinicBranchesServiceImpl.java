@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class ClinicBranchesServiceImpl implements ClinicBranchesService {
-    private ClinicBranchesRepository clinicBranchesRepository;
+    private final ClinicBranchesRepository clinicBranchesRepository;
 
 
     @Override
