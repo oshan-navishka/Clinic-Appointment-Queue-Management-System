@@ -8,9 +8,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SpecializationsDTO {
-    private String specializationId;
-    private String name;
-    private String description;
+public class ClinicBranchesDTO {
+    private String branchId;
+    private String branchName;
+    private String address;
+    private String phone;
+    private String email;
     private Status status;
 }
