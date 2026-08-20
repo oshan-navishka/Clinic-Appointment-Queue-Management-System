@@ -2,6 +2,7 @@ package com.example.clinic_Appointment_Queue_Management_System.service.impl;
 
 import com.example.clinic_Appointment_Queue_Management_System.dto.SpecializationsDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.Specializations;
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import com.example.clinic_Appointment_Queue_Management_System.repository.SpecializationsRepository;
 import com.example.clinic_Appointment_Queue_Management_System.service.SpecializationsService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class SpecializationsServiceImpl implements SpecializationsService {
             specializations.setSpecializationId(generatedId);
             specializations.setName(specializationsDTO.getName());
             specializations.setDescription(specializationsDTO.getDescription());
-            specializations.setStatus(specializationsDTO.getStatus());
+            specializations.setStatus(Status.ACTIVE);
             specializationsRepository.save(specializations);
         }catch (Exception e){
             log.error("Error saving specialization: {}", e.getMessage());
