@@ -47,6 +47,8 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/clinicBranches/addBranch").permitAll()
 
+                        .requestMatchers(HttpMethod.POST, "/api/appointments/addAppointment").permitAll()
+
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )

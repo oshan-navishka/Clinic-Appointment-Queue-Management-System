@@ -13,10 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/appointments")
-@Service
+@Slf4j
 @RequiredArgsConstructor
 public class AppointmentController {
     private final AppointmentService appointmentService;
