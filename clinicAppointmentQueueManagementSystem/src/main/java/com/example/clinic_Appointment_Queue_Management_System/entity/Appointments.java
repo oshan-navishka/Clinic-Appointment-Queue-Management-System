@@ -25,7 +25,10 @@ public class Appointments {
     @JoinColumn(name = "doctorId", nullable = false)
     private Doctor doctor;
 
-    private String branchId;
+    @ManyToOne
+    @JoinColumn(name = "branchId", nullable = false)
+    private ClinicBranches clinicBranches;
+
     private LocalDate appointmentDate;
     private LocalTime appointmentTime;
     private int appointmentNumber;
