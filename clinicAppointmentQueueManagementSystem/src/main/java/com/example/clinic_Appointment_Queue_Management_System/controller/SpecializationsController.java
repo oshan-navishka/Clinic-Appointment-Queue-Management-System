@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,7 +19,7 @@ public class SpecializationsController {
     private final SpecializationsService specializationsService;
 
     @PostMapping(value = "/saveSpecialization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CommonResponse saveSpecialization(SpecializationsDTO specializationsDTO) {
+    public CommonResponse saveSpecialization(@RequestBody SpecializationsDTO specializationsDTO) {
         log.info("Saving specialization: {}", specializationsDTO.toString());
         specializationsService.saveSpecialization(specializationsDTO);
         return new CommonResponse(0, "Specialization saved successfully");
