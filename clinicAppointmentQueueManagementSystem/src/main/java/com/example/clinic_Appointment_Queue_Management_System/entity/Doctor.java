@@ -1,5 +1,6 @@
 package com.example.clinic_Appointment_Queue_Management_System.entity;
 
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.Specialization;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,7 +23,10 @@ public class Doctor {
 
     private String firstName;
     private String lastName;
-    private String specialization;
+
+    @Enumerated(EnumType.STRING)
+    private Specialization specialization;
+    
     private String licenseNumber;
 
     @Column(unique = true)

@@ -23,8 +23,11 @@ public class DoctorSchedules {
     private ClinicBranches clinicBranches;
 
     private String dayOfWeek;
+
     private String startTime;
+
     private String endTime;
+
     private int maxAppointments;
 
     @Enumerated(EnumType.STRING)
