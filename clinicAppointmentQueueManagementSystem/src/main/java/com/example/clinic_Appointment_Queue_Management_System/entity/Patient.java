@@ -1,5 +1,6 @@
 package com.example.clinic_Appointment_Queue_Management_System.entity;
 
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.Gender;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,11 +23,18 @@ public class Patient {
     private User user;
 
     private String firstName;
+
     private String lastName;
-    private LocalDate dateOfBirth;
-    private String gender;
-    private String contact;
+
+    private int age;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    private String phoneNumber;
+
     private String address;
+
     private String emergencyContact;
 
     @Enumerated(EnumType.STRING)

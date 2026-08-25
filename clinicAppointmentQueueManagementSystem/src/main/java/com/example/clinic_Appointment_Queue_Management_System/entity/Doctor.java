@@ -24,6 +24,8 @@ public class Doctor {
     private String lastName;
     private String specialization;
     private String licenseNumber;
+
+    @Column(unique = true)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
