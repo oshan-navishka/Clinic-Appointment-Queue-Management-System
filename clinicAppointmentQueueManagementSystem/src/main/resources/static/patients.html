@@ -106,6 +106,7 @@
             $("#userIdDisplay").val("User ID not found");
             $("#userId").val("");
         }
+        loadPatients();
 
     });
 
@@ -143,6 +144,57 @@
             error: function (xhr, status, error) {
                 console.error("Error saving patient:", error);
                 alert("Error saving patient: " + error);
+            }
+        })
+    }
+
+    function loadPatients(){
+        $.ajax({
+            url: "http://localhost:8080/api/patients/allPatients",
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            success: function (response) {
+                console.log("Patients fetched successfully:", response);
+                let patients = response.body;
+                $("#patientTable").empty();
+                if (!patients || patients.length === 0) {
+                    $("#patientTable").html(`
+                        <tr>
+                            <td colspan='7' style="text-align: center;">
+                                No patients found
+                            </td>
+                        </tr>
+                    `);
+                    return;
+                    $.each(patients, function (index, patients){
+                        const fullName = (patients.firstName || "") + " " + (patients.lastName || "");
+                        $.append(
+                            `<tr>
+                                <td>${patients.patientId || ""}</td>
+                                <td>${fullName.trim() || ""}</td>
+                                <td>${patients.contact || ""}</td>
+                                <td>${patients.age || ""}</td>
+                                <td>${patients.address || ""}</td>
+                                <td>${patients.emergencyContact || ""}</td>
+                                <td>${patients.status || ""}</td>
+                            </tr>`
+                        );
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Error fetching patients:", error);
+                alert("Error fetching patients: " + error);
+
+                $("#patientTable").html(`
+                    <tr>
+                        <td colspan='7' style="text-align: center; color: red;">
+                            Error fetching patients
+                        </td>
+                    </tr>
+                `);
             }
         })
     }
