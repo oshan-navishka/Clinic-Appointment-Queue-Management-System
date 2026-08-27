@@ -2,9 +2,11 @@ package com.example.clinic_Appointment_Queue_Management_System.service.impl;
 
 import com.example.clinic_Appointment_Queue_Management_System.dto.DoctorDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.Doctor;
+import com.example.clinic_Appointment_Queue_Management_System.entity.Specializations;
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import com.example.clinic_Appointment_Queue_Management_System.repository.DoctorRepository;
+import com.example.clinic_Appointment_Queue_Management_System.repository.SpecializationsRepository;
 import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
 import com.example.clinic_Appointment_Queue_Management_System.service.DoctorService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class DoctorServiceImpl implements DoctorService {
     private final DoctorRepository doctorRepository;
     private final UserRepository userRepository;
-
+    private final SpecializationsRepository specializationsRepository;
     @Override
     public void addDoctor(DoctorDTO doctorDTO) {
         log.info("Doctor added to the queue");
@@ -27,6 +29,10 @@ public class DoctorServiceImpl implements DoctorService {
                     .orElseThrow(() ->
                             new RuntimeException("User not found with ID: " + doctorDTO.getUserId()));
 
+            Specializations specialization = specializationsRepository.findById(doctorDTO.getSpecializationId())
+                    .orElseThrow(() ->
+                            new RuntimeException("Specialization not found with ID: " + doctorDTO.getSpecializationId()));
+
             long count = doctorRepository.count();
             String generatedId = String.format("D%03d", count + 1);
 
@@ -35,7 +41,7 @@ public class DoctorServiceImpl implements DoctorService {
             doctor.setUser(user);
             doctor.setFirstName(doctorDTO.getFirstName());
             doctor.setLastName(doctorDTO.getLastName());
-            doctor.setSpecialization(doctorDTO.getSpecialization());
+            doctor.setSpecializations(specialization);
             doctor.setLicenseNumber(doctorDTO.getLicenseNumber());
             doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
             doctor.setStatus(Status.ACTIVE);

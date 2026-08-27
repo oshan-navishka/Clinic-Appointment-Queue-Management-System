@@ -13,7 +13,8 @@ public class DoctorDTO {
     private String userId;
     private String firstName;
     private String lastName;
-    private String specialization;
+    private String specializationId;
+    private String specializationName;
     private String licenseNumber;
     private String phoneNumber;
     private Status status;

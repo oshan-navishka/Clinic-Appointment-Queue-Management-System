@@ -3,6 +3,7 @@ package com.example.clinic_Appointment_Queue_Management_System.service.impl;
 import com.example.clinic_Appointment_Queue_Management_System.dto.PatientDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.Patient;
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.Gender;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import com.example.clinic_Appointment_Queue_Management_System.repository.PatientRepository;
 import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
@@ -33,8 +34,8 @@ public class PatientServiceImpl implements PatientService {
             patient.setPatientId(generatedId);
             patient.setFirstName(patientDTO.getFirstName());
             patient.setLastName(patientDTO.getLastName());
-            patient.setDateOfBirth(patientDTO.getDateOfBirth());
-            patient.setGender(patientDTO.getGender());
+            patient.setAge(patientDTO.getAge());
+            patient.setGender(Gender.valueOf(patientDTO.getGender().toUpperCase()));
             patient.setContact(patientDTO.getContact());
             patient.setAddress(patientDTO.getAddress());
             patient.setEmergencyContact(patientDTO.getEmergencyContact());

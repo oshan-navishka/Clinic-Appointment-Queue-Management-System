@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
 public class AppointmentController {
-    private final AppointmentService appointmentService;
-
-    @PostMapping(value = "/addAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CommonResponse AddAppointment(@RequestBody AppointmentDTO appointmentDTO) {
-        log.info("Adding appointment: {}", appointmentDTO);
-        appointmentService.addAppointment(appointmentDTO);
-        return new CommonResponse(0, "Appointment added successfully");
-    }
+//    private final AppointmentService appointmentService;
+//
+//    @PostMapping(value = "/addAppointment", produces = MediaType.APPLICATION_JSON_VALUE)
+//    public CommonResponse AddAppointment(@RequestBody AppointmentDTO appointmentDTO) {
+//        log.info("Adding appointment: {}", appointmentDTO);
+//        appointmentService.addAppointment(appointmentDTO);
+//        return new CommonResponse(0, "Appointment added successfully");
+//    }
 }
