@@ -45,9 +45,26 @@
             <div id="alert" class="alert alert-error" style="display:none;"></div>
             <div class="card">
                 <form id="patientForm" class="form-grid">
-                    <select class="field-input" id="userId" required>
-                        <option value="" disabled selected>Select User Account</option>
-                    </select>
+<!--                    <select class="field-input" id="userId" required>-->
+<!--                        <option value="" disabled selected>Select User Account</option>-->
+<!--                    </select>-->
+
+                    <div>
+                        <label>User ID</label>
+
+                        <input
+                                class="field-input"
+                                id="userIdDisplay"
+                                type="text"
+                                readonly
+                                placeholder="Logged User ID"
+                        >
+
+                        <input
+                                id="userId"
+                                type="hidden"
+                        >
+                    </div>
                     <input class="field-input" id="firstName" placeholder="First name" required>
                     <input class="field-input" id="lastName" placeholder="Last name" required>
                     <input class="field-input" id="age" type="number">
@@ -68,36 +85,61 @@
     </div>
 </div>
 </body>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script>
-function loadUsers(){
-    let role = localStorage.getItem('role') || "";
-    let currentUserId = localStorage.getItem('userId') || "";
-    let currentUsername = localStorage.getItem('username') || "";
+<!--<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>-->
+<!--<script>-->
+<!--function loadUsers(){-->
+<!--    let role = localStorage.getItem('role') || "";-->
+<!--    let currentUserId = localStorage.getItem('userId') || "";-->
+<!--    let currentUsername = localStorage.getItem('username') || "";-->
 
-    if (role == "ADMIN"){
-        $.ajax({
-            url: "http://localhost:8080/api/users/allUsers",
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            },
-            success: function (users){
-                let options = "<option value='' disabled selected>Select User Account</option>";
-                (users || []).forEach(u=>{
-                    options += `<option value='${u.userId}'>${u.username} (${u.role})</option>`;
-                });
-                $("#userId").html(options);
-            },
-            error: function (err){
-                console.error("Error loading users:", err);
-                alert("Failed to load users. Please try again later.");
-            }
-        });
-    } else{
-        let options = `<option value='${currentUserId}' selected>${currentUsername} (${role})</option>`;
-        $("#userId").html(options);
-    }
-}
+<!--    if (role == "ADMIN"){-->
+<!--        $.ajax({-->
+<!--            url: "http://localhost:8080/api/users/allUsers",-->
+<!--            method: "GET",-->
+<!--            headers: {-->
+<!--                "Authorization": "Bearer " + localStorage.getItem("token")-->
+<!--            },-->
+<!--            success: function (users){-->
+<!--                let options = "<option value='' disabled selected>Select User Account</option>";-->
+<!--                (users || []).forEach(u=>{-->
+<!--                    options += `<option value='${u.userId}'>${u.username} (${u.role})</option>`;-->
+<!--                });-->
+<!--                $("#userId").html(options);-->
+<!--            },-->
+<!--            error: function (err){-->
+<!--                console.error("Error loading users:", err);-->
+<!--                alert("Failed to load users. Please try again later.");-->
+<!--            }-->
+<!--        });-->
+<!--    } else{-->
+<!--        let options = `<option value='${currentUserId}' selected>${currentUsername} (${role})</option>`;-->
+<!--        $("#userId").html(options);-->
+<!--    }-->
+<!--}-->
+<!--</script>-->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        const userId = localStorage.getItem("userId");
+
+        console.log("Patient Page User ID:", userId);
+
+        if (userId) {
+
+            $("#userIdDisplay").val(userId);
+            $("#userId").val(userId);
+
+        } else {
+
+            console.log("NO USER ID FOUND");
+
+            $("#userIdDisplay").val("User ID not found");
+            $("#userId").val("");
+        }
+
+    });
 </script>
+
 </html>

@@ -506,20 +506,57 @@
             "password": password
         });
 
+        // $.ajax({
+        //     url: "http://localhost:8080/api/users/login",
+        //     method: "POST",
+        //     contentType: "application/json",
+        //     data: obj,
+        //     success: function (response){
+        //         alert(response.message || "Login successful!");
+        //         window.location.href = "dashboard.html";
+        //     },
+        //     error: function (response){
+        //         console.error("Error during login: ", response);
+        //         alert("Login failed. Please check your credentials and try again.");
+        //     }
+        // })
         $.ajax({
             url: "http://localhost:8080/api/users/login",
             method: "POST",
             contentType: "application/json",
             data: obj,
-            success: function (response){
-                alert(response.message || "Login successful!");
-                window.location.href = "dashboard.html";
-            },
-            error: function (response){
-                console.error("Error during login: ", response);
-                alert("Login failed. Please check your credentials and try again.");
+
+            success: function (response) {
+
+                console.log("Login Response:", response);
+
+                if (response.status === 0) {
+
+                    const userData = response.body;
+
+                    console.log("User ID:", userData.userId);
+                    console.log("Token:", userData.token);
+
+                    localStorage.setItem("userId", userData.userId);
+                    localStorage.setItem("token", userData.token);
+                    localStorage.setItem("username", username);
+
+                    console.log(
+                        "Saved User ID:",
+                        localStorage.getItem("userId")
+                    );
+
+                    alert(response.message || "Login successful!");
+
+                    window.location.href = "dashboard.html";
+
+                } else {
+
+                    alert(response.message || "Login failed.");
+
+                }
             }
-        })
+        });
 
     }
 

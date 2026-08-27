@@ -32,6 +32,8 @@ public class PatientServiceImpl implements PatientService {
 
             Patient patient = new Patient();
             patient.setPatientId(generatedId);
+            patientRepository.save(patient);
+
             patient.setFirstName(patientDTO.getFirstName());
             patient.setLastName(patientDTO.getLastName());
             patient.setAge(patientDTO.getAge());
@@ -40,6 +42,8 @@ public class PatientServiceImpl implements PatientService {
             patient.setAddress(patientDTO.getAddress());
             patient.setEmergencyContact(patientDTO.getEmergencyContact());
             patient.setStatus(Status.ACTIVE);
+
+            patientRepository.save(patient);
 
         } catch (Exception e) {
             log.error("Error occurred while saving patient {}", patientDTO, e);
