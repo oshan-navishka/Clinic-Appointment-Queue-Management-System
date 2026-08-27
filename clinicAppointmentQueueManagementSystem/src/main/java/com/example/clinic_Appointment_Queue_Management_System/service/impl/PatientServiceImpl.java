@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -48,6 +51,35 @@ public class PatientServiceImpl implements PatientService {
         } catch (Exception e) {
             log.error("Error occurred while saving patient {}", patientDTO, e);
             throw new RuntimeException("Error occurred while saving patient", e);
+        }
+    }
+
+    @Override
+    public List<PatientDTO> getAllPatients() {
+        log.info("loading all patients");
+        try{
+            List<PatientDTO> patientDTOS = new ArrayList<>();
+            List<Patient> patients = patientRepository.findAll();
+
+            for (Patient patient : patients) {
+                PatientDTO patientDTO = new PatientDTO();
+                patientDTO.setPatientId(patient.getPatientId());
+                patientDTO.setUserId(patient.getUser().getUserId());
+                patientDTO.setFirstName(patient.getFirstName());
+                patientDTO.setLastName(patient.getLastName());
+                patientDTO.setAge(patient.getAge());
+                patientDTO.setGender(patient.getGender().name());
+                patientDTO.setContact(patient.getContact());
+                patientDTO.setAddress(patient.getAddress());
+                patientDTO.setEmergencyContact(patient.getEmergencyContact());
+                patientDTO.setStatus(patient.getStatus());
+                patientDTOS.add(patientDTO);
+            }
+            return patientDTOS;
+
+        } catch (Exception e) {
+            log.error("Error occurred while fetching all patients", e);
+            throw new RuntimeException("Error occurred while fetching all patients", e);
         }
     }
 }
