@@ -21,16 +21,20 @@ public class Doctor {
     @JoinColumn(name = "userId", nullable = false, unique = true)
     private User  user;
 
-    private String firstName;
-    private String lastName;
-
     @Enumerated(EnumType.STRING)
     private Specialization specialization;
+
+    private String firstName;
+
+    private String lastName;
     
     private String licenseNumber;
 
     @Column(unique = true)
     private String phoneNumber;
+
+    @Column(length = 100)
+    private String email;
 
     @Enumerated(EnumType.STRING)
     private Status status;
