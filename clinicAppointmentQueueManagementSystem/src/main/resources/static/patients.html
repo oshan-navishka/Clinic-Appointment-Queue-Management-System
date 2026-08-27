@@ -50,7 +50,7 @@
                     </select>
                     <input class="field-input" id="firstName" placeholder="First name" required>
                     <input class="field-input" id="lastName" placeholder="Last name" required>
-                    <input class="field-input" id="dateOfBirth" type="date">
+                    <input class="field-input" id="age" type="number">
                     <select class="field-input" id="gender"><option>MALE</option><option>FEMALE</option><option>OTHER</option></select>
                     <input class="field-input" id="contact" placeholder="Phone">
                     <input class="field-input" id="address" placeholder="Address">
@@ -68,4 +68,36 @@
     </div>
 </div>
 </body>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+function loadUsers(){
+    let role = localStorage.getItem('role') || "";
+    let currentUserId = localStorage.getItem('userId') || "";
+    let currentUsername = localStorage.getItem('username') || "";
+
+    if (role == "ADMIN"){
+        $.ajax({
+            url: "http://localhost:8080/api/users/allUsers",
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            success: function (users){
+                let options = "<option value='' disabled selected>Select User Account</option>";
+                (users || []).forEach(u=>{
+                    options += `<option value='${u.userId}'>${u.username} (${u.role})</option>`;
+                });
+                $("#userId").html(options);
+            },
+            error: function (err){
+                console.error("Error loading users:", err);
+                alert("Failed to load users. Please try again later.");
+            }
+        });
+    } else{
+        let options = `<option value='${currentUserId}' selected>${currentUsername} (${role})</option>`;
+        $("#userId").html(options);
+    }
+}
+</script>
 </html>
