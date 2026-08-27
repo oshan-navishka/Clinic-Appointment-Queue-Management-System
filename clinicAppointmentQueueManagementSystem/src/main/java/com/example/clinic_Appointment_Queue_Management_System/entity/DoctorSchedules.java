@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.DayOfWeek;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,7 +24,8 @@ public class DoctorSchedules {
     @JoinColumn(name = "branchId", nullable = false)
     private ClinicBranches clinicBranches;
 
-    private String dayOfWeek;
+    @Enumerated(EnumType.STRING)
+    private DayOfWeek dayOfWeek;
 
     private String startTime;
 
