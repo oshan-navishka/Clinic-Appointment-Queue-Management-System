@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Patients</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area" style="margin-bottom:1.2rem;">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white;">Clinic<span>Q</span></div>
+        </div>
+        <a class="staff-only" href="dashboard.html"><i class="fas fa-gauge-high"></i> Dashboard</a>
+        <a class="staff-only active" href="patients.html"><i class="fas fa-user-injured"></i> Patients</a>
+        <a class="" href="doctors.html"><i class="fas fa-user-doctor"></i> Doctors</a>
+        <a class="" href="specializations.html"><i class="fas fa-stethoscope"></i> Specializations</a>
+        <a class="" href="clinic-branches.html"><i class="fas fa-hospital"></i> Branches</a>
+        <a class="staff-only" href="doctor-schedules.html"><i class="fas fa-clock"></i> Schedules</a>
+        <a class="staff-only" href="appointments.html"><i class="fas fa-calendar-check"></i> Appointments</a>
+        <a class="staff-only" href="queues.html"><i class="fas fa-list-ol"></i> Queue</a>
+        <a class="staff-only" href="medical-records.html"><i class="fas fa-notes-medical"></i> Records</a>
+        <a class="staff-only" href="prescriptions.html"><i class="fas fa-prescription"></i> Prescriptions</a>
+        <a class="staff-only" href="medications.html"><i class="fas fa-pills"></i> Medications</a>
+        <a class="staff-only" href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
+        <a class="staff-only" href="invoices.html"><i class="fas fa-file-invoice"></i> Invoices</a>
+        <a class="staff-only" href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
+        <a class="staff-only" href="doctor-reviews.html"><i class="fas fa-star"></i> Reviews</a>
+        <a class="admin-only" href="users.html"><i class="fas fa-users-gear"></i> Users</a>
+        <a class="admin-only" href="audit-logs.html"><i class="fas fa-clipboard-list"></i> Audit logs</a>
+        <a href="#" onclick="logout(); return false;"><i class="fas fa-right-from-bracket"></i> Logout</a>
+    </aside>
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+            <h2>Patients</h2>
+            <div id="who"></div>
+        </header>
+        <main class="page">
+            <div id="alert" class="alert alert-error" style="display:none;"></div>
+            <div class="card">
+                <form id="patientForm" class="form-grid">
+                    <select class="field-input" id="userId" required>
+                        <option value="" disabled selected>Select User Account</option>
+                    </select>
+                    <input class="field-input" id="firstName" placeholder="First name" required>
+                    <input class="field-input" id="lastName" placeholder="Last name" required>
+                    <input class="field-input" id="dateOfBirth" type="date">
+                    <select class="field-input" id="gender"><option>MALE</option><option>FEMALE</option><option>OTHER</option></select>
+                    <input class="field-input" id="contact" placeholder="Phone">
+                    <input class="field-input" id="address" placeholder="Address">
+                    <input class="field-input" id="emergencyContact" placeholder="Emergency contact">
+                    <button class="btn" type="submit">Save patient</button>
+                </form>
+                <div class="table-wrap" style="margin-top:1rem;">
+                    <table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead>
+                        <tbody id="patientTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>
