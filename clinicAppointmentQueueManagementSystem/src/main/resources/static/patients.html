@@ -85,38 +85,6 @@
     </div>
 </div>
 </body>
-<!--<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>-->
-<!--<script>-->
-<!--function loadUsers(){-->
-<!--    let role = localStorage.getItem('role') || "";-->
-<!--    let currentUserId = localStorage.getItem('userId') || "";-->
-<!--    let currentUsername = localStorage.getItem('username') || "";-->
-
-<!--    if (role == "ADMIN"){-->
-<!--        $.ajax({-->
-<!--            url: "http://localhost:8080/api/users/allUsers",-->
-<!--            method: "GET",-->
-<!--            headers: {-->
-<!--                "Authorization": "Bearer " + localStorage.getItem("token")-->
-<!--            },-->
-<!--            success: function (users){-->
-<!--                let options = "<option value='' disabled selected>Select User Account</option>";-->
-<!--                (users || []).forEach(u=>{-->
-<!--                    options += `<option value='${u.userId}'>${u.username} (${u.role})</option>`;-->
-<!--                });-->
-<!--                $("#userId").html(options);-->
-<!--            },-->
-<!--            error: function (err){-->
-<!--                console.error("Error loading users:", err);-->
-<!--                alert("Failed to load users. Please try again later.");-->
-<!--            }-->
-<!--        });-->
-<!--    } else{-->
-<!--        let options = `<option value='${currentUserId}' selected>${currentUsername} (${role})</option>`;-->
-<!--        $("#userId").html(options);-->
-<!--    }-->
-<!--}-->
-<!--</script>-->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script>
@@ -140,6 +108,42 @@
         }
 
     });
+
+    function saveCustomer(){
+        const userId = $("#userId").val();
+        const firstName = $("#firstName").val();
+        const lastName = $("#lastName").val();
+        const age = $("#age").val();
+        const gender = $("#gender").val();
+        const contact = $("#contact").val();
+        const address = $("#address").val();
+        const emergencyContact = $("#emergencyContact").val();
+
+        $.ajax({
+            url: "http://localhost:8080/api/patients/savePatient",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                userId: userId,
+                firstName: firstName,
+                lastName: lastName,
+                age: age,
+                gender: gender,
+                contact: contact,
+                address: address,
+                emergencyContact: emergencyContact
+            }),
+            success: function (response) {
+                console.log("Patient saved successfully:", response);
+                alert("Patient saved successfully!");
+                $("#patientForm")[0].reset();
+            },
+            error: function (xhr, status, error) {
+                console.error("Error saving patient:", error);
+                alert("Error saving patient: " + error);
+            }
+        })
+    }
 </script>
 
 </html>

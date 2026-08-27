@@ -32,7 +32,7 @@ public class PatientServiceImpl implements PatientService {
 
             Patient patient = new Patient();
             patient.setPatientId(generatedId);
-            patientRepository.save(patient);
+            userRepository.save(user);
 
             patient.setFirstName(patientDTO.getFirstName());
             patient.setLastName(patientDTO.getLastName());
