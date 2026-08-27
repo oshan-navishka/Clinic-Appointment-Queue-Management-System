@@ -44,7 +44,7 @@
         <main class="page">
             <div id="alert" class="alert alert-error" style="display:none;"></div>
             <div class="card">
-                <form id="patientForm" class="form-grid">
+                <form id="patientForm" class="form-grid" onsubmit="saveCustomer() ; return false;">
 <!--                    <select class="field-input" id="userId" required>-->
 <!--                        <option value="" disabled selected>Select User Account</option>-->
 <!--                    </select>-->
@@ -137,6 +137,8 @@
                 console.log("Patient saved successfully:", response);
                 alert("Patient saved successfully!");
                 $("#patientForm")[0].reset();
+                $("#userIdDisplay").val(userId);
+                $("#userId").val(userId);
             },
             error: function (xhr, status, error) {
                 console.error("Error saving patient:", error);
