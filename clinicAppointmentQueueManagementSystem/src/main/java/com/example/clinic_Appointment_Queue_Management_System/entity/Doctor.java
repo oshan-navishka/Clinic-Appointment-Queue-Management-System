@@ -1,6 +1,5 @@
 package com.example.clinic_Appointment_Queue_Management_System.entity;
 
-import com.example.clinic_Appointment_Queue_Management_System.enumaration.Specialization;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,8 +20,9 @@ public class Doctor {
     @JoinColumn(name = "userId", nullable = false, unique = true)
     private User  user;
 
-    @Enumerated(EnumType.STRING)
-    private Specialization specialization;
+    @ManyToOne
+    @JoinColumn(name = "specializationId", nullable = false)
+    private Specializations specializations;
 
     private String firstName;
 

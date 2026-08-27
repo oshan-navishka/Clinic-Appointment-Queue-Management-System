@@ -31,7 +31,7 @@ public class Patient {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    private String phoneNumber;
+    private String contact;
 
     private String address;
 
