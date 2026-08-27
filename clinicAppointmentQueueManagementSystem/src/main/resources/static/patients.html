@@ -168,9 +168,10 @@
                         </tr>
                     `);
                     return;
+                }
                     $.each(patients, function (index, patients){
                         const fullName = (patients.firstName || "") + " " + (patients.lastName || "");
-                        $.append(
+                        const row =
                             `<tr>
                                 <td>${patients.patientId || ""}</td>
                                 <td>${fullName.trim() || ""}</td>
@@ -180,9 +181,9 @@
                                 <td>${patients.emergencyContact || ""}</td>
                                 <td>${patients.status || ""}</td>
                             </tr>`
-                        );
+                        ;
+                        $("#patientTable").append(row);
                     });
-                }
             },
             error: function (xhr, status, error) {
                 console.error("Error fetching patients:", error);
