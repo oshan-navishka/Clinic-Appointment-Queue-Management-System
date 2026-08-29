@@ -31,8 +31,8 @@ public class SpecializationsController {
         return new CommonResponse(0, "Specialization updated successfully");
     }
 
-    @GetMapping(value = "/{specializationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CommonResponse getSpecializationById(@PathVariable String specializationId) {
+    @GetMapping(value = "/getAllSpecializations", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getAllSpecializations() {
         log.info("Get Specialization");
         List<SpecializationsDTO> specializationsDTOList = specializationsService.getAllSpecializations();
         return new CommonResponse(0, specializationsDTOList, "Specialization fetched successfully");

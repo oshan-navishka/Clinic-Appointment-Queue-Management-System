@@ -46,6 +46,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/specializations/saveSpecialization").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/specializations/updateSpecialization").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/specializations/getAllSpecializations").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/clinicBranches/addBranch").permitAll()
 
