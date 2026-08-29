@@ -48,6 +48,7 @@ public class SpecializationsServiceImpl implements SpecializationsService {
                 specializationsDTO.setSpecializationId(specializations.getSpecializationId());
                 specializationsDTO.setName(specializations.getName());
                 specializationsDTO.setDescription(specializations.getDescription());
+                specializationsDTO.setStatus(specializations.getStatus());
                 specializationsDTOS.add(specializationsDTO);
             }
             return specializationsDTOS;

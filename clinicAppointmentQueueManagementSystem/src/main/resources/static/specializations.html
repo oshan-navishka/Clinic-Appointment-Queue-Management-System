@@ -103,14 +103,16 @@
                 response.body.forEach(specialization => {
                     const row = $(`
                         <tr>
-                            <td>${specialization.id}</td>
+                            <td>${specialization.specializationId}</td>
                             <td>${specialization.name}</td>
                             <td>${specialization.status}</td>
                         </tr>
                     `);
                     row.on("click", function () {
+                        $("#id").val(specialization.specializationId);
                         $("#name").val(specialization.name);
                         $("#description").val(specialization.description);
+                        $("#status").val(specialization.status);
                     });
                     tbody.append(row);
                 });
