@@ -48,7 +48,7 @@
                     <input class="field-input" id="name" placeholder="Name" required>
                     <input class="field-input" id="description" placeholder="Description">
                     <button class="btn" type="submit">Save</button>
-                    <button class="btn" type="submit">Update</button>
+                    <button class="btn" type="button" onclick="updateSpecialization()">Update</button>
                 </form>
                 <div class="table-wrap" style="margin-top:1rem;">
                     <table>
@@ -84,6 +84,7 @@
                 alert("Specialization saved successfully!");
                 console.log("Specialization saved:", response);
                 $("#specForm")[0].reset();
+                loadSpecializations();
             },
             error: function (xhr, status, error) {
                 alert("Error saving specialization: " + xhr.responseText);
