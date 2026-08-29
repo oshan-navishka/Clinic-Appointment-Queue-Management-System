@@ -44,10 +44,23 @@
         <main class="page">
             <div id="alert" class="alert alert-error" style="display:none;"></div>
             <div class="card">
-                <form id="doctorForm" class="form-grid admin-only">
-                    <select class="field-input" id="userId" required>
-                        <option value="" disabled selected>Select User Account</option>
-                    </select>
+                <form id="doctorForm" class="form-grid admin-only" onsubmit="handleDoctorSave(); return false;">
+                    <div>
+                        <label>User ID</label>
+
+                        <input
+                                class="field-input"
+                                id="userIdDisplay"
+                                type="text"
+                                readonly
+                                placeholder="Logged User ID"
+                        >
+
+                        <input
+                                id="userId"
+                                type="hidden"
+                        >
+                    </div>
                     <input class="field-input" id="firstName" placeholder="First name" required>
                     <input class="field-input" id="lastName" placeholder="Last name" required>
                     <select class="field-input" id="specializationId" required>
@@ -66,5 +79,39 @@
                 </div>
             </div>
         </main>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+function handleDoctorSave(){
+    const data = {
+        userId: document.getElementById("userId").value,
+        firstName: document.getElementById("firstName").value,
+        lastName: document.getElementById("lastName").value,
+        specializationId: document.getElementById("specializationId").value,
+        licenseNumber: document.getElementById("licenseNumber").value,
+        phoneNumber: document.getElementById("phoneNumber").value,
+        email: document.getElementById("email").value
+    };
+    $.ajax({
+        url: `http://localhost:8080/api/doctors/addDct`,
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        success: function (response){
+            alert(response.message || "Doctor added successfully!");
+            console.log("Doctor saved succsessfully!!!", response);
+            $("#doctorForm")[0].reset();
+        },
+        error: function (response){
+            console.error("Error saving doctor")
+            alert("Error saving doctor")
+        }
+    })
+}
+</script>
 </body>
 </html>
