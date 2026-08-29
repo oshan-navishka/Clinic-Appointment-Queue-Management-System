@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/specializations")
 @Slf4j
@@ -27,5 +29,12 @@ public class SpecializationsController {
         log.info("Update Specialization");
         specializationsService.updateSpecialization(specializationsDTO);
         return new CommonResponse(0, "Specialization updated successfully");
+    }
+
+    @GetMapping(value = "/{specializationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getSpecializationById(@PathVariable String specializationId) {
+        log.info("Get Specialization");
+        List<SpecializationsDTO> specializationsDTOList = specializationsService.getAllSpecializations();
+        return new CommonResponse(0, specializationsDTOList, "Specialization fetched successfully");
     }
 }
