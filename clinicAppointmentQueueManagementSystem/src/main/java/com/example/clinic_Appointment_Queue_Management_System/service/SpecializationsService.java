@@ -5,5 +5,6 @@ import com.example.clinic_Appointment_Queue_Management_System.dto.Specialization
 public interface SpecializationsService {
     void saveSpecialization(SpecializationsDTO specializationsDTO);
 
+
     void updateSpecialization(SpecializationsDTO specializationsDTO);
 }
