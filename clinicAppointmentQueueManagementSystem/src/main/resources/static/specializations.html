@@ -63,6 +63,10 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
+    $(document).ready(function() {
+        loadSpecializations();
+    });
+
     function saveSpecialization(){
         const data = {
             name: document.getElementById("name").value.trim(),
@@ -85,6 +89,37 @@
                 alert("Error saving specialization: " + xhr.responseText);
             }
         })
+    }
+    function loadSpecializations(){
+        $.ajax({
+            url: "http://localhost:8080/api/specializations/getAllSpecializations",
+            type: "GET",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            success: function (response){
+                const tbody = $("#specTable");
+                tbody.empty();
+                response.body.forEach(specialization => {
+                    const row = $(`
+                        <tr>
+                            <td>${specialization.id}</td>
+                            <td>${specialization.name}</td>
+                            <td>${specialization.status}</td>
+                        </tr>
+                    `);
+                    row.on("click", function () {
+                        $("#name").val(specialization.name);
+                        $("#description").val(specialization.description);
+                    });
+                    tbody.append(row);
+                });
+            },
+            error: function (response){
+                alert("Error fetching specializations:");
+                console.error("Error fetching specializations:", response);
+            }
+        });
     }
 </script>
 </body>
