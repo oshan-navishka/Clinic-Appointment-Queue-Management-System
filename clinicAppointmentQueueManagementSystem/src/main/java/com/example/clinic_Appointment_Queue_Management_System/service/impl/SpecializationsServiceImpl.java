@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,6 +32,25 @@ public class SpecializationsServiceImpl implements SpecializationsService {
             specializations.setDescription(specializationsDTO.getDescription());
             specializations.setStatus(Status.ACTIVE);
             specializationsRepository.save(specializations);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<SpecializationsDTO> getAllSpecializations() {
+        log.info("In SpecializationsImpl getAllSpecializations");
+        try {
+            List<SpecializationsDTO> specializationsDTOS = new ArrayList<>();
+            List<Specializations> specializationsList = specializationsRepository.findAll();
+            for (Specializations specializations : specializationsList) {
+                SpecializationsDTO specializationsDTO = new SpecializationsDTO();
+                specializationsDTO.setSpecializationId(specializations.getSpecializationId());
+                specializationsDTO.setName(specializations.getName());
+                specializationsDTO.setDescription(specializations.getDescription());
+                specializationsDTOS.add(specializationsDTO);
+            }
+            return specializationsDTOS;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
