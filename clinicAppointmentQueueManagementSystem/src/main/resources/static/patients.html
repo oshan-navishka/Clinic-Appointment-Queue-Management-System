@@ -111,14 +111,14 @@
     });
 
     function saveCustomer(){
-        const userId = $("#userId").val();
-        const firstName = $("#firstName").val();
-        const lastName = $("#lastName").val();
-        const age = $("#age").val();
-        const gender = $("#gender").val();
-        const contact = $("#contact").val();
-        const address = $("#address").val();
-        const emergencyContact = $("#emergencyContact").val();
+        const userId = $("#userId").val().trim();
+        const firstName = $("#firstName").val().trim();
+        const lastName = $("#lastName").val().trim();
+        const age = $("#age").val().trim();
+        const gender = $("#gender").val().trim();
+        const contact = $("#contact").val().trim();
+        const address = $("#address").val().trim();
+        const emergencyContact = $("#emergencyContact").val().trim();
 
         $.ajax({
             url: "http://localhost:8080/api/patients/savePatient",
@@ -184,6 +184,9 @@
                         ;
                         $("#patientTable").append(row);
                     });
+
+                // loadt table methode eka cheak kranna thiye eka 23456789075431234567890-[]
+                // \41?>lkjhgfds
             },
             error: function (xhr, status, error) {
                 console.error("Error fetching patients:", error);

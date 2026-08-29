@@ -21,4 +21,11 @@ public class SpecializationsController {
         specializationsService.saveSpecialization(specializationsDTO);
         return new CommonResponse(0, "Specialization saved successfully");
     }
+
+    @PutMapping(value = "/updateSpecialization", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse updateSpecialization(@RequestBody SpecializationsDTO specializationsDTO) {
+        log.info("Update Specialization");
+        specializationsService.updateSpecialization(specializationsDTO);
+        return new CommonResponse(0, "Specialization updated successfully");
+    }
 }

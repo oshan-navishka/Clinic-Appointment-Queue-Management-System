@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -28,6 +30,24 @@ public class SpecializationsServiceImpl implements SpecializationsService {
             specializations.setDescription(specializationsDTO.getDescription());
             specializations.setStatus(Status.ACTIVE);
             specializationsRepository.save(specializations);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void updateSpecialization(SpecializationsDTO specializationsDTO) {
+        log.info("In SpecializationsImpl updateSpecialization");
+        try{
+            Optional<Specializations> optionalSpecialization = specializationsRepository.findById(specializationsDTO.getSpecializationId());
+
+            if (optionalSpecialization.isEmpty())
+                throw new RuntimeException("Specialization not found with ID: " + specializationsDTO.getSpecializationId());
+            Specializations specializations = optionalSpecialization.get();
+            specializations.setName(specializationsDTO.getName());
+            specializations.setDescription(specializationsDTO.getDescription());
+            specializationsRepository.save(specializations);
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
