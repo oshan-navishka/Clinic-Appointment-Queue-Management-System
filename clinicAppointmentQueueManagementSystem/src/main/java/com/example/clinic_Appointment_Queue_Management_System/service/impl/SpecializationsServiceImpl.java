@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class SpecializationsImpl implements SpecializationsService {
+public class SpecializationsServiceImpl implements SpecializationsService {
     private final SpecializationsRepository specializationsRepository;
 
     @Override
@@ -20,7 +20,7 @@ public class SpecializationsImpl implements SpecializationsService {
         log.info("In SpecializationsImpl saveSpecialization");
         try{
             long count = specializationsRepository.count();
-            String generatedId = String.format("S%3d", count + 1);
+            String generatedId = String.format("S%03d", count + 1);
 
             Specializations specializations = new Specializations();
             specializations.setSpecializationId(generatedId);
