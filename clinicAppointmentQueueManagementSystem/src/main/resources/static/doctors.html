@@ -83,6 +83,13 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
+    $(document).ready(function() {
+        const loggedUserId = localStorage.getItem("userId");
+        if (loggedUserId) {
+            $("#userIdDisplay").val(loggedUserId);
+            $("#userId").val(loggedUserId);
+        }
+    });
 function handleDoctorSave(){
     const data = {
         userId: document.getElementById("userId").value,
@@ -94,7 +101,7 @@ function handleDoctorSave(){
         email: document.getElementById("email").value
     };
     $.ajax({
-        url: `http://localhost:8080/api/doctors/addDct`,
+        url: "http://localhost:8080/api/doctors/addDct",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(data),
@@ -103,7 +110,7 @@ function handleDoctorSave(){
         },
         success: function (response){
             alert(response.message || "Doctor added successfully!");
-            console.log("Doctor saved succsessfully!!!", response);
+            console.log("Doctor saved successfully!!!", response);
             $("#doctorForm")[0].reset();
         },
         error: function (response){
