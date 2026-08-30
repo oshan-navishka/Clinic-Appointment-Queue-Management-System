@@ -530,32 +530,24 @@
 
                 console.log("Login Response:", response);
 
-                if (response.status === 0) {
-
+                if (response.status === 0 && response.body) {
                     const userData = response.body;
 
-                    console.log("User ID:", userData.userId);
-                    console.log("Token:", userData.token);
-
-                    localStorage.setItem("userId", userData.userId);
                     localStorage.setItem("token", userData.token);
+                    localStorage.setItem("userId", userData.userId);
                     localStorage.setItem("username", username);
 
-                    console.log(
-                        "Saved User ID:",
-                        localStorage.getItem("userId")
-                    );
-
                     alert(response.message || "Login successful!");
-
                     window.location.href = "dashboard.html";
-
                 } else {
-
                     alert(response.message || "Login failed.");
-
                 }
+            },
+            error: function (xhr) {
+                console.error("Error during login:", xhr.responseText);
+                alert("Login failed. Please check your credentials and try again.");
             }
+
         });
 
     }

@@ -88,6 +88,7 @@
         if (loggedUserId) {
             $("#userIdDisplay").val(loggedUserId);
             $("#userId").val(loggedUserId);
+            loadSpecializationsDropdown();
         }
     });
 function handleDoctorSave(){
@@ -114,10 +115,31 @@ function handleDoctorSave(){
             $("#doctorForm")[0].reset();
         },
         error: function (response){
-            console.error("Error saving doctor")
+            console.error("Error saving doctor", response);
             alert("Error saving doctor")
         }
     })
+}
+
+function loadSpecializationsDropdown(){
+    $.ajax({
+        url: "http://localhost:8080/api/specializations/getAllSpecializations",
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        success: function (response){
+            const select = $("#specializationId");
+            select.empty();
+            select.append('<option value="" disabled selected>Select Specialization</option>');
+            response.body.forEach(spec => {
+                select.append(`<option value="${spec.specializationId}">${spec.name}</option>`);
+            });
+        },
+        error: function (){
+            alert("Error loading specializations");
+        }
+    });
 }
 </script>
 </body>

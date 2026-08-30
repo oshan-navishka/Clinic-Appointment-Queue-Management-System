@@ -44,11 +44,18 @@ public class DoctorServiceImpl implements DoctorService {
             doctor.setSpecializations(specialization);
             doctor.setLicenseNumber(doctorDTO.getLicenseNumber());
             doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
+//            doctor.setEmail(doctorDTO.getEmail());
             doctor.setStatus(Status.ACTIVE);
+
+            log.info("EMAIL FROM DTO = [{}]", doctorDTO.getEmail());
+
+            doctor.setEmail(doctorDTO.getEmail());
+
+            log.info("EMAIL IN ENTITY = [{}]", doctor.getEmail());
 
             doctorRepository.save(doctor);
         }catch (Exception e){
-            log.error("Doctor could not be added to the queue");
+            log.error("Doctor could not be added", e);
             throw e;
         }
     }

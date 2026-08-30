@@ -17,5 +17,6 @@ public class DoctorDTO {
     private String specializationName;
     private String licenseNumber;
     private String phoneNumber;
+    private String email;
     private Status status;
 }
