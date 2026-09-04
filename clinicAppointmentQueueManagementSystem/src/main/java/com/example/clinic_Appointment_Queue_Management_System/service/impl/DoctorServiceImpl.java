@@ -44,7 +44,7 @@ public class DoctorServiceImpl implements DoctorService {
             doctor.setSpecializations(specialization);
             doctor.setLicenseNumber(doctorDTO.getLicenseNumber());
             doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
-//            doctor.setEmail(doctorDTO.getEmail());
+            doctor.setEmail(doctorDTO.getEmail());
             doctor.setStatus(Status.ACTIVE);
 
             log.info("EMAIL FROM DTO = [{}]", doctorDTO.getEmail());
