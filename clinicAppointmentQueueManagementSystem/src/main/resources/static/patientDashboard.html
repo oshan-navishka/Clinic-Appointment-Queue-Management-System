@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f7fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .dashboard {
+            text-align: center;
+        }
+
+        .add-details-btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-details-btn:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="dashboard">
+    <button class="add-details-btn" onclick="addDetails()">
+        <i class="fas fa-user-plus"></i> Add Your Details
+    </button>
+</div>
+
+<script>
+    function addDetails() {
+        window.location.href = "patients.html";
+    }
+</script>
+
+</body>
+</html>

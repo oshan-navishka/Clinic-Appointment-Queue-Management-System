@@ -34,6 +34,7 @@ public class UserController {
         UserDataDTO userDataDTO = new UserDataDTO();
         userDataDTO.setUserId(userDTO.getUserId());
         userDataDTO.setToken(token);
+        userDataDTO.setUserRole(userDTO.getUserRole());
 
         return new CommonResponse(0, userDataDTO, "User has been logged in successfully");
 

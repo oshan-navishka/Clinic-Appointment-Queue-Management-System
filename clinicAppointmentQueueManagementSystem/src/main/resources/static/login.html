@@ -533,12 +533,25 @@
                 if (response.status === 0 && response.body) {
                     const userData = response.body;
 
+                    console.log("FULL USER DATA:", userData);
+                    console.log("ROLE:", userData.role);
+                    console.log("USER ROLE:", userData.userRole);
+
                     localStorage.setItem("token", userData.token);
                     localStorage.setItem("userId", userData.userId);
                     localStorage.setItem("username", username);
 
                     alert(response.message || "Login successful!");
-                    window.location.href = "dashboard.html";
+
+                    const role = userData.userRole;
+                    if (role === "DOCTOR") {
+                        window.location.href = "dashboard.html";
+                    } else if (role === "PATIENT") {
+                        window.location.href = "patientDashboard.html";
+                    } else {
+                        alert("Unknown role. Redirecting to dashboard.");
+                        window.location.href = "dashboard.html";
+                    }
                 } else {
                     alert(response.message || "Login failed.");
                 }
