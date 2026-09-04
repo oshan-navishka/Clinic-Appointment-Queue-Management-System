@@ -140,6 +140,7 @@
                 $("#patientForm")[0].reset();
                 $("#userIdDisplay").val(userId);
                 $("#userId").val(userId);
+                loadPatients();
             },
             error: function (xhr, status, error) {
                 console.error("Error saving patient:", error);
