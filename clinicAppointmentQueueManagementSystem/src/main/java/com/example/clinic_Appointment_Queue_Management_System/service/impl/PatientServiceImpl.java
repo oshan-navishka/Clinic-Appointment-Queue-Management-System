@@ -8,6 +8,7 @@ import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status
 import com.example.clinic_Appointment_Queue_Management_System.repository.PatientRepository;
 import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
 import com.example.clinic_Appointment_Queue_Management_System.service.PatientService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,7 @@ public class PatientServiceImpl implements PatientService {
             patient.setEmergencyContact(patientDTO.getEmergencyContact());
             patient.setStatus(Status.ACTIVE);
 
-            patientRepository.save(patient);
+            patientRepository.saveAndFlush(patient);
 
         } catch (Exception e) {
             log.error("Error occurred while saving patient {}", patientDTO, e);
