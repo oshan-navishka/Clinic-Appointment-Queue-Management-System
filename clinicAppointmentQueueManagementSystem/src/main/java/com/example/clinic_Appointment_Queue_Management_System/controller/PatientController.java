@@ -38,4 +38,11 @@ public class PatientController {
         patientService.updatePatient(patientDTO);
         return new CommonResponse(0, "Patient updated successfully");
     }
+
+    @DeleteMapping(value = "/deletePatient/{patientId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse deletePatient(@PathVariable String patientId) {
+        log.info("Deleting Patient {}", patientId);
+        patientService.deletePatient(patientId);
+        return new CommonResponse(0, "Patient deleted successfully");
+    }
 }

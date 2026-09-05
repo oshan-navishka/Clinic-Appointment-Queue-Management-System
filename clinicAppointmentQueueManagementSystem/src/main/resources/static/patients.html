@@ -44,7 +44,7 @@
         <main class="page">
             <div id="alert" class="alert alert-error" style="display:none;"></div>
             <div class="card">
-                <form id="patientForm" class="form-grid"">
+                <form id="patientForm" class="form-grid">
 <!--                    <select class="field-input" id="userId" required>-->
 <!--                        <option value="" disabled selected>Select User Account</option>-->
 <!--                    </select>-->
@@ -76,6 +76,7 @@
                     <input class="field-input" id="emergencyContact" placeholder="Emergency contact">
                     <button class="btn" type="button" onclick="saveCustomer()">Save patient</button>
                     <button class="btn" type="button" onclick="handlePatientUpdate()">Update patient</button>
+                    <button class="btn" type="button" onclick="deletePatient()">Delete patient</button>
                 </form>
                 <div class="table-wrap" style="margin-top:1rem;">
                     <table>
@@ -232,6 +233,27 @@
                 alert("Error fetching patients: " + error);
             }
         })
+    }
+
+    function deletePatient(patientId){
+        $.ajax({
+            url: `http://localhost:8080/api/patients/deletePatient/${patientId}`,
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            data: JSON.stringify({ patientId: patientId }),
+            contentType: "application/json",
+            success: function (response) {
+                console.log("Patient deleted successfully:", response);
+                alert("Patient deleted successfully!");
+                loadPatients();
+            },
+            error: function (xhr, status, error) {
+                console.error("Error deleting patient:", error);
+                alert("Error deleting patient: " + error);
+            }
+        });
     }
 </script>
 

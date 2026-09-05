@@ -109,4 +109,22 @@ public class PatientServiceImpl implements PatientService {
             throw new RuntimeException("Error occurred while updating patient", e);
         }
     }
+
+    @Override
+    public void deletePatient(String patientId) {
+        log.info("Deleting Patient {}", patientId);
+        try{
+            Optional<Patient> optionalPatient = patientRepository.findById(patientId);
+
+            if (optionalPatient.isEmpty())
+                throw new RuntimeException("Patient not found with ID: " + patientId);
+            Patient patient = optionalPatient.get();
+            patient.setStatus(Status.INACTIVE);
+            patientRepository.save(patient);
+            log.info("Patient deleted successfully: {}", patientId);
+        } catch (Exception e) {
+            log.error("Error occurred while deleting patient {}", patientId, e);
+            throw new RuntimeException("Error occurred while deleting patient", e);
+        }
+    }
 }

@@ -10,4 +10,6 @@ public interface PatientService {
     List<PatientDTO> getAllPatients();
 
     void updatePatient(PatientDTO patientDTO);
+
+    void deletePatient(String patientId);
 }
