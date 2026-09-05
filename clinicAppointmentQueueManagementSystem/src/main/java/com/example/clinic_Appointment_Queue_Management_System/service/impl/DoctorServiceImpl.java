@@ -13,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -56,6 +59,32 @@ public class DoctorServiceImpl implements DoctorService {
             doctorRepository.save(doctor);
         }catch (Exception e){
             log.error("Doctor could not be added", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public List<DoctorDTO> getAllDoctors() {
+        log.info("Fetching all doctors");
+        try{
+            List<DoctorDTO> doctorDTOS = new ArrayList<>();
+            List<Doctor> doctors = doctorRepository.findAll();
+            for (Doctor doctor : doctors) {
+                DoctorDTO doctorDTO = new DoctorDTO();
+                doctorDTO.setDoctorId(doctor.getDoctorId());
+                doctorDTO.setUserId(doctor.getUser().getUserId());
+                doctorDTO.setFirstName(doctor.getFirstName());
+                doctorDTO.setLastName(doctor.getLastName());
+                doctorDTO.setSpecializationId(doctor.getSpecializations().getSpecializationId());
+                doctorDTO.setLicenseNumber(doctor.getLicenseNumber());
+                doctorDTO.setPhoneNumber(doctor.getPhoneNumber());
+                doctorDTO.setEmail(doctor.getEmail());
+                doctorDTO.setStatus(doctor.getStatus());
+                doctorDTOS.add(doctorDTO);
+            }
+            return doctorDTOS;
+        }catch (Exception e){
+            log.error("Error occurred while fetching all doctors", e);
             throw e;
         }
     }

@@ -7,10 +7,9 @@ import com.example.clinic_Appointment_Queue_Management_System.service.DoctorServ
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/doctors")
@@ -24,5 +23,12 @@ public class DoctorController {
         log.info("Adding doctor: {}", doctorDTO);
         doctorService.addDoctor(doctorDTO);
         return new CommonResponse(0, "Doctor added successfully");
+    }
+
+    @GetMapping(value = "/loadAllDct", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse loadAllDoctors() {
+        log.info("Loading all doctors");
+        List<DoctorDTO> doctorDTOList = doctorService.getAllDoctors();
+        return new CommonResponse(0, doctorDTOList, "All doctors loaded successfully");
     }
 }
