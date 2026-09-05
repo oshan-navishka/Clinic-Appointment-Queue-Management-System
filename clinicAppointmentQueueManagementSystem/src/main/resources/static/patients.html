@@ -149,6 +149,8 @@
         })
     }
 
+    function
+
     function loadPatients(){
         $.ajax({
             url: "http://localhost:8080/api/patients/allPatients",
@@ -157,49 +159,38 @@
                 "Authorization": "Bearer " + localStorage.getItem("token")
             },
             success: function (response) {
-                console.log("Patients fetched successfully:", response);
-                let patients = response.body;
-                $("#patientTable").empty();
-                if (!patients || patients.length === 0) {
-                    $("#patientTable").html(`
+
+                const tbody = $("#patientTable");
+                tbody.empty();
+                response.body.forEach(patient => {
+                    const row = $(`
                         <tr>
-                            <td colspan='7' style="text-align: center;">
-                                No patients found
-                            </td>
+                            <td>${patient.patientId}</td>
+                            <td>${patient.firstName} ${patient.lastName}</td>
+                            <td>${patient.contact}</td>
+                            <td>${patient.age}</td>
+                            <td>${patient.address}</td>
+                            <td>${patient.emergencyContact}</td>
+                            <td>${patient.status}</td>
                         </tr>
                     `);
-                    return;
-                }
-                    $.each(patients, function (index, patients){
-                        const fullName = (patients.firstName || "") + " " + (patients.lastName || "");
-                        const row =
-                            `<tr>
-                                <td>${patients.patientId || ""}</td>
-                                <td>${fullName.trim() || ""}</td>
-                                <td>${patients.contact || ""}</td>
-                                <td>${patients.age || ""}</td>
-                                <td>${patients.address || ""}</td>
-                                <td>${patients.emergencyContact || ""}</td>
-                                <td>${patients.status || ""}</td>
-                            </tr>`
-                        ;
-                        $("#patientTable").append(row);
+                    row.on("click", function(){
+                        $("#userId").val(patient.userId);
+                        $("#firstName").val(patient.firstName);
+                        $("#lastName").val(patient.lastName);
+                        $("#age").val(patient.age);
+                        $("#gender").val(patient.gender);
+                        $("#contact").val(patient.contact);
+                        $("#address").val(patient.address);
+                        $("#emergencyContact").val(patient.emergencyContact);
+                        $("#status").val(patient.status);
                     });
-
-                // loadt table methode eka cheak kranna thiye eka 23456789075431234567890-[]
-                // \41?>lkjhgfds
+                    tbody.append(row);
+                });
             },
             error: function (xhr, status, error) {
                 console.error("Error fetching patients:", error);
                 alert("Error fetching patients: " + error);
-
-                $("#patientTable").html(`
-                    <tr>
-                        <td colspan='7' style="text-align: center; color: red;">
-                            Error fetching patients
-                        </td>
-                    </tr>
-                `);
             }
         })
     }
