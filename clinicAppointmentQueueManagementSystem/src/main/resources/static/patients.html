@@ -76,7 +76,7 @@
                     <input class="field-input" id="emergencyContact" placeholder="Emergency contact">
                     <button class="btn" type="button" onclick="saveCustomer()">Save patient</button>
                     <button class="btn" type="button" onclick="handlePatientUpdate()">Update patient</button>
-                    <button class="btn" type="button" onclick="deletePatient()">Delete patient</button>
+                    <button class="btn" type="button" onclick="deletePatient($('#patientId').val().trim())">Delete patient</button>
                 </form>
                 <div class="table-wrap" style="margin-top:1rem;">
                     <table>
