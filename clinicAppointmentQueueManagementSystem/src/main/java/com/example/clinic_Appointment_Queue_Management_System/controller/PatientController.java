@@ -45,4 +45,11 @@ public class PatientController {
         patientService.deletePatient(patientId);
         return new CommonResponse(0, "Patient deleted successfully");
     }
+
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse searchPatients(@RequestParam String keyword) {
+        log.info("Searching patients with keyword: {}", keyword);
+        List<PatientDTO> patientDTOS = patientService.searchPatients(keyword);
+        return new CommonResponse(0, patientDTOS, "Patients found successfully");
+    }
 }

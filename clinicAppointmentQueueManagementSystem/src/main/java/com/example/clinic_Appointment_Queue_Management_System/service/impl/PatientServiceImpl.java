@@ -128,4 +128,25 @@ public class PatientServiceImpl implements PatientService {
             throw new RuntimeException("Error occurred while deleting patient", e);
         }
     }
+
+    @Override
+    public List<PatientDTO> searchPatients(String keyword) {
+        List<Patient> patients = patientRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrContactContaining(keyword, keyword, keyword);
+        List<PatientDTO> patientDTOS = new ArrayList<>();
+        for (Patient patient : patients) {
+            PatientDTO patientDTO = new PatientDTO();
+            patientDTO.setPatientId(patient.getPatientId());
+            patientDTO.setUserId(patient.getUser().getUserId());
+            patientDTO.setFirstName(patient.getFirstName());
+            patientDTO.setLastName(patient.getLastName());
+            patientDTO.setAge(patient.getAge());
+            patientDTO.setGender(patient.getGender().name());
+            patientDTO.setContact(patient.getContact());
+            patientDTO.setAddress(patient.getAddress());
+            patientDTO.setEmergencyContact(patient.getEmergencyContact());
+            patientDTO.setStatus(patient.getStatus());
+            patientDTOS.add(patientDTO);
+        }
+        return patientDTOS;
+    }
 }

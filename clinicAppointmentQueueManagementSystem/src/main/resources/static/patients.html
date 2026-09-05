@@ -39,7 +39,20 @@
         <header class="topbar">
             <button class="menu-btn" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
             <h2>Patients</h2>
-            <div id="who"></div>
+            <div id="who">
+                <input
+                        class="field-input"
+                        id="userIdDisplay"
+                        type="text"
+                        readonly
+                        placeholder="Logged User ID"
+                >
+
+                <input
+                        id="userId"
+                        type="hidden"
+                >
+            </div>
         </header>
         <main class="page">
             <div id="alert" class="alert alert-error" style="display:none;"></div>
@@ -49,22 +62,11 @@
 <!--                        <option value="" disabled selected>Select User Account</option>-->
 <!--                    </select>-->
 
-                    <div>
-                        <label>User ID</label>
 
-                        <input
-                                class="field-input"
-                                id="userIdDisplay"
-                                type="text"
-                                readonly
-                                placeholder="Logged User ID"
-                        >
-
-                        <input
-                                id="userId"
-                                type="hidden"
-                        >
+                    <div style="margin-bottom:1rem;">
+                        <input type="text" id="searchInput" placeholder="Search patients..." class="field-input">
                     </div>
+
 
                     <input class="field-input" id="firstName" placeholder="First name" required>
                     <input type="hidden" id="patientId">
@@ -94,20 +96,15 @@
 
 <script>
     $(document).ready(function () {
-
         const userId = localStorage.getItem("userId");
-
         console.log("Patient Page User ID:", userId);
 
         if (userId) {
-
             $("#userIdDisplay").val(userId);
             $("#userId").val(userId);
 
         } else {
-
             console.log("NO USER ID FOUND");
-
             $("#userIdDisplay").val("User ID not found");
             $("#userId").val("");
         }

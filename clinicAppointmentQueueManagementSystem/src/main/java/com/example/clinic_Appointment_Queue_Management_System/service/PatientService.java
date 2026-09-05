@@ -12,4 +12,6 @@ public interface PatientService {
     void updatePatient(PatientDTO patientDTO);
 
     void deletePatient(String patientId);
+
+    List<PatientDTO> searchPatients(String keyword);
 }
