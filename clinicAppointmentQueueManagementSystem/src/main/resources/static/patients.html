@@ -75,6 +75,7 @@
                     <input class="field-input" id="address" placeholder="Address">
                     <input class="field-input" id="emergencyContact" placeholder="Emergency contact">
                     <button class="btn" type="button" onclick="saveCustomer()">Save patient</button>
+                    <button class="btn" type="button" onclick="clearForm()">Clear</button>
                     <button class="btn" type="button" onclick="handlePatientUpdate()">Update patient</button>
                     <button class="btn" type="button" onclick="deletePatient($('#patientId').val().trim())">Delete patient</button>
                 </form>
@@ -141,9 +142,7 @@
             success: function (response) {
                 console.log("Patient saved successfully:", response);
                 alert("Patient saved successfully!");
-                $("#patientForm")[0].reset();
-                $("#userIdDisplay").val(userId);
-                $("#userId").val(userId);
+                clearForm();
                 loadPatients();
             },
             error: function (xhr, status, error) {
@@ -180,7 +179,7 @@
             success: function (response) {
                 console.log("Patient updated successfully:", response);
                 alert("Patient updated successfully!");
-                $("#patientForm")[0].reset();
+                clearForm();
                 loadPatients();
             },
             error: function (xhr, status, error) {
@@ -246,6 +245,7 @@
                 console.log("Patient deleted successfully:", response);
                 alert("Patient deleted successfully!");
                 loadPatients();
+                clearForm();
             },
             error: function (xhr, status, error) {
                 console.error("Error deleting patient:", error);
@@ -253,6 +253,17 @@
             }
         });
     }
+
+    const clearForm = () => {
+        $("#patientForm")[0].reset();
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+            $("#userIdDisplay").val(userId);
+            $("#userId").val(userId);
+        }
+    };
+
+
 </script>
 
 </html>
