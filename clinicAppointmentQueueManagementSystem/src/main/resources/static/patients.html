@@ -44,7 +44,7 @@
         <main class="page">
             <div id="alert" class="alert alert-error" style="display:none;"></div>
             <div class="card">
-                <form id="patientForm" class="form-grid" onsubmit="saveCustomer() ; return false;">
+                <form id="patientForm" class="form-grid"">
 <!--                    <select class="field-input" id="userId" required>-->
 <!--                        <option value="" disabled selected>Select User Account</option>-->
 <!--                    </select>-->
@@ -65,14 +65,17 @@
                                 type="hidden"
                         >
                     </div>
+
                     <input class="field-input" id="firstName" placeholder="First name" required>
+                    <input type="hidden" id="patientId">
                     <input class="field-input" id="lastName" placeholder="Last name" required>
                     <input class="field-input" id="age" type="number" placeholder="Age">
                     <select class="field-input" id="gender"><option>MALE</option><option>FEMALE</option><option>OTHER</option></select>
                     <input class="field-input" id="contact" placeholder="Phone">
                     <input class="field-input" id="address" placeholder="Address">
                     <input class="field-input" id="emergencyContact" placeholder="Emergency contact">
-                    <button class="btn" type="submit">Save patient</button>
+                    <button class="btn" type="button" onclick="saveCustomer()">Save patient</button>
+                    <button class="btn" type="button" onclick="handlePatientUpdate()">Update patient</button>
                 </form>
                 <div class="table-wrap" style="margin-top:1rem;">
                     <table>
@@ -149,7 +152,42 @@
         })
     }
 
-    function
+    function handlePatientUpdate(){
+        const patientId = $("#patientId").val().trim();
+        const firstName = $("#firstName").val().trim();
+        const lastName = $("#lastName").val().trim();
+        const age = $("#age").val().trim();
+        const gender = $("#gender").val().trim();
+        const contact = $("#contact").val().trim();
+        const address = $("#address").val().trim();
+        const emergencyContact = $("#emergencyContact").val().trim();
+
+        $.ajax({
+            url: "http://localhost:8080/api/patients/updatePatient",
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify({
+                patientId: patientId,
+                firstName: firstName,
+                lastName: lastName,
+                age: age,
+                gender: gender,
+                contact: contact,
+                address: address,
+                emergencyContact: emergencyContact
+            }),
+            success: function (response) {
+                console.log("Patient updated successfully:", response);
+                alert("Patient updated successfully!");
+                $("#patientForm")[0].reset();
+                loadPatients();
+            },
+            error: function (xhr, status, error) {
+                console.error("Error updating patient:", error);
+                alert("Error updating patient: " + error);
+            }
+        });
+    }
 
     function loadPatients(){
         $.ajax({
@@ -175,6 +213,7 @@
                         </tr>
                     `);
                     row.on("click", function(){
+                        $("#patientId").val(patient.patientId);
                         $("#userId").val(patient.userId);
                         $("#firstName").val(patient.firstName);
                         $("#lastName").val(patient.lastName);
