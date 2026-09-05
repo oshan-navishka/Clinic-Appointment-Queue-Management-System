@@ -75,7 +75,7 @@ public class DoctorServiceImpl implements DoctorService {
                 doctorDTO.setUserId(doctor.getUser().getUserId());
                 doctorDTO.setFirstName(doctor.getFirstName());
                 doctorDTO.setLastName(doctor.getLastName());
-                doctorDTO.setSpecializationId(doctor.getSpecializations().getSpecializationId());
+                doctorDTO.setSpecializationName(doctor.getSpecializations().getName());
                 doctorDTO.setLicenseNumber(doctor.getLicenseNumber());
                 doctorDTO.setPhoneNumber(doctor.getPhoneNumber());
                 doctorDTO.setEmail(doctor.getEmail());
