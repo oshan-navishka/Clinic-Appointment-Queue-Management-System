@@ -131,7 +131,7 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public List<PatientDTO> searchPatients(String keyword) {
-        List<Patient> patients = patientRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrContactContaining(keyword, keyword, keyword);
+        List<Patient> patients = patientRepository.searchPatients(keyword);
         List<PatientDTO> patientDTOS = new ArrayList<>();
         for (Patient patient : patients) {
             PatientDTO patientDTO = new PatientDTO();

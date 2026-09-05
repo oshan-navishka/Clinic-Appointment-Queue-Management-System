@@ -110,6 +110,15 @@
         }
         loadPatients();
 
+        $("#searchInput").on("input", function () {
+            const keyword = $(this).val().trim();
+            if (keyword.length > 0) {
+                searchPatients();
+            } else {
+                loadPatients();
+            }
+        });
+
     });
 
     function saveCustomer(){
@@ -259,6 +268,41 @@
             $("#userId").val(userId);
         }
     };
+
+    function searchPatients(){
+        const keyword = $("#searchInput").val().trim();
+        $.ajax({
+            url: `http://localhost:8080/api/patients/searchPatients?keyword=${keyword}`,
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            success: function (response) {
+                console.log("Search results:", response);
+                const patients = response.body;
+                const table = $("#patientTable");
+                table.empty();
+
+                patients.forEach(p=>{
+                    table.append(`
+                    <tr>
+                            <td>${p.patientId}</td>
+                            <td>${p.firstName} ${p.lastName}</td>
+                            <td>${p.contact}</td>
+                            <td>${p.age}</td>
+                            <td>${p.address}</td>
+                            <td>${p.emergencyContact}</td>
+                            <td>${p.status}</td>
+                        </tr>
+                    `);
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error("Error searching patients:", error);
+                alert("Error searching patients: " + error);
+            }
+        });
+    }
 
 
 </script>
