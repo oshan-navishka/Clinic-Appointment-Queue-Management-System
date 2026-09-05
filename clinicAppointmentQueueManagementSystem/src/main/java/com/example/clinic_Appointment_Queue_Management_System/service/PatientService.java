@@ -8,4 +8,6 @@ public interface PatientService {
     void savePatient(PatientDTO patientDTO);
 
     List<PatientDTO> getAllPatients();
+
+    void updatePatient(PatientDTO patientDTO);
 }

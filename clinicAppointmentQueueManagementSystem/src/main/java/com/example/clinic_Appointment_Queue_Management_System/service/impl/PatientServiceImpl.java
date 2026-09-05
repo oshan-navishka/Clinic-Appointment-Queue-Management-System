@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -80,6 +81,32 @@ public class PatientServiceImpl implements PatientService {
         } catch (Exception e) {
             log.error("Error occurred while fetching all patients", e);
             throw new RuntimeException("Error occurred while fetching all patients", e);
+        }
+    }
+
+    @Override
+    public void updatePatient(PatientDTO patientDTO) {
+        log.info("Updating Patient {}", patientDTO);
+        try{
+            Optional<Patient> optionalPatient = patientRepository.findById(patientDTO.getPatientId());
+
+            if (optionalPatient.isEmpty())
+                throw new RuntimeException("Patient not found with ID: " + patientDTO.getPatientId());
+
+            Patient patient = optionalPatient.get();
+            patient.setFirstName(patientDTO.getFirstName());
+            patient.setLastName(patientDTO.getLastName());
+            patient.setAge(patientDTO.getAge());
+            patient.setGender(Gender.valueOf(patientDTO.getGender().toUpperCase()));
+            patient.setContact(patientDTO.getContact());
+            patient.setAddress(patientDTO.getAddress());
+            patient.setEmergencyContact(patientDTO.getEmergencyContact());
+            patient.setStatus(Status.ACTIVE);
+            patientRepository.save(patient);
+            log.info("Patient updated successfully: {}", patient.getPatientId());
+        } catch (Exception e) {
+            log.error("Error occurred while updating patient {}", patientDTO, e);
+            throw new RuntimeException("Error occurred while updating patient", e);
         }
     }
 }

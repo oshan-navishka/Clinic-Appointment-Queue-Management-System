@@ -31,4 +31,11 @@ public class PatientController {
         List<PatientDTO> patientDTOS = patientService.getAllPatients();
         return new CommonResponse(0, patientDTOS, "Patients fetched successfully");
     }
+
+    @PutMapping(value = "/updatePatient", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse updatePatient(@RequestBody PatientDTO patientDTO) {
+        log.info("Updating Patient {}", patientDTO);
+        patientService.updatePatient(patientDTO);
+        return new CommonResponse(0, "Patient updated successfully");
+    }
 }
