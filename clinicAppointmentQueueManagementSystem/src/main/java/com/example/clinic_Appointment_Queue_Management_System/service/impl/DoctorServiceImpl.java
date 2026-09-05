@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -85,6 +86,34 @@ public class DoctorServiceImpl implements DoctorService {
             return doctorDTOS;
         }catch (Exception e){
             log.error("Error occurred while fetching all doctors", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void updateDoctor(DoctorDTO doctorDTO) {
+        log.info("Update Doctor {}", doctorDTO);
+        try {
+            Optional<Doctor> doctor = doctorRepository.findById(doctorDTO.getDoctorId());
+
+            Specializations specialization = specializationsRepository.findById(doctorDTO.getSpecializationId())
+                    .orElseThrow(() ->
+                            new RuntimeException("Specialization not found with ID: " + doctorDTO.getSpecializationId()));
+
+            if (doctor.isEmpty())
+                throw new RuntimeException("Doctor not found with ID: " + doctorDTO.getDoctorId());
+
+            Doctor doctorUpdate = doctor.get();
+            doctorUpdate.setFirstName(doctorDTO.getFirstName());
+            doctorUpdate.setLastName(doctorDTO.getLastName());
+            doctorUpdate.setSpecializations(specialization);
+            doctorUpdate.setLicenseNumber(doctorDTO.getLicenseNumber());
+            doctorUpdate.setPhoneNumber(doctorDTO.getPhoneNumber());
+            doctorUpdate.setEmail(doctorDTO.getEmail());
+            doctorUpdate.setStatus(Status.ACTIVE);
+            doctorRepository.save(doctorUpdate);
+        }catch (Exception e){
+            log.error("Doctor could not be updated", e);
             throw e;
         }
     }

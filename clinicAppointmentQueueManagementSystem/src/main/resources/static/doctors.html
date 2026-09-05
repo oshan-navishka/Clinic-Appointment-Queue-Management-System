@@ -44,7 +44,7 @@
         <main class="page">
             <div id="alert" class="alert alert-error" style="display:none;"></div>
             <div class="card">
-                <form id="doctorForm" class="form-grid admin-only" onsubmit="handleDoctorSave(); return false;">
+                <form id="doctorForm" class="form-grid admin-only">
                     <div>
                         <label>User ID</label>
 
@@ -69,7 +69,8 @@
                     <input class="field-input" id="licenseNumber" placeholder="License number" required>
                     <input class="field-input" id="phoneNumber" placeholder="Phone">
                     <input class="field-input" id="email" placeholder="Email">
-                    <button class="btn" type="submit">Add doctor</button>
+                    <button class="btn" type="button" onclick="handleDoctorSave()">Add doctor</button>
+                    <button class="btn" type="button">Update doctor</button>
                 </form>
                 <div class="table-wrap" style="margin-top:1rem;">
                     <table>

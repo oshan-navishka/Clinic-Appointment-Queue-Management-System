@@ -9,4 +9,6 @@ public interface DoctorService {
     void addDoctor(DoctorDTO doctorDTO);
 
     List<DoctorDTO> getAllDoctors();
+
+    void updateDoctor(DoctorDTO doctorDTO);
 }
