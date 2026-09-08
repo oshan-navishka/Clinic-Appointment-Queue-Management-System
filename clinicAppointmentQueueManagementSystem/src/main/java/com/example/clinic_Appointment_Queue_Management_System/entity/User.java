@@ -4,10 +4,12 @@ import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity

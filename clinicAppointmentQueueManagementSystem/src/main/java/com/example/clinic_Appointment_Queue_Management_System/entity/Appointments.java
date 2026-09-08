@@ -1,15 +1,21 @@
 package com.example.clinic_Appointment_Queue_Management_System.entity;
 
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.AppointmentState;
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.BookingSource;
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.PaymentStatus;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -26,7 +32,7 @@ public class Appointments {
     private Doctor doctor;
 
     @ManyToOne
-    @JoinColumn(name = "branchId", nullable = false)
+    @JoinColumn(name = "branchId")
     private ClinicBranches clinicBranches;
 
     private LocalDate appointmentDate;
@@ -36,6 +42,19 @@ public class Appointments {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @Enumerated(EnumType.STRING)
+    private BookingSource bookingSource;
+
+    @Enumerated(EnumType.STRING)
+    private AppointmentState appointmentState;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+    private Double paymentAmount;
+
+    private LocalDateTime paidAt;
 
 
 }

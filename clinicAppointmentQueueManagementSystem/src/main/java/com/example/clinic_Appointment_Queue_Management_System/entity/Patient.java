@@ -4,13 +4,14 @@ import com.example.clinic_Appointment_Queue_Management_System.enumaration.Gender
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.time.LocalDate;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
