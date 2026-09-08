@@ -12,4 +12,6 @@ public class UserDataDTO {
     private String userId;
     private String token;
     private UserRole userRole;
+    private String patientId;
+    private String doctorId;
 }
