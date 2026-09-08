@@ -1,8 +1,6 @@
 package com.example.clinic_Appointment_Queue_Management_System.enumaration;
 
-public enum UserRole {
-    SUPER_ADMIN,
-    ADMIN,
-    DOCTOR,
-    PATIENT
+public enum AppointmentState {
+    PENDING,
+    CHECKED
 }
