@@ -1,0 +1,231 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Appointments</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+    <style>
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+        .field-input { width:100%; padding:.72rem 1rem; border:1.5px solid var(--border-color);
+                       border-radius:var(--radius-md); font-size:.95rem; font-family:inherit;
+                       background:#f8fafc; color:var(--text-main); outline:none; transition:.2s; }
+        .field-input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(0,180,219,.1); }
+        .field-input select { appearance:none; }
+        .tab-row { display:flex; gap:.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+        .tab-btn { padding:.5rem 1.2rem; border:none; border-radius:var(--radius-sm); font-size:.88rem;
+                   font-weight:600; cursor:pointer; background:#e8f4fd; color:#0b2a44; transition:.15s; }
+        .tab-btn.active { background:var(--accent-grad); color:#fff; box-shadow:0 3px 10px rgba(0,180,219,.2); }
+        .empty { text-align:center; color:var(--text-muted); padding:2rem; }
+        .badge { display:inline-block; padding:.22rem .65rem; border-radius:999px; font-size:.75rem; font-weight:600; }
+        .badge-pending { background:#fff3cd; color:#856404; }
+        .badge-checked { background:#d1fae5; color:#065f46; }
+        .badge-paid    { background:#dbeafe; color:#1e40af; }
+        .badge-unpaid  { background:#fee2e2; color:#991b1b; }
+        .badge-online  { background:#ede9fe; color:#5b21b6; }
+        .badge-admin   { background:#e0f2fe; color:#0369a1; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+        <!-- nav built by sidebar.js based on role -->
+    </aside>
+
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+            <h2>Appointments</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert alert-error" style="display:none"></div>
+
+            <!-- ── Book Appointment (Admin) ─────────────────────────────── -->
+            <div class="dashboard-box" style="margin-bottom:2rem">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-calendar-plus"></i> Book Appointment (Admin)</h3>
+                    <button class="btn btn-sm btn-secondary" onclick="clearForm()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+                <form class="form-grid" id="apptForm">
+                    <input type="hidden" id="apptId">
+                    <select class="field-input" id="patientSelect">
+                        <option value="" disabled selected>Select Patient</option>
+                    </select>
+                    <select class="field-input" id="doctorSelect">
+                        <option value="" disabled selected>Select Doctor</option>
+                    </select>
+                    <input class="field-input" type="date" id="apptDate" placeholder="Date">
+                    <input class="field-input" type="time" id="apptTime" placeholder="Time (optional)">
+                    <input class="field-input" id="reason" placeholder="Reason for visit">
+                    <select class="field-input" id="branchSelect">
+                        <option value="">No branch</option>
+                    </select>
+                    <div style="grid-column:1/-1;display:flex;gap:.7rem;flex-wrap:wrap">
+                        <button class="btn" type="button" onclick="bookAdminAppt()">
+                            <i class="fas fa-plus"></i> Book Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ── Appointment List ──────────────────────────────────────── -->
+            <div class="dashboard-box">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-list-alt"></i> All Appointments</h3>
+                    <button class="btn btn-sm btn-secondary" onclick="loadAll()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="tab-row">
+                    <button class="tab-btn active" onclick="filterTab('all',this)">All</button>
+                    <button class="tab-btn" onclick="filterTab('pending',this)">Pending</button>
+                    <button class="tab-btn" onclick="filterTab('checked',this)">Checked</button>
+                    <button class="tab-btn" onclick="filterTab('unpaid',this)">Unpaid</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Date</th>
+                            <th>Queue#</th><th>Fee</th><th>State</th><th>Payment</th><th>Source</th></tr>
+                        </thead>
+                        <tbody id="apptTable"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+    let allAppts  = [];
+
+    // function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.textContent = msg;
+        el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+        el.style.display = 'flex';
+        setTimeout(() => el.style.display = 'none', 4500);
+    }
+
+    function clearForm() { document.getElementById('apptForm').reset(); }
+
+    $(document).ready(function () {
+        if (!token()) { window.location.href = 'login.html'; return; }
+        $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Admin'));
+        loadDropdowns();
+        loadAll();
+    });
+
+    function loadDropdowns() {
+        $.ajax({ url: API + '/api/patients/allPatients', method:'GET', headers:authHdr(),
+            success: function(r) {
+                const s = $('#patientSelect').empty().append('<option value="" disabled selected>Select Patient</option>');
+                (r.body||[]).forEach(p => s.append(`<option value="${p.patientId}">${p.firstName} ${p.lastName}</option>`));
+            }
+        });
+        $.ajax({ url: API + '/api/doctors/loadAllDct', method:'GET', headers:authHdr(),
+            success: function(r) {
+                const s = $('#doctorSelect').empty().append('<option value="" disabled selected>Select Doctor</option>');
+                (r.body||[]).forEach(d => s.append(`<option value="${d.doctorId}">${d.firstName} ${d.lastName} — ${d.specializationName||''}</option>`));
+            }
+        });
+        $.ajax({ url: API + '/api/clinicBranches/getAllBranches', method:'GET', headers:authHdr(),
+            success: function(r) {
+                const s = $('#branchSelect').empty().append('<option value="">No branch</option>');
+                (r.body||[]).filter(b => b.status === 'ACTIVE').forEach(b =>
+                    s.append(`<option value="${b.branchId}">${b.branchName}</option>`)
+                );
+            }
+        });
+    }
+
+    function bookAdminAppt() {
+        const patientId = $('#patientSelect').val();
+        const doctorId  = $('#doctorSelect').val();
+        const date      = $('#apptDate').val();
+        if (!patientId || !doctorId || !date) { showAlert('Please select patient, doctor, and date.','error'); return; }
+        $.ajax({
+            url: API + '/api/appointments/addAppointment', method:'POST',
+            contentType:'application/json', headers:authHdr(),
+            data: JSON.stringify({
+                patientId, doctorId,
+                appointmentDate: date,
+                appointmentTime: $('#apptTime').val() || null,
+                reason:          $('#reason').val().trim(),
+                branchId:        $('#branchSelect').val() || null
+            }),
+            success: function(r) {
+                if (r.status === 0) { showAlert('Appointment booked!','success'); clearForm(); loadAll(); }
+                else showAlert(r.message||'Failed.','error');
+            },
+            error: function(xhr) {
+                let m='Error booking.'; try{ m=JSON.parse(xhr.responseText).message||m; }catch(e){}
+                showAlert(m,'error');
+            }
+        });
+    }
+
+    function loadAll() {
+        $.ajax({ url: API + '/api/appointments/all', method:'GET', headers:authHdr(),
+            success: function(r) { allAppts = r.body||[]; renderTable(allAppts); },
+            error: function() { showAlert('Failed to load appointments.','error'); }
+        });
+    }
+
+    function filterTab(tab, el) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        if (tab === 'all')     renderTable(allAppts);
+        else if (tab === 'pending') renderTable(allAppts.filter(a => a.appointmentState === 'PENDING'));
+        else if (tab === 'checked') renderTable(allAppts.filter(a => a.appointmentState === 'CHECKED'));
+        else if (tab === 'unpaid')  renderTable(allAppts.filter(a => a.paymentStatus === 'UNPAID'));
+    }
+
+    function renderTable(list) {
+        const tbody = $('#apptTable').empty();
+        if (!list.length) { tbody.html('<tr><td colspan="9" class="empty">No appointments found.</td></tr>'); return; }
+        list.forEach(a => {
+            const state = a.appointmentState === 'CHECKED'
+                ? '<span class="badge badge-checked">Checked</span>'
+                : '<span class="badge badge-pending">Pending</span>';
+            const pay = a.paymentStatus === 'PAID'
+                ? '<span class="badge badge-paid">Paid</span>'
+                : '<span class="badge badge-unpaid">Unpaid</span>';
+            const src = a.bookingSource === 'ONLINE'
+                ? '<span class="badge badge-online">Online</span>'
+                : '<span class="badge badge-admin">Admin</span>';
+            const fee = a.paymentAmount ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK',{minimumFractionDigits:2}) : '—';
+            tbody.append(`<tr>
+                <td>${a.appointmentId}</td>
+                <td>${a.patientName||'—'}</td>
+                <td>${a.doctorName||'—'}</td>
+                <td>${a.appointmentDate||'—'}</td>
+                <td><strong>#${a.appointmentNumber||'—'}</strong></td>
+                <td>${fee}</td>
+                <td>${state}</td><td>${pay}</td><td>${src}</td>
+            </tr>`);
+        });
+    }
+</script>
+</body>
+</html>
+
