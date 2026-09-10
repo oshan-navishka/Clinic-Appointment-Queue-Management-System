@@ -37,7 +37,6 @@ public class AppointmentController {
         return new CommonResponse(0, "Payment completed successfully");
     }
 
-    /** Admin confirms payment on behalf of patient — no ownership check */
     @PostMapping(value = "/adminConfirmPayment/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse adminConfirmPayment(@PathVariable String appointmentId) {
         log.info("Admin confirming payment for appointment {}", appointmentId);

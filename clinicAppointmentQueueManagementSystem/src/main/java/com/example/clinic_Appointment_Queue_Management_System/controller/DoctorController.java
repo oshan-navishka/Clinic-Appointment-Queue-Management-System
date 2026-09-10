@@ -45,22 +45,12 @@ public class DoctorController {
         return new CommonResponse(0, doctorService.getByUserId(userId), "Doctor profile loaded");
     }
 
-    /**
-     * Doctor dashboard — returns this week's appointments, all pending/checked splits,
-     * and overall counts for the logged-in doctor identified by their userId.
-     *
-     * GET /api/doctors/dashboard?userId=U002
-     */
     @GetMapping(value = "/dashboard", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getDoctorDashboard(@RequestParam String userId) {
         log.info("Loading doctor dashboard for userId: {}", userId);
         return new CommonResponse(0, appointmentService.getDoctorDashboard(userId), "Doctor dashboard loaded");
     }
 
-    /**
-     * Patient booking page — active doctors with availability, fee and rating.
-     * GET /api/doctors/cards
-     */
     @GetMapping(value = "/cards", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getDoctorCards() {
         log.info("Loading doctor cards for patient booking");
