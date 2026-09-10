@@ -125,7 +125,7 @@
     const token   = () => localStorage.getItem('token');
     const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
 
-    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+    // function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
     function showAlert(msg, type) {
         const el = document.getElementById('alert');
@@ -220,7 +220,6 @@
                         ? 'LKR ' + Number(d.consultationFee).toLocaleString('en-LK', {minimumFractionDigits:2})
                         : 'LKR 2,500.00 (default)';
 
-                    // group slots by branch
                     const byBranch = {};
                     (d.availableSlots || []).forEach(s => {
                         const key  = s.branchId  || '__none__';
@@ -255,7 +254,6 @@
                         });
                     }
 
-                    // star rating
                     let starsHtml = '';
                     const avg = d.averageRating || 0;
                     for (let i = 1; i <= 5; i++) {
