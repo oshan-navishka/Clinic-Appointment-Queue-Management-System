@@ -8,303 +8,362 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
 </head>
 <body>
 <div class="app-shell">
+
+    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
     <aside class="sidebar" id="sidebar">
         <div class="logo-area" style="margin-bottom:1.2rem;">
             <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
             <div class="logo-text" style="color:white;">Clinic<span>Q</span></div>
         </div>
-        <a class="staff-only" href="dashboard.html"><i class="fas fa-gauge-high"></i> Dashboard</a>
-        <a class="staff-only active" href="patients.html"><i class="fas fa-user-injured"></i> Patients</a>
-        <a class="" href="doctors.html"><i class="fas fa-user-doctor"></i> Doctors</a>
-        <a class="" href="specializations.html"><i class="fas fa-stethoscope"></i> Specializations</a>
-        <a class="" href="clinic-branches.html"><i class="fas fa-hospital"></i> Branches</a>
-        <a class="staff-only" href="doctor-schedules.html"><i class="fas fa-clock"></i> Schedules</a>
-        <a class="staff-only" href="appointments.html"><i class="fas fa-calendar-check"></i> Appointments</a>
-        <a class="staff-only" href="queues.html"><i class="fas fa-list-ol"></i> Queue</a>
-        <a class="staff-only" href="medical-records.html"><i class="fas fa-notes-medical"></i> Records</a>
-        <a class="staff-only" href="prescriptions.html"><i class="fas fa-prescription"></i> Prescriptions</a>
-        <a class="staff-only" href="medications.html"><i class="fas fa-pills"></i> Medications</a>
-        <a class="staff-only" href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
-        <a class="staff-only" href="invoices.html"><i class="fas fa-file-invoice"></i> Invoices</a>
-        <a class="staff-only" href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
-        <a class="staff-only" href="doctor-reviews.html"><i class="fas fa-star"></i> Reviews</a>
-        <a class="admin-only" href="users.html"><i class="fas fa-users-gear"></i> Users</a>
-        <a class="admin-only" href="audit-logs.html"><i class="fas fa-clipboard-list"></i> Audit logs</a>
-        <a href="#" onclick="logout(); return false;"><i class="fas fa-right-from-bracket"></i> Logout</a>
+        <!-- nav built by sidebar.js based on role -->
     </aside>
-    <div class="content">
-        <header class="topbar">
-            <button class="menu-btn" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
-            <h2>Patients</h2>
-            <div id="who">
-                <input
-                        class="field-input"
-                        id="userIdDisplay"
-                        type="text"
-                        readonly
-                        placeholder="Logged User ID"
-                >
 
-                <input
-                        id="userId"
-                        type="hidden"
-                >
-            </div>
+    <!-- ── Main ─────────────────────────────────────────────────────────── -->
+    <div class="content">
+
+        <!-- Topbar -->
+        <header class="topbar">
+            <button class="menu-btn" type="button"
+                    onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2>Patients</h2>
+            <div id="who" style="font-size:.9rem;color:#64748b;font-weight:600"></div>
         </header>
+
         <main class="page">
             <div id="alert" class="alert alert-error" style="display:none;"></div>
+
+            <!-- ── Form card ──────────────────────────────────────────── -->
             <div class="card">
+                <h3 id="formTitle"
+                    style="margin-bottom:1rem;color:#0b2a44;font-size:1rem">
+                    Add New Patient
+                </h3>
+
                 <form id="patientForm" class="form-grid">
-<!--                    <select class="field-input" id="userId" required>-->
-<!--                        <option value="" disabled selected>Select User Account</option>-->
-<!--                    </select>-->
+                    <input type="hidden" id="patientId">
+                    <input type="hidden" id="userId">
 
-
-                    <div style="margin-bottom:1rem;">
-                        <input type="text" id="searchInput" placeholder="Search patients..." class="field-input">
+                    <!-- search bar spans full width -->
+                    <div style="grid-column:1/-1;margin-bottom:.2rem;">
+                        <input type="text" id="searchInput"
+                               placeholder="&#xf002;  Search by name or phone…"
+                               class="field-input"
+                               style="width:100%;">
                     </div>
 
+                    <!-- personal details -->
+                    <input class="field-input" id="firstName"
+                           placeholder="First name" required>
+                    <input class="field-input" id="lastName"
+                           placeholder="Last name"  required>
+                    <input class="field-input" id="age"
+                           type="number" placeholder="Age" min="0" max="150">
+                    <select class="field-input" id="gender">
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                    <input class="field-input" id="contact"
+                           placeholder="Phone number">
+                    <input class="field-input" id="address"
+                           placeholder="Address">
+                    <input class="field-input" id="emergencyContact"
+                           placeholder="Emergency contact">
 
-                    <input class="field-input" id="firstName" placeholder="First name" required>
-                    <input type="hidden" id="patientId">
-                    <input class="field-input" id="lastName" placeholder="Last name" required>
-                    <input class="field-input" id="age" type="number" placeholder="Age">
-                    <select class="field-input" id="gender"><option>MALE</option><option>FEMALE</option><option>OTHER</option></select>
-                    <input class="field-input" id="contact" placeholder="Phone">
-                    <input class="field-input" id="address" placeholder="Address">
-                    <input class="field-input" id="emergencyContact" placeholder="Emergency contact">
-                    <button class="btn" type="button" onclick="saveCustomer()">Save patient</button>
-                    <button class="btn" type="button" onclick="clearForm()">Clear</button>
-                    <button class="btn" type="button" onclick="handlePatientUpdate()">Update patient</button>
-                    <button class="btn" type="button" onclick="deletePatient($('#patientId').val().trim())">Delete patient</button>
+                    <!-- optional login account -->
+                    <fieldset style="grid-column:1/-1;border:1px solid #e2eaf2;
+                                     border-radius:10px;padding:.8rem 1rem;margin-top:.3rem">
+                        <legend style="font-size:.78rem;font-weight:700;
+                                       color:#1f6e9c;padding:0 .4rem">
+                            Login Account (optional — for patient self-login)
+                        </legend>
+                        <div class="form-grid" style="margin-top:.5rem">
+                            <input class="field-input" id="username"
+                                   placeholder="Username"
+                                   autocomplete="new-password">
+                            <input class="field-input" id="userEmail"
+                                   placeholder="Email" type="email">
+                            <input class="field-input" id="password"
+                                   placeholder="Password" type="password"
+                                   autocomplete="new-password">
+                        </div>
+                    </fieldset>
+
+                    <!-- action buttons -->
+                    <div style="grid-column:1/-1;display:flex;gap:.7rem;
+                                flex-wrap:wrap;margin-top:.6rem">
+                        <button class="btn" type="button"
+                                onclick="savePatient()">
+                            <i class="fas fa-plus"></i> Save Patient
+                        </button>
+                        <button class="btn btn-secondary" type="button"
+                                onclick="handlePatientUpdate()">
+                            <i class="fas fa-pen"></i> Update Patient
+                        </button>
+                        <button class="btn btn-secondary" type="button"
+                                onclick="handleDelete()">
+                            <i class="fas fa-trash"></i> Delete Patient
+                        </button>
+                        <button class="btn btn-secondary" type="button"
+                                onclick="clearForm()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
                 </form>
-                <div class="table-wrap" style="margin-top:1rem;">
+
+                <!-- ── Table ───────────────────────────────────────── -->
+                <div class="table-wrap" style="margin-top:1.5rem">
                     <table>
-                        <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Age</th><th>Address</th><th>Emergency contact</th><th>Status</th></tr></thead>
-                        <tbody id="patientTable"></tbody>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Address</th>
+                            <th>Emergency Contact</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="patientTable">
+                        <tr>
+                            <td colspan="9"
+                                style="text-align:center;color:#94a3b8;padding:1.5rem">
+                                Loading patients…
+                            </td>
+                        </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
 </div>
-</body>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 <script>
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
     $(document).ready(function () {
-        const userId = localStorage.getItem("userId");
-        console.log("Patient Page User ID:", userId);
+        if (!token()) { window.location.href = 'login.html'; return; }
+        const uname = localStorage.getItem('username') || '';
+        if (uname) document.getElementById('who').textContent = 'Logged in as: ' + uname;
 
-        if (userId) {
-            $("#userIdDisplay").val(userId);
-            $("#userId").val(userId);
-
-        } else {
-            console.log("NO USER ID FOUND");
-            $("#userIdDisplay").val("User ID not found");
-            $("#userId").val("");
-        }
         loadPatients();
 
-        $("#searchInput").on("input", function () {
-            const keyword = $(this).val().trim();
-            if (keyword.length > 0) {
-                searchPatients();
-            } else {
-                loadPatients();
-            }
+        $('#searchInput').on('input', function () {
+            const kw = $(this).val().trim();
+            if (kw.length > 0) searchPatients(kw);
+            else loadPatients();
         });
-
     });
 
-    function saveCustomer(){
-        const userId = $("#userId").val().trim();
-        const firstName = $("#firstName").val().trim();
-        const lastName = $("#lastName").val().trim();
-        const age = $("#age").val().trim();
-        const gender = $("#gender").val().trim();
-        const contact = $("#contact").val().trim();
-        const address = $("#address").val().trim();
-        const emergencyContact = $("#emergencyContact").val().trim();
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
-        $.ajax({
-            url: "http://localhost:8080/api/patients/savePatient",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                userId: userId,
-                firstName: firstName,
-                lastName: lastName,
-                age: age,
-                gender: gender,
-                contact: contact,
-                address: address,
-                emergencyContact: emergencyContact
-            }),
-            success: function (response) {
-                console.log("Patient saved successfully:", response);
-                alert("Patient saved successfully!");
-                clearForm();
-                loadPatients();
-            },
-            error: function (xhr, status, error) {
-                console.error("Error saving patient:", error);
-                alert("Error saving patient: " + error);
-            }
-        })
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.textContent   = msg;
+        el.className     = 'alert ' + (type === 'success' ? '' : 'alert-error');
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 4000);
     }
 
-    function handlePatientUpdate(){
-        const patientId = $("#patientId").val().trim();
-        const firstName = $("#firstName").val().trim();
-        const lastName = $("#lastName").val().trim();
-        const age = $("#age").val().trim();
-        const gender = $("#gender").val().trim();
-        const contact = $("#contact").val().trim();
-        const address = $("#address").val().trim();
-        const emergencyContact = $("#emergencyContact").val().trim();
+    function clearForm() {
+        document.getElementById('patientForm').reset();
+        document.getElementById('patientId').value = '';
+        document.getElementById('userId').value    = '';
+        document.getElementById('formTitle').textContent = 'Add New Patient';
+    }
 
+    function loadPatients() {
         $.ajax({
-            url: "http://localhost:8080/api/patients/updatePatient",
-            method: "PUT",
-            contentType: "application/json",
-            data: JSON.stringify({
-                patientId: patientId,
-                firstName: firstName,
-                lastName: lastName,
-                age: age,
-                gender: gender,
-                contact: contact,
-                address: address,
-                emergencyContact: emergencyContact
-            }),
-            success: function (response) {
-                console.log("Patient updated successfully:", response);
-                alert("Patient updated successfully!");
-                clearForm();
-                loadPatients();
+            url:     API + '/api/patients/allPatients',
+            method:  'GET',
+            headers: authHdr(),
+            success: function (res) {
+                renderTable(res.body || []);
             },
-            error: function (xhr, status, error) {
-                console.error("Error updating patient:", error);
-                alert("Error updating patient: " + error);
+            error: function (xhr) {
+                if (xhr.status === 401 || xhr.status === 403) { logout(); return; }
+                showAlert('Failed to load patients.', 'error');
             }
         });
     }
 
-    function loadPatients(){
+    function searchPatients(keyword) {
         $.ajax({
-            url: "http://localhost:8080/api/patients/allPatients",
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            },
-            success: function (response) {
-
-                const tbody = $("#patientTable");
-                tbody.empty();
-                response.body.forEach(patient => {
-                    const row = $(`
-                        <tr>
-                            <td>${patient.patientId}</td>
-                            <td>${patient.firstName} ${patient.lastName}</td>
-                            <td>${patient.contact}</td>
-                            <td>${patient.age}</td>
-                            <td>${patient.address}</td>
-                            <td>${patient.emergencyContact}</td>
-                            <td>${patient.status}</td>
-                        </tr>
-                    `);
-                    row.on("click", function(){
-                        $("#patientId").val(patient.patientId);
-                        $("#userId").val(patient.userId);
-                        $("#firstName").val(patient.firstName);
-                        $("#lastName").val(patient.lastName);
-                        $("#age").val(patient.age);
-                        $("#gender").val(patient.gender);
-                        $("#contact").val(patient.contact);
-                        $("#address").val(patient.address);
-                        $("#emergencyContact").val(patient.emergencyContact);
-                        $("#status").val(patient.status);
-                    });
-                    tbody.append(row);
-                });
-            },
-            error: function (xhr, status, error) {
-                console.error("Error fetching patients:", error);
-                alert("Error fetching patients: " + error);
-            }
+            url:     API + '/api/patients/searchPatients?keyword=' + encodeURIComponent(keyword),
+            method:  'GET',
+            headers: authHdr(),
+            success: function (res) { renderTable(res.body || []); },
+            error:   function ()    { showAlert('Search failed.', 'error'); }
         });
     }
 
-    function deletePatient(patientId){
-        $.ajax({
-            url: `http://localhost:8080/api/patients/deletePatient/${patientId}`,
-            method: "DELETE",
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            },
-            success: function (response) {
-                console.log("Patient deleted successfully:", response);
-                alert("Patient deleted successfully!");
-                loadPatients();
-                clearForm();
-            },
-            error: function (xhr, status, error) {
-                console.error("Error deleting patient:", error);
-                alert("Error deleting patient: " + error);
-            }
-        });
-    }
-
-    const clearForm = () => {
-        $("#patientForm")[0].reset();
-        const userId = localStorage.getItem("userId");
-        if (userId) {
-            $("#userIdDisplay").val(userId);
-            $("#userId").val(userId);
+    function renderTable(patients) {
+        const tbody = $('#patientTable');
+        tbody.empty();
+        if (patients.length === 0) {
+            tbody.append('<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:1.5rem">No patients found</td></tr>');
+            return;
         }
-    };
+        patients.forEach(p => {
+            const statusBadge = p.status === 'ACTIVE'
+                ? '<span style="color:#16a34a;font-weight:600;font-size:.8rem">● Active</span>'
+                : '<span style="color:#dc2626;font-weight:600;font-size:.8rem">● Inactive</span>';
+            const row = $(`
+                <tr style="cursor:pointer">
+                    <td>${p.patientId}</td>
+                    <td><strong>${p.firstName} ${p.lastName}</strong></td>
+                    <td>${p.contact || '—'}</td>
+                    <td>${p.age || '—'}</td>
+                    <td>${p.gender || '—'}</td>
+                    <td>${p.address || '—'}</td>
+                    <td>${p.emergencyContact || '—'}</td>
+                    <td>${p.userEmail || '—'}</td>
+                    <td>${statusBadge}</td>
+                </tr>
+            `);
+            row.on('click', function () {
+                $('#patientId').val(p.patientId);
+                $('#userId').val(p.userId || '');
+                $('#firstName').val(p.firstName);
+                $('#lastName').val(p.lastName);
+                $('#age').val(p.age);
+                $('#gender').val(p.gender);
+                $('#contact').val(p.contact);
+                $('#address').val(p.address);
+                $('#emergencyContact').val(p.emergencyContact);
+                $('#username').val('');
+                $('#userEmail').val(p.userEmail || '');
+                $('#password').val('');
+                document.getElementById('formTitle').textContent =
+                    'Edit Patient — ' + p.firstName + ' ' + p.lastName;
+            });
+            tbody.append(row);
+        });
+    }
 
-    function searchPatients(){
-        const keyword = $("#searchInput").val().trim();
+    function savePatient() {
+        const firstName = $('#firstName').val().trim();
+        const lastName  = $('#lastName').val().trim();
+        if (!firstName || !lastName) {
+            showAlert('First name and last name are required.', 'error'); return;
+        }
+
+        const payload = {
+            firstName:        firstName,
+            lastName:         lastName,
+            age:              $('#age').val() ? parseInt($('#age').val()) : null,
+            gender:           $('#gender').val(),
+            contact:          $('#contact').val().trim(),
+            address:          $('#address').val().trim(),
+            emergencyContact: $('#emergencyContact').val().trim(),
+            username:         $('#username').val().trim() || null,
+            userEmail:        $('#userEmail').val().trim() || null,
+            password:         $('#password').val().trim() || null
+        };
+
         $.ajax({
-            url: `http://localhost:8080/api/patients/searchPatients?keyword=${keyword}`,
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("token")
+            url:         API + '/api/patients/savePatient',
+            method:      'POST',
+            contentType: 'application/json',
+            headers:     authHdr(),
+            data:        JSON.stringify(payload),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Patient saved successfully!', 'success');
+                    clearForm();
+                    loadPatients();
+                } else {
+                    showAlert(res.message || 'Failed to save patient.', 'error');
+                }
             },
-            success: function (response) {
-                console.log("Search results:", response);
-                const patients = response.body;
-                const table = $("#patientTable");
-                table.empty();
-
-                patients.forEach(p=>{
-                    table.append(`
-                    <tr>
-                            <td>${p.patientId}</td>
-                            <td>${p.firstName} ${p.lastName}</td>
-                            <td>${p.contact}</td>
-                            <td>${p.age}</td>
-                            <td>${p.address}</td>
-                            <td>${p.emergencyContact}</td>
-                            <td>${p.status}</td>
-                        </tr>
-                    `);
-                });
-            },
-            error: function (xhr, status, error) {
-                console.error("Error searching patients:", error);
-                alert("Error searching patients: " + error);
+            error: function (xhr) {
+                let msg = 'Error saving patient.';
+                try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e){}
+                showAlert(msg, 'error');
             }
         });
     }
 
+    function handlePatientUpdate() {
+        const patientId = $('#patientId').val().trim();
+        if (!patientId) {
+            showAlert('Please select a patient from the table first.', 'error'); return;
+        }
 
+        const payload = {
+            patientId:        patientId,
+            firstName:        $('#firstName').val().trim(),
+            lastName:         $('#lastName').val().trim(),
+            age:              $('#age').val() ? parseInt($('#age').val()) : null,
+            gender:           $('#gender').val(),
+            contact:          $('#contact').val().trim(),
+            address:          $('#address').val().trim(),
+            emergencyContact: $('#emergencyContact').val().trim()
+        };
+
+        $.ajax({
+            url:         API + '/api/patients/updatePatient',
+            method:      'PUT',
+            contentType: 'application/json',
+            headers:     authHdr(),
+            data:        JSON.stringify(payload),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Patient updated successfully!', 'success');
+                    clearForm();
+                    loadPatients();
+                } else {
+                    showAlert(res.message || 'Failed to update.', 'error');
+                }
+            },
+            error: function (xhr) {
+                let msg = 'Error updating patient.';
+                try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e){}
+                showAlert(msg, 'error');
+            }
+        });
+    }
+
+    function handleDelete() {
+        const patientId = $('#patientId').val().trim();
+        if (!patientId) {
+            showAlert('Please select a patient from the table first.', 'error'); return;
+        }
+        if (!confirm('Soft-delete this patient? (status → INACTIVE)')) return;
+
+        $.ajax({
+            url:     API + '/api/patients/deletePatient/' + patientId,
+            method:  'DELETE',
+            headers: authHdr(),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Patient deleted (set inactive).', 'success');
+                    clearForm();
+                    loadPatients();
+                } else {
+                    showAlert(res.message || 'Failed to delete.', 'error');
+                }
+            },
+            error: function (xhr) {
+                let msg = 'Error deleting patient.';
+                try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e){}
+                showAlert(msg, 'error');
+            }
+        });
+    }
 </script>
-
+</body>
 </html>
