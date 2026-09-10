@@ -38,6 +38,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/patients/selfRegister").permitAll()
                         .requestMatchers("/", "/index.html", "/*.html", "/css/**", "/js/**", "/images/**", "/error").permitAll()
+                        // Chatbot — any authenticated user
+                        .requestMatchers(HttpMethod.POST, "/api/chat").authenticated()
 
                         // User management
                         .requestMatchers(HttpMethod.POST,   "/api/users/register").hasRole("SUPER_ADMIN")
