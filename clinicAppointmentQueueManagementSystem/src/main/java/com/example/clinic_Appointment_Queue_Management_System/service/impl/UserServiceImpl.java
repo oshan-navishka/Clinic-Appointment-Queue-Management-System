@@ -4,6 +4,8 @@ import com.example.clinic_Appointment_Queue_Management_System.dto.ChangeCredenti
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.UserRole;
+import com.example.clinic_Appointment_Queue_Management_System.exception.CustomException;
 import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
 import com.example.clinic_Appointment_Queue_Management_System.service.EmailService;
 import com.example.clinic_Appointment_Queue_Management_System.service.UserService;
@@ -20,6 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
+
     private final UserRepository  userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService    emailService;
@@ -29,10 +32,10 @@ public class UserServiceImpl implements UserService {
         log.info("Saving user {}", userDTO);
         try {
             if (userRepository.existsByUsername(userDTO.getUsername())) {
-                throw new RuntimeException("Username already exists");
+                throw new CustomException(409, "Username already exists");
             }
             if (userDTO.getUserEmail() != null && userRepository.existsByUserEmail(userDTO.getUserEmail())) {
-                throw new RuntimeException("Email already exists");
+                throw new CustomException(409, "Email already exists");
             }
 
             long count = userRepository.count();
@@ -50,8 +53,7 @@ public class UserServiceImpl implements UserService {
             try {
                 if (userDTO.getUserEmail() != null && !userDTO.getUserEmail().isBlank()
                         && userDTO.getPassword() != null && !userDTO.getPassword().isBlank()) {
-                    String role = userDTO.getUserRole() != null
-                            ? userDTO.getUserRole().name() : "ADMIN";
+                    String role = userDTO.getUserRole() != null ? userDTO.getUserRole().name() : "ADMIN";
                     emailService.sendWelcomeEmail(
                             userDTO.getUserEmail(),
                             userDTO.getUsername(),
@@ -64,42 +66,45 @@ public class UserServiceImpl implements UserService {
                 log.warn("Could not send welcome email for user {}: {}", userDTO.getUsername(), ex.getMessage());
             }
 
-        } catch (Exception e) {
-            log.error("Error saving user {}", userDTO);
+        } catch (CustomException e) {
             throw e;
+        } catch (Exception e) {
+            log.error("Error saving user", e);
+            throw new CustomException(500, "Error occurred while saving user");
         }
     }
 
     @Override
     public UserDTO getUserDetails(String username, String password) {
         log.info("Fetching user {}", username);
-        try{
+        try {
             Optional<User> userOptional = userRepository.findByUsername(username);
             if (userOptional.isEmpty()) {
                 userOptional = userRepository.findByUserEmail(username);
             }
             if (userOptional.isEmpty()) {
-                throw new RuntimeException("User not found");
+                throw new CustomException(404, "User not found");
             }
 
-            User userDetails = userOptional.get();
+            User user = userOptional.get();
 
-            if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-                throw new RuntimeException("Invalid password");
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                throw new CustomException(401, "Wrong password");
             }
-            log.info("Fetching user details {}", username);
 
             return new UserDTO(
-                    userDetails.getUserId(),
-                    userDetails.getUsername(),
-                    userDetails.getPassword(),
-                    userDetails.getUserEmail(),
-                    userDetails.getUserRole(),
-                    userDetails.getStatus()
+                    user.getUserId(),
+                    user.getUsername(),
+                    user.getPassword(),
+                    user.getUserEmail(),
+                    user.getUserRole(),
+                    user.getStatus()
             );
-        }catch (Exception e){
-            log.error("Error fetching user details {}", username);
+        } catch (CustomException e) {
             throw e;
+        } catch (Exception e) {
+            log.error("Error fetching user details for {}", username, e);
+            throw new CustomException(500, "Error occurred while fetching user details");
         }
     }
 
@@ -108,61 +113,59 @@ public class UserServiceImpl implements UserService {
         log.info("Fetching all users");
         try {
             List<UserDTO> userDTOS = new ArrayList<>();
-            List<User> users = userRepository.findAll();
-
-            for (User user : users) {
-                UserDTO userDTO = new UserDTO();
-                userDTO.setUserId(user.getUserId());
-                userDTO.setUsername(user.getUsername());
-                userDTO.setPassword(user.getPassword());
-                userDTO.setUserEmail(user.getUserEmail());
-                userDTO.setUserRole(user.getUserRole());
-                userDTO.setStatus(user.getStatus());
-                userDTOS.add(userDTO);
+            for (User user : userRepository.findAll()) {
+                UserDTO dto = new UserDTO();
+                dto.setUserId(user.getUserId());
+                dto.setUsername(user.getUsername());
+                dto.setPassword(user.getPassword());
+                dto.setUserEmail(user.getUserEmail());
+                dto.setUserRole(user.getUserRole());
+                dto.setStatus(user.getStatus());
+                userDTOS.add(dto);
             }
             return userDTOS;
         } catch (Exception e) {
-            log.error("Error fetching all users");
-            throw e;
+            log.error("Error fetching all users", e);
+            throw new CustomException(500, "Error occurred while fetching users");
         }
     }
 
     @Override
     public void updateUser(UserDTO userDTO) {
-        log.info("Updating user {}", userDTO);
-        try{
-            Optional<User> userOptional = userRepository.findById(userDTO.getUserId());
-            if (userOptional.isEmpty()) {
-                throw new RuntimeException("User not found");
-            }
-            User user =  userOptional.get();
+        log.info("Updating user {}", userDTO.getUserId());
+        try {
+            User user = userRepository.findById(userDTO.getUserId())
+                    .orElseThrow(() -> new CustomException(404, "User not found"));
+
             user.setUsername(userDTO.getUsername());
             user.setUserEmail(userDTO.getUserEmail());
             user.setUserRole(userDTO.getUserRole());
             userRepository.save(user);
-        }catch (Exception e){
-            log.error("Error fetching user {}", userDTO);
+        } catch (CustomException e) {
             throw e;
+        } catch (Exception e) {
+            log.error("Error updating user {}", userDTO.getUserId(), e);
+            throw new CustomException(500, "Error occurred while updating user");
         }
     }
 
     @Override
     public void deleteUser(String userId) {
-        log.info("Deleting user with id {}", userId);
+        log.info("Deleting user {}", userId);
         try {
-            Optional<User> userOptional = userRepository.findById(userId);
-            if (userOptional.isEmpty()) {
-                throw new RuntimeException("User not found");
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new CustomException(404, "User not found"));
+
+            if (user.getUserRole() == UserRole.SUPER_ADMIN) {
+                throw new CustomException(403, "Cannot delete a SUPER_ADMIN account");
             }
-            User user = userOptional.get();
-            if (user.getUserRole() == com.example.clinic_Appointment_Queue_Management_System.enumaration.UserRole.SUPER_ADMIN) {
-                throw new RuntimeException("Cannot delete a SUPER_ADMIN account");
-            }
+
             userRepository.deleteById(userId);
-            log.info("User {} deleted successfully", userId);
-        } catch (Exception e) {
-            log.error("Error deleting user {}", userId);
+        } catch (CustomException e) {
             throw e;
+        } catch (Exception e) {
+            log.error("Error deleting user {}", userId, e);
+            throw new CustomException(500, "Error occurred while deleting user");
         }
     }
 
@@ -170,60 +173,55 @@ public class UserServiceImpl implements UserService {
     public void changeCredentials(ChangeCredentialsDTO dto) {
         log.info("Changing credentials for user {}", dto.getUserId());
         try {
-            Optional<User> userOptional = userRepository.findById(dto.getUserId());
-            if (userOptional.isEmpty()) {
-                throw new RuntimeException("User not found");
-            }
-            User user = userOptional.get();
+            User user = userRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new CustomException(404, "User not found"));
 
-            // Verify current password before allowing any change
             if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
-                throw new RuntimeException("Current password is incorrect");
+                throw new CustomException(401, "Current password is incorrect");
             }
 
-            // Update username if provided and not already taken by another user
             if (dto.getNewUsername() != null && !dto.getNewUsername().isBlank()) {
                 String newUsername = dto.getNewUsername().trim();
                 if (!newUsername.equals(user.getUsername()) && userRepository.existsByUsername(newUsername)) {
-                    throw new RuntimeException("Username already taken");
+                    throw new CustomException(409, "Username already taken");
                 }
                 user.setUsername(newUsername);
             }
 
-            // Update password if a new one is provided
             if (dto.getNewPassword() != null && !dto.getNewPassword().isBlank()) {
                 user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
             }
 
             userRepository.save(user);
-            log.info("Credentials updated successfully for user {}", dto.getUserId());
-        } catch (Exception e) {
-            log.error("Error changing credentials for user {}", dto.getUserId());
+        } catch (CustomException e) {
             throw e;
+        } catch (Exception e) {
+            log.error("Error changing credentials for user {}", dto.getUserId(), e);
+            throw new CustomException(500, "Error occurred while changing credentials");
         }
     }
 
     @Override
     public void resetPassword(String userId, String newPassword) {
-        log.info("Super Admin resetting password for user {}", userId);
+        log.info("Resetting password for user {}", userId);
         try {
-            Optional<User> userOptional = userRepository.findById(userId);
-            if (userOptional.isEmpty()) {
-                throw new RuntimeException("User not found");
-            }
             if (newPassword == null || newPassword.isBlank()) {
-                throw new RuntimeException("New password cannot be empty");
+                throw new CustomException(400, "New password cannot be empty");
             }
             if (newPassword.length() < 6) {
-                throw new RuntimeException("Password must be at least 6 characters");
+                throw new CustomException(400, "Password must be at least 6 characters");
             }
-            User user = userOptional.get();
+
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new CustomException(404, "User not found"));
+
             user.setPassword(passwordEncoder.encode(newPassword));
             userRepository.save(user);
-            log.info("Password reset successfully for user {}", userId);
-        } catch (Exception e) {
-            log.error("Error resetting password for user {}", userId);
+        } catch (CustomException e) {
             throw e;
+        } catch (Exception e) {
+            log.error("Error resetting password for user {}", userId, e);
+            throw new CustomException(500, "Error occurred while resetting password");
         }
     }
 }
