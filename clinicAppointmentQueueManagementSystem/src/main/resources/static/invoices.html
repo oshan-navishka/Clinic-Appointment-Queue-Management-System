@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Invoices</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+    <style>
+        .field-input { width:100%; padding:.72rem 1rem; border:1.5px solid var(--border-color);
+                       border-radius:var(--radius-md); font-size:.95rem; font-family:inherit;
+                       background:#f8fafc; color:var(--text-main); outline:none; transition:.2s; }
+        .field-input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(0,180,219,.1); }
+        .badge { display:inline-block; padding:.22rem .65rem; border-radius:999px; font-size:.75rem; font-weight:600; }
+        .badge-pending { background:#fff3cd; color:#856404; }
+        .badge-paid    { background:#d1fae5; color:#065f46; }
+        .badge-cancelled { background:#fee2e2; color:#991b1b; }
+        .empty { text-align:center; color:var(--text-muted); padding:2rem; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+        <!-- nav built by sidebar.js based on role -->
+    </aside>
+
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+            <h2>Invoices</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert alert-error" style="display:none"></div>
+
+            <!-- Stats -->
+            <div class="cards">
+                <div class="card card-blue">
+                    <div class="card-header-icon"><h3>Total Invoices</h3>
+                        <div class="icon-wrapper"><i class="fas fa-file-invoice"></i></div></div>
+                    <div class="num" id="cTotal">0</div>
+                </div>
+                <div class="card card-green">
+                    <div class="card-header-icon"><h3>Paid</h3>
+                        <div class="icon-wrapper"><i class="fas fa-check-circle"></i></div></div>
+                    <div class="num" id="cPaid">0</div>
+                </div>
+                <div class="card card-orange">
+                    <div class="card-header-icon"><h3>Pending</h3>
+                        <div class="icon-wrapper"><i class="fas fa-hourglass-half"></i></div></div>
+                    <div class="num" id="cPending">0</div>
+                </div>
+                <div class="card card-red">
+                    <div class="card-header-icon"><h3>Total Revenue</h3>
+                        <div class="icon-wrapper"><i class="fas fa-coins"></i></div></div>
+                    <div class="num" id="cRevenue" style="font-size:1.2rem">LKR 0</div>
+                </div>
+            </div>
+
+            <!-- Search by patient -->
+            <div class="dashboard-box">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-file-invoice-dollar"></i> Invoice List</h3>
+                    <div style="display:flex;gap:.7rem;align-items:center">
+                        <input type="text" id="patientIdInput" class="field-input"
+                               style="width:200px" placeholder="Patient ID to search">
+                        <button class="btn btn-sm" onclick="searchByPatient()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadAllInvoices()">
+                            <i class="fas fa-sync-alt"></i> All
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr><th>Invoice ID</th><th>Appointment</th><th>Patient</th>
+                            <th>Amount</th><th>Status</th><th>Issued</th><th>Paid At</th></tr>
+                        </thead>
+                        <tbody id="invoiceTable"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+    // function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.textContent = msg; el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+        el.style.display = 'flex'; setTimeout(() => el.style.display = 'none', 4500);
+    }
+
+    $(document).ready(function () {
+        if (!token()) { window.location.href = 'login.html'; return; }
+        $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Admin'));
+        loadAllInvoices();
+    });
+
+    function loadAllInvoices() {
+        $.ajax({ url: API + '/api/appointments/overview', method:'GET', headers:authHdr(),
+            success: function(r) {
+                const appts = (r.body||{}).allAppointments || [];
+                renderTable(appts);
+                updateStats(appts);
+            },
+            error: function() { showAlert('Failed to load invoices.','error'); }
+        });
+    }
+
+    function searchByPatient() {
+        const pid = $('#patientIdInput').val().trim();
+        if (!pid) { loadAllInvoices(); return; }
+        $.ajax({ url: API + '/api/appointments/myAppointments?userId=' + pid, method:'GET', headers:authHdr(),
+            success: function(r) { renderTable(r.body||[]); },
+            error: function() { showAlert('Patient not found or error.','error'); }
+        });
+    }
+
+    function updateStats(appts) {
+        const paid = appts.filter(a => a.paymentStatus === 'PAID');
+        const pend = appts.filter(a => a.paymentStatus === 'UNPAID');
+        $('#cTotal').text(appts.length);
+        $('#cPaid').text(paid.length);
+        $('#cPending').text(pend.length);
+        const rev = paid.reduce((s, a) => s + (a.paymentAmount || 0), 0);
+        $('#cRevenue').text('LKR ' + rev.toLocaleString('en-LK',{minimumFractionDigits:2}));
+    }
+
+    function renderTable(list) {
+        const tbody = $('#invoiceTable').empty();
+        if (!list.length) { tbody.html('<tr><td colspan="7" class="empty">No invoices found.</td></tr>'); return; }
+        list.forEach((a, i) => {
+            const statusBadge = a.paymentStatus === 'PAID'
+                ? '<span class="badge badge-paid">Paid</span>'
+                : '<span class="badge badge-pending">Pending</span>';
+            const fee = a.paymentAmount ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK',{minimumFractionDigits:2}) : '—';
+            const paidAt = a.paidAt ? new Date(a.paidAt).toLocaleString() : '—';
+            tbody.append(`<tr>
+                <td><strong>INV-${String(i+1).padStart(4,'0')}</strong></td>
+                <td>${a.appointmentId}</td>
+                <td>${a.patientName||'—'}</td>
+                <td><strong>${fee}</strong></td>
+                <td>${statusBadge}</td>
+                <td>${a.appointmentDate||'—'}</td>
+                <td>${paidAt}</td>
+            </tr>`);
+        });
+    }
+</script>
+</body>
+</html>
+
