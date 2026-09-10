@@ -1,0 +1,813 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+    <style>
+        /* extra local helpers */
+        .tab-row { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+        .tab-btn { padding:.5rem 1.2rem; border:none; border-radius:var(--radius-sm); font-size:.88rem;
+                   font-weight:600; cursor:pointer; background:var(--info-bg); color:var(--navy);
+                   transition:var(--transition); font-family:inherit; }
+        .tab-btn.active { background:var(--accent-grad); color:#fff; box-shadow:0 3px 10px rgba(0,180,219,.2); }
+        .tab-btn:hover:not(.active) { background:#d0ebf7; }
+        .badge { display:inline-block; padding:.22rem .65rem; border-radius:999px; font-size:.75rem; font-weight:600; }
+        .badge-pending { background:#fff3cd; color:#856404; }
+        .badge-checked { background:#d1fae5; color:#065f46; }
+        .badge-paid    { background:#dbeafe; color:#1e40af; }
+        .badge-unpaid  { background:#fee2e2; color:#991b1b; }
+        .badge-online  { background:#ede9fe; color:#5b21b6; }
+        .badge-admin-b { background:#e0f2fe; color:#0369a1; }
+        .empty { text-align:center; color:var(--text-muted); padding:2rem; }
+        .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200;
+                          display:none; align-items:center; justify-content:center; padding:1rem; }
+        .modal-backdrop.open { display:flex; }
+        .modal { background:#fff; border-radius:var(--radius-lg); padding:2rem; width:100%;
+                 max-width:560px; box-shadow:var(--shadow-lg); position:relative;
+                 max-height:92vh; overflow-y:auto; }
+        .modal-close { position:absolute; top:1rem; right:1rem; background:none; border:none;
+                       font-size:1.2rem; color:var(--text-muted); cursor:pointer; }
+        .modal-close:hover { color:var(--navy); }
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+        .field-input { width:100%; padding:.72rem 1rem; border:1.5px solid var(--border-color);
+                       border-radius:var(--radius-md); font-size:.95rem; font-family:inherit;
+                       background:#f8fafc; color:var(--text-main); outline:none; transition:.2s; }
+        .field-input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(0,180,219,.1); }
+        .confirm-btn  { background:#16a34a; color:#fff; }
+        .confirm-btn:hover { background:#15803d; }
+        .invoice-btn  { background:var(--navy); color:#fff; }
+        .invoice-btn:hover { background:#154a72; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+        <!-- nav built by sidebar.js based on role -->
+    </aside>
+
+    <!-- ── Main ─────────────────────────────────────────────────────────── -->
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2 id="pageTitle">Admin Dashboard</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert" style="display:none"></div>
+
+            <!-- ── Welcome + Quick actions ────────────────────────────── -->
+            <div class="welcome-banner">
+                <h1 id="welcome-msg">Welcome, Admin</h1>
+                <p>Manage patients, appointments, and payments from one place.</p>
+            </div>
+
+            <div class="quick-actions">
+                <button class="btn" onclick="showSection('appointments')"><i class="fas fa-calendar-plus"></i> Book Appointment</button>
+                <button class="btn btn-secondary" onclick="window.location.href='patients.html'"><i class="fas fa-user-plus"></i> Add Patient</button>
+                <button class="btn btn-secondary" onclick="showSection('payments')"><i class="fas fa-credit-card"></i> Payments</button>
+                <button class="btn btn-secondary" onclick="loadStats()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+
+            <!-- ── Stats ─────────────────────────────────────────────── -->
+            <div class="cards">
+                <div class="card card-blue">
+                    <div class="card-header-icon"><h3>Total Patients</h3>
+                        <div class="icon-wrapper"><i class="fas fa-user-injured"></i></div></div>
+                    <div class="num" id="cPatients">—</div>
+                </div>
+                <div class="card card-purple">
+                    <div class="card-header-icon"><h3>Total Doctors</h3>
+                        <div class="icon-wrapper"><i class="fas fa-user-doctor"></i></div></div>
+                    <div class="num" id="cDoctors">—</div>
+                </div>
+                <div class="card card-orange">
+                    <div class="card-header-icon"><h3>Pending</h3>
+                        <div class="icon-wrapper"><i class="fas fa-hourglass-half"></i></div></div>
+                    <div class="num" id="cPending">—</div>
+                </div>
+                <div class="card card-emerald">
+                    <div class="card-header-icon"><h3>Checked</h3>
+                        <div class="icon-wrapper"><i class="fas fa-check-circle"></i></div></div>
+                    <div class="num" id="cChecked">—</div>
+                </div>
+                <div class="card card-red">
+                    <div class="card-header-icon"><h3>Pending Payments</h3>
+                        <div class="icon-wrapper"><i class="fas fa-credit-card"></i></div></div>
+                    <div class="num" id="cUnpaid">—</div>
+                </div>
+            </div>
+
+            <!-- ══ SECTION: APPOINTMENTS ═══════════════════════════════ -->
+            <div id="secAppointments">
+                <div class="dashboard-box">
+                    <div class="dashboard-box-header">
+                        <h3><i class="fas fa-calendar-check"></i> Appointments</h3>
+                        <button class="btn btn-sm" onclick="openBookModal()">
+                            <i class="fas fa-plus"></i> Book Appointment
+                        </button>
+                    </div>
+
+                    <!-- filter tabs -->
+                    <div class="tab-row">
+                        <button class="tab-btn active" onclick="filterAppts('all',this)">All</button>
+                        <button class="tab-btn" onclick="filterAppts('pending',this)">Pending</button>
+                        <button class="tab-btn" onclick="filterAppts('checked',this)">Checked</button>
+                        <button class="tab-btn" onclick="filterAppts('unpaid',this)">Unpaid</button>
+                        <button class="tab-btn" onclick="filterAppts('paid',this)">Paid</button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>ID</th><th>Patient</th><th>Doctor</th><th>Date</th>
+                                <th>Queue#</th><th>State</th><th>Payment</th><th>Fee</th><th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="apptTable">
+                            <tr><td colspan="9" class="empty">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ SECTION: PAYMENTS ════════════════════════════════════ -->
+            <div id="secPayments" style="display:none">
+                <div class="dashboard-box">
+                    <div class="dashboard-box-header">
+                        <h3><i class="fas fa-credit-card"></i> Payment Management</h3>
+                        <span style="font-size:.85rem;color:var(--text-muted)">
+                            Confirm patient payments &amp; issue receipts
+                        </span>
+                    </div>
+
+                    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius-md);
+                                padding:1rem 1.2rem;margin-bottom:1.2rem;font-size:.9rem;color:#92400e">
+                        <strong><i class="fas fa-info-circle"></i> Workflow:</strong>
+                        Patient pays online → Admin confirms → Patient can download invoice receipt.
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Appt ID</th><th>Patient</th><th>Doctor</th><th>Date</th>
+                                <th>Fee</th><th>Status</th><th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="payTable">
+                            <tr><td colspan="7" class="empty">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ SECTION: DOCTOR BREAKDOWN ════════════════════════════ -->
+            <div id="secDoctors" style="display:none">
+                <div class="dashboard-box">
+                    <div class="dashboard-box-header">
+                        <h3><i class="fas fa-user-doctor"></i> Doctor Patient Breakdown</h3>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr><th>Doctor</th><th>Specialization</th><th>Total</th><th>Pending</th><th>Checked</th><th>Paid</th><th>Unpaid</th></tr>
+                            </thead>
+                            <tbody id="docBreakTable">
+                            <tr><td colspan="7" class="empty">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- section nav -->
+            <div class="tab-row" style="justify-content:center;margin-top:.5rem">
+                <button class="tab-btn active" id="navAppts" onclick="showSection('appointments')">
+                    <i class="fas fa-calendar-check"></i> Appointments
+                </button>
+                <button class="tab-btn" id="navPay" onclick="showSection('payments')">
+                    <i class="fas fa-credit-card"></i> Payments
+                </button>
+                <button class="tab-btn" id="navMeds" onclick="showSection('medications')">
+                    <i class="fas fa-pills"></i> Medications
+                    <span id="medPendingBadge" style="background:#ef4444;color:#fff;border-radius:50%;
+                          width:18px;height:18px;font-size:.65rem;display:none;align-items:center;
+                          justify-content:center;margin-left:4px;font-weight:700">0</span>
+                </button>
+                <button class="tab-btn" id="navDoc" onclick="showSection('doctors')">
+                    <i class="fas fa-user-doctor"></i> Doctors
+                </button>
+            </div>
+
+            <!-- ══ SECTION: MEDICATIONS ═════════════════════════════════ -->
+            <div id="secMedications" style="display:none">
+                <div class="dashboard-box">
+                    <div class="dashboard-box-header">
+                        <h3><i class="fas fa-pills"></i> Medication Approvals</h3>
+                        <button class="btn btn-sm btn-secondary" onclick="loadPendingMeds()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+
+                    <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:var(--radius-md);
+                                padding:1rem 1.2rem;margin-bottom:1.2rem;font-size:.9rem;color:#5b21b6">
+                        <strong><i class="fas fa-info-circle"></i> Workflow:</strong>
+                        Doctor prescribes medicines after checking patient →
+                        Prescription sent to admin for confirmation →
+                        Admin reviews and confirms → Patient sees medicines in their dashboard.
+                    </div>
+
+                    <!-- grouped by patient / prescription -->
+                    <div id="pendingMedCards"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ════════ BOOK APPOINTMENT MODAL ════════════════════════════════════════ -->
+<div class="modal-backdrop" id="bookModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('bookModal')"><i class="fas fa-times"></i></button>
+        <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:1.2rem">
+            <i class="fas fa-calendar-plus" style="color:var(--accent)"></i> Book Appointment (Admin)
+        </h3>
+        <div id="bookAlert" class="alert alert-error" style="display:none"></div>
+        <div class="form-grid">
+            <div>
+                <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">Patient</label>
+                <select class="field-input" id="bPatient">
+                    <option value="" disabled selected>Select Patient</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">Doctor</label>
+                <select class="field-input" id="bDoctor">
+                    <option value="" disabled selected>Select Doctor</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">Date</label>
+                <input type="date" class="field-input" id="bDate">
+            </div>
+            <div>
+                <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">Branch (optional)</label>
+                <select class="field-input" id="bBranch">
+                    <option value="">No specific branch</option>
+                </select>
+            </div>
+            <div style="grid-column:1/-1">
+                <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">Reason</label>
+                <input type="text" class="field-input" id="bReason" placeholder="Reason for visit">
+            </div>
+        </div>
+        <button class="btn" style="width:100%;justify-content:center;margin-top:1rem" onclick="confirmBook()" id="bookSubmitBtn">
+            <i class="fas fa-calendar-check"></i> Book Appointment
+        </button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+const API     = 'http://localhost:8080';
+const token   = () => localStorage.getItem('token');
+const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+let allAppts = [];
+
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 5000);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showSection(s) {
+    ['secAppointments','secPayments','secMedications','secDoctors'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+    });
+    ['navAppts','navPay','navMeds','navDoc'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+    });
+    if (s === 'appointments') {
+        document.getElementById('secAppointments').style.display = 'block';
+        document.getElementById('navAppts').classList.add('active');
+    } else if (s === 'payments') {
+        document.getElementById('secPayments').style.display = 'block';
+        document.getElementById('navPay').classList.add('active');
+        renderPayTable(allAppts);
+    } else if (s === 'medications') {
+        document.getElementById('secMedications').style.display = 'block';
+        document.getElementById('navMeds').classList.add('active');
+        loadPendingMeds();
+    } else if (s === 'doctors') {
+        document.getElementById('secDoctors').style.display = 'block';
+        document.getElementById('navDoc').classList.add('active');
+    }
+}
+
+$(document).ready(function () {
+    if (!token()) { window.location.href = 'login.html'; return; }
+    const uname = localStorage.getItem('username') || 'Admin';
+    document.getElementById('who').textContent = 'Logged in as: ' + uname;
+    document.getElementById('welcome-msg').textContent = 'Welcome back, ' + uname + '!';
+    document.getElementById('bDate').min = new Date().toISOString().split('T')[0];
+    loadStats();
+    loadDropdowns();
+    loadPendingMeds();
+});
+
+function loadStats() {
+    $.ajax({
+        url: API + '/api/appointments/overview', method: 'GET', headers: authHdr(),
+        success: function (res) {
+            if (res.status !== 0) { showAlert(res.message || 'Failed.', 'error'); return; }
+            const d = res.body;
+            $('#cPatients').text(d.patientCount  || 0);
+            $('#cDoctors').text(d.doctorCount    || 0);
+            $('#cPending').text(d.pendingCount   || 0);
+            $('#cChecked').text(d.checkedCount   || 0);
+            $('#cUnpaid').text(d.unpaidCount     || 0);
+
+            allAppts = d.allAppointments || [];
+            renderApptTable(allAppts);
+
+            const bBody = $('#docBreakTable').empty();
+            (d.doctorPatients || []).forEach(doc => {
+                const appts  = doc.appointments || [];
+                const paid   = appts.filter(a => a.paymentStatus === 'PAID').length;
+                const unpaid = appts.filter(a => a.paymentStatus === 'UNPAID').length;
+                bBody.append(`<tr>
+                    <td><strong>${doc.doctorName||'—'}</strong></td>
+                    <td>${doc.specializationName||'—'}</td>
+                    <td>${appts.length}</td>
+                    <td><span style="color:#d97706;font-weight:600">${doc.pendingCount||0}</span></td>
+                    <td><span style="color:#16a34a;font-weight:600">${doc.checkedCount||0}</span></td>
+                    <td><span style="color:#1d6fa4;font-weight:600">${paid}</span></td>
+                    <td><span style="color:#dc2626;font-weight:600">${unpaid}</span></td>
+                </tr>`);
+            });
+        },
+        error: function (xhr) {
+            if (xhr.status === 401 || xhr.status === 403) { logout(); return; }
+            showAlert('Failed to load data.', 'error');
+        }
+    });
+}
+
+function renderApptTable(list) {
+    const tbody = $('#apptTable').empty();
+    if (!list.length) {
+        tbody.html('<tr><td colspan="9" class="empty">No appointments found.</td></tr>');
+        return;
+    }
+    list.forEach(a => {
+        const state = a.appointmentState === 'CHECKED'
+            ? '<span class="badge badge-checked">✓ Checked</span>'
+            : '<span class="badge badge-pending">⏳ Pending</span>';
+        const pay = a.paymentStatus === 'PAID'
+            ? '<span class="badge badge-paid">Paid</span>'
+            : '<span class="badge badge-unpaid">Unpaid</span>';
+        const fee = a.paymentAmount
+            ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK', {minimumFractionDigits:2})
+            : '—';
+
+        let actions = '';
+        if (a.paymentStatus === 'UNPAID') {
+            actions += `<button class="btn btn-sm confirm-btn" style="margin-right:.3rem"
+                onclick="confirmPayment('${a.appointmentId}','${(a.patientName||'').replace(/'/g,'')}')"
+                title="Confirm payment">
+                <i class="fas fa-check"></i> Confirm Pay</button>`;
+        }
+        if (a.paymentStatus === 'PAID') {
+            actions += `<button class="btn btn-sm invoice-btn"
+                onclick="printInvoice(${JSON.stringify(a).replace(/"/g,'&quot;')})"
+                title="Download invoice">
+                <i class="fas fa-file-invoice"></i> Invoice</button>`;
+        }
+        if (!actions) actions = '<span style="color:#94a3b8;font-size:.78rem">—</span>';
+
+        tbody.append(`<tr>
+            <td><strong>${a.appointmentId}</strong></td>
+            <td>${a.patientName||'—'}</td>
+            <td>${a.doctorName||'—'}</td>
+            <td>${a.appointmentDate||'—'}</td>
+            <td><strong>#${a.appointmentNumber||'—'}</strong></td>
+            <td>${state}</td>
+            <td>${pay}</td>
+            <td>${fee}</td>
+            <td style="white-space:nowrap">${actions}</td>
+        </tr>`);
+    });
+}
+
+function filterAppts(tab, el) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    let filtered = allAppts;
+    if (tab === 'pending') filtered = allAppts.filter(a => a.appointmentState === 'PENDING');
+    else if (tab === 'checked') filtered = allAppts.filter(a => a.appointmentState === 'CHECKED');
+    else if (tab === 'unpaid')  filtered = allAppts.filter(a => a.paymentStatus === 'UNPAID');
+    else if (tab === 'paid')    filtered = allAppts.filter(a => a.paymentStatus === 'PAID');
+    renderApptTable(filtered);
+}
+
+function renderPayTable(list) {
+    const tbody = $('#payTable').empty();
+    if (!list.length) { tbody.html('<tr><td colspan="7" class="empty">No appointments found.</td></tr>'); return; }
+    list.forEach(a => {
+        const fee = a.paymentAmount
+            ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK', {minimumFractionDigits:2})
+            : '—';
+        const statusBadge = a.paymentStatus === 'PAID'
+            ? '<span class="badge badge-paid">Paid</span>'
+            : '<span class="badge badge-unpaid">Unpaid</span>';
+
+        let actions = '';
+        if (a.paymentStatus === 'UNPAID') {
+            actions += `<button class="btn btn-sm confirm-btn" style="margin-right:.3rem"
+                onclick="confirmPayment('${a.appointmentId}','${(a.patientName||'').replace(/'/g,'')}')"
+                ><i class="fas fa-check"></i> Confirm</button>`;
+        } else {
+            actions += `<button class="btn btn-sm invoice-btn"
+                onclick="printInvoice(${JSON.stringify(a).replace(/"/g,'&quot;')})"
+                ><i class="fas fa-file-invoice"></i> Invoice</button>`;
+        }
+
+        tbody.append(`<tr>
+            <td><strong>${a.appointmentId}</strong></td>
+            <td>${a.patientName||'—'}</td>
+            <td>${a.doctorName||'—'}</td>
+            <td>${a.appointmentDate||'—'}</td>
+            <td><strong>${fee}</strong></td>
+            <td>${statusBadge}</td>
+            <td>${actions}</td>
+        </tr>`);
+    });
+}
+
+function confirmPayment(apptId, patientName) {
+    if (!confirm('Confirm payment for appointment ' + apptId + ' (' + patientName + ')?')) return;
+
+    const appt = allAppts.find(a => a.appointmentId === apptId);
+    if (!appt) { showAlert('Appointment not found in current list.', 'error'); return; }
+
+    $.ajax({
+        url: `${API}/api/appointments/adminConfirmPayment/${apptId}`,
+        method: 'POST', headers: authHdr(),
+        success: function (res) {
+            if (res.status === 0) {
+                showAlert('Payment confirmed! Patient can now download invoice.', 'success');
+                loadStats();
+                // auto print invoice
+                const updated = Object.assign({}, appt, { paymentStatus: 'PAID' });
+                setTimeout(() => printInvoice(updated), 500);
+            } else {
+                showAlert(res.message || 'Failed.', 'error');
+            }
+        },
+        error: function (xhr) {
+            let m = 'Payment confirmation failed.';
+            try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+            showAlert(m, 'error');
+        }
+    });
+}
+
+function loadDropdowns() {
+    $.ajax({ url: API + '/api/patients/allPatients', method:'GET', headers:authHdr(),
+        success: r => {
+            const s = $('#bPatient').empty().append('<option value="" disabled selected>Select Patient</option>');
+            (r.body||[]).forEach(p => s.append(`<option value="${p.patientId}">${p.firstName} ${p.lastName}</option>`));
+        }
+    });
+    $.ajax({ url: API + '/api/doctors/loadAllDct', method:'GET', headers:authHdr(),
+        success: r => {
+            const s = $('#bDoctor').empty().append('<option value="" disabled selected>Select Doctor</option>');
+            (r.body||[]).forEach(d => s.append(`<option value="${d.doctorId}">${d.firstName} ${d.lastName} — ${d.specializationName||''}</option>`));
+        }
+    });
+    $.ajax({ url: API + '/api/clinicBranches/getAllBranches', method:'GET', headers:authHdr(),
+        success: r => {
+            const s = $('#bBranch').empty().append('<option value="">No specific branch</option>');
+            (r.body||[]).filter(b => b.status === 'ACTIVE').forEach(b =>
+                s.append(`<option value="${b.branchId}">${b.branchName}</option>`)
+            );
+        }
+    });
+}
+
+function openBookModal() { openModal('bookModal'); }
+
+function confirmBook() {
+    const patientId = $('#bPatient').val();
+    const doctorId  = $('#bDoctor').val();
+    const date      = $('#bDate').val();
+    if (!patientId || !doctorId || !date) {
+        document.getElementById('bookAlert').textContent = 'Please select patient, doctor, and date.';
+        document.getElementById('bookAlert').style.display = 'flex';
+        setTimeout(() => document.getElementById('bookAlert').style.display = 'none', 3000);
+        return;
+    }
+    const btn = document.getElementById('bookSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+
+    $.ajax({
+        url: API + '/api/appointments/addAppointment', method: 'POST',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({
+            patientId,
+            doctorId,
+            appointmentDate: date,
+            reason: $('#bReason').val().trim(),
+            branchId: $('#bBranch').val() || null
+        }),
+        success: r => {
+            if (r.status === 0) {
+                showAlert('Appointment booked successfully!', 'success');
+                closeModal('bookModal');
+                loadStats();
+                document.getElementById('bDate').value = '';
+                document.getElementById('bReason').value = '';
+            } else showAlert(r.message || 'Failed.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment';
+        },
+        error: xhr => {
+            let m = 'Error.'; try{ m = JSON.parse(xhr.responseText).message||m; }catch(e){}
+            showAlert(m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment';
+        }
+    });
+}
+
+function loadPendingMeds() {
+    $('#pendingMedCards').html(
+        '<div style="text-align:center;color:var(--text-muted);padding:2rem">'
+        + '<i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>'
+        + '<div style="margin-top:.5rem">Loading...</div></div>'
+    );
+    $.ajax({
+        url: API + '/api/medications/pendingApproval', method: 'GET', headers: authHdr(),
+        success: function (res) {
+            const list  = res.body || [];
+            const badge = document.getElementById('medPendingBadge');
+            if (list.length > 0) {
+                badge.textContent = list.length;
+                badge.style.display = 'inline-flex';
+            } else {
+                badge.style.display = 'none';
+            }
+            renderPendingMedCards(list);
+        },
+        error: () => showAlert('Failed to load pending medications.', 'error')
+    });
+}
+
+function renderPendingMedCards(list) {
+    const container = $('#pendingMedCards').empty();
+    if (!list.length) {
+        container.html(
+            '<div style="text-align:center;padding:2.5rem;color:#16a34a">'
+            + '<i class="fas fa-check-circle" style="font-size:2.5rem;margin-bottom:.8rem;display:block"></i>'
+            + '<strong>All clear!</strong> No medications pending confirmation.'
+            + '</div>'
+        );
+        return;
+    }
+    const byPatient = {};
+    list.forEach(m => {
+        if (!byPatient[m.patientId]) byPatient[m.patientId] = { name: m.patientName, meds: [] };
+        byPatient[m.patientId].meds.push(m);
+    });
+    Object.values(byPatient).forEach(grp => {
+        let medRows = '';
+        grp.meds.forEach(m => {
+            medRows += `<tr>
+                <td><strong>${m.medicineName||'—'}</strong></td>
+                <td>${m.dosage||'—'}</td>
+                <td>${m.frequency||'—'}</td>
+                <td>${m.startDate||'—'}</td>
+                <td>${m.endDate||'—'}</td>
+                <td><button class="btn btn-sm confirm-btn" onclick="approveMedication('${m.medicationId}')">
+                    <i class="fas fa-check"></i> Confirm</button></td>
+            </tr>`;
+        });
+        const allIds = grp.meds.map(m => m.medicationId).join(',');
+        container.append(`
+            <div style="border:1.5px solid #c4b5fd;border-radius:var(--radius-lg);margin-bottom:1.2rem;overflow:hidden;background:#fff">
+                <div style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);padding:1rem 1.4rem;
+                            display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem">
+                    <div style="display:flex;align-items:center;gap:.75rem">
+                        <div style="background:#7c3aed;color:#fff;width:38px;height:38px;border-radius:10px;
+                                    display:flex;align-items:center;justify-content:center;font-size:1rem">
+                            <i class="fas fa-user-injured"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700;color:var(--navy);font-size:.95rem">${grp.name}</div>
+                            <div style="font-size:.78rem;color:#5b21b6;margin-top:.15rem">
+                                <i class="fas fa-pills" style="margin-right:.3rem"></i>
+                                ${grp.meds.length} medicine(s) from doctor — awaiting admin confirmation
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn" style="background:#7c3aed;color:#fff;font-size:.85rem"
+                        onclick="approveAllForPatient('${allIds}')">
+                        <i class="fas fa-check-double"></i> Confirm All (${grp.meds.length})
+                    </button>
+                </div>
+                <div style="padding:1rem 1.4rem">
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th>
+                                <th>Start</th><th>End</th><th>Action</th></tr></thead>
+                            <tbody>${medRows}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`);
+    });
+}
+
+function approveMedication(medicationId) {
+    $.ajax({
+        url: `${API}/api/medications/approve/${medicationId}`,
+        method: 'PUT', headers: authHdr(),
+        success: function (res) {
+            if (res.status === 0) {
+                showAlert('Medicine confirmed! Patient notified.', 'success');
+                loadPendingMeds();
+            } else showAlert(res.message || 'Failed.', 'error');
+        },
+        error: function (xhr) {
+            let m = 'Confirmation failed.';
+            try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+            showAlert(m, 'error');
+        }
+    });
+}
+
+function approveAllForPatient(commaSeparatedIds) {
+    if (!confirm('Confirm ALL medicines for this patient? They will be notified.')) return;
+    const ids = commaSeparatedIds.split(',').filter(Boolean);
+    let done = 0;
+    ids.forEach(id => {
+        $.ajax({
+            url: `${API}/api/medications/approve/${id}`,
+            method: 'PUT', headers: authHdr(),
+            success: function () { if (++done === ids.length) { showAlert('All ' + ids.length + ' medicines confirmed!', 'success'); loadPendingMeds(); } },
+            error: function ()   { if (++done === ids.length) loadPendingMeds(); }
+        });
+    });
+}
+
+function printInvoice(a) {
+    if (typeof a === 'string') { try { a = JSON.parse(a); } catch(e){ return; } }
+    const invoiceNum = 'INV-' + a.appointmentId;
+    const fee = a.paymentAmount
+        ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK', {minimumFractionDigits:2})
+        : 'LKR 2,500.00';
+    const paidAt = a.paidAt ? new Date(a.paidAt).toLocaleString('en-LK') : new Date().toLocaleString('en-LK');
+
+    const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Invoice ${invoiceNum}</title>
+<style>
+body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;background:#fff;color:#1e293b}
+.page{max-width:680px;margin:0 auto;padding:40px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #0b2a44}
+.brand-icon{background:#0b2a44;color:#fff;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:12px;flex-shrink:0}
+.brand{display:flex;align-items:center}
+.brand-name{font-size:22px;font-weight:700;color:#0b2a44}
+.brand-name span{font-weight:400;color:#1f6e9c}
+.inv-info{text-align:right}
+.inv-info h2{font-size:20px;font-weight:700;color:#0b2a44;margin:0 0 4px}
+.inv-info .num{font-size:14px;color:#64748b}
+.status-paid{background:#d1fae5;color:#065f46;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;display:inline-block;margin-top:6px}
+.status-confirmed{background:#dbeafe;color:#1e40af;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.section-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #e2eaf2}
+.field label{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px}
+.field div{font-size:14px;color:#1e293b;margin-top:3px;font-weight:500}
+.amount-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin:20px 0}
+.amount-box .lbl{font-size:13px;font-weight:600;color:#15803d}
+.amount-box .val{font-size:22px;font-weight:700;color:#15803d}
+.admin-stamp{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:10px 16px;
+             text-align:center;font-size:13px;font-weight:600;color:#1e40af;margin:16px 0}
+.footer{margin-top:40px;padding-top:16px;border-top:1px solid #e2eaf2;text-align:center;font-size:12px;color:#94a3b8}
+.no-print{text-align:center;margin-top:24px}
+@media print{.no-print{display:none!important} @page{margin:15mm;size:A4}}
+</style></head><body>
+<div class="page">
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">&#x2665;</div>
+      <div>
+        <div class="brand-name">Clinic<span>Q</span></div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Clinic Appointment Queue Management System</div>
+      </div>
+    </div>
+    <div class="inv-info">
+      <h2>PAYMENT RECEIPT</h2>
+      <div class="num">${invoiceNum}</div>
+      <span class="status-paid">&#x2713; PAID</span><br>
+      <span class="status-confirmed">&#x2713; Admin Confirmed</span>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <div class="section-title">Patient Details</div>
+      <div class="field" style="margin-bottom:10px"><label>Patient Name</label><div>${a.patientName||'—'}</div></div>
+      <div class="field"><label>Appointment ID</label><div>${a.appointmentId}</div></div>
+    </div>
+    <div>
+      <div class="section-title">Appointment Details</div>
+      <div class="field" style="margin-bottom:10px"><label>Doctor</label><div>Dr. ${a.doctorName||'—'}</div></div>
+      <div class="field"><label>Specialization</label><div>${a.doctorSpecialization||'—'}</div></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <div class="section-title">Schedule</div>
+      <div class="field" style="margin-bottom:10px"><label>Date</label><div>${a.appointmentDate||'—'}</div></div>
+      <div class="field"><label>Time</label><div>${a.appointmentTime||'—'}</div></div>
+    </div>
+    <div>
+      <div class="section-title">Queue &amp; Source</div>
+      <div class="field" style="margin-bottom:10px"><label>Queue Number</label>
+        <div style="font-size:20px;font-weight:700;color:#0b2a44">#${a.appointmentNumber||'—'}</div></div>
+      <div class="field"><label>Booking Type</label>
+        <div>${a.bookingSource === 'ONLINE' ? 'Online Booking' : 'Admin Booking'}</div></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <div class="section-title">Reason for Visit</div>
+    <div style="font-size:14px;color:#374151;padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e2eaf2">${a.reason||'—'}</div>
+  </div>
+
+  <div class="amount-box">
+    <div class="lbl">&#x1F4B3; Consultation Fee Paid</div>
+    <div class="val">${fee}</div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="field"><label>Payment Date &amp; Time</label><div>${paidAt}</div></div>
+    <div class="field"><label>Confirmed By</label><div>Clinic Admin</div></div>
+  </div>
+
+  <div class="admin-stamp">
+    &#x2714; Payment confirmed and verified by ClinicQ Administration
+  </div>
+
+  <div class="no-print">
+    <button onclick="window.print()" style="background:#0b2a44;color:#fff;border:none;
+      padding:12px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;
+      box-shadow:0 4px 16px rgba(11,42,68,.2);font-family:inherit">
+      &#x1F4F4; Download / Print PDF
+    </button>
+    <button onclick="window.close()" style="background:#e2eaf2;color:#0b2a44;border:none;
+      padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;
+      margin-left:12px;font-family:inherit">Close</button>
+  </div>
+
+  <div class="footer">
+    ClinicQ &nbsp;|&nbsp; Clinic Appointment Queue Management System<br>
+    This is a computer-generated receipt. Payment confirmed by administrator.
+  </div>
+</div></body></html>`;
+
+    const w = window.open('', '_blank', 'width=750,height=900,scrollbars=yes');
+    if (w) { w.document.open(); w.document.write(html); w.document.close();
+             w.onload = () => setTimeout(() => w.print(), 400); }
+}
+</script>
+</body>
+</html>
+
