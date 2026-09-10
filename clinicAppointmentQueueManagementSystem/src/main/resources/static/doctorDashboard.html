@@ -3,53 +3,520 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Dashboard</title>
-
+    <title>ClinicQ · Doctor Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #f5f7fa;
-            font-family: Arial, sans-serif;
-        }
-
-        .dashboard {
-            text-align: center;
-        }
-
-        .add-details-btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .add-details-btn:hover {
-            background: #1d4ed8;
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#f0f6fc;color:#1e293b}
+        .shell{display:flex;min-height:100vh}
+        .sidebar{width:230px;background:#0b2a44;display:flex;flex-direction:column;padding:1.5rem 1rem;gap:.3rem;flex-shrink:0;position:sticky;top:0;height:100vh}
+        .logo-area{display:flex;align-items:center;gap:.7rem;margin-bottom:1.5rem;padding:.5rem}
+        .logo-icon{background:#1f6e9c;color:#fff;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+        .logo-text{color:#fff;font-weight:700;font-size:1.3rem}
+        .logo-text span{font-weight:400;opacity:.7}
+        .nav-link{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-radius:10px;color:rgba(255,255,255,.75);font-size:.9rem;font-weight:500;text-decoration:none;transition:.15s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left}
+        .nav-link:hover,.nav-link.active{background:rgba(255,255,255,.12);color:#fff}
+        .nav-link i{width:1.1rem;text-align:center}
+        .nav-logout{margin-top:auto;border-top:1px solid rgba(255,255,255,.1);padding-top:1rem}
+        .main{flex:1;display:flex;flex-direction:column;min-width:0}
+        .topbar{background:#fff;padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;border-bottom:1px solid #e2eaf2;position:sticky;top:0;z-index:10}
+        .topbar h2{font-size:1.1rem;font-weight:700;color:#0b2a44;flex:1}
+        .user-badge{background:#e8f4fd;color:#0b2a44;padding:.4rem .9rem;border-radius:20px;font-size:.85rem;font-weight:600}
+        .page{padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem}
+        .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem}
+        .stat{background:#fff;border-radius:16px;padding:1.2rem 1.4rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+        .stat h4{font-size:.78rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem}
+        .stat .num{font-size:2rem;font-weight:700;color:#0b2a44}
+        .stat.blue .num{color:#1d6fa4}.stat.orange .num{color:#ea7c0a}.stat.green .num{color:#16a34a}.stat.purple .num{color:#7c3aed}
+        .tab-bar{display:flex;gap:.5rem;background:#fff;padding:.5rem;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);flex-wrap:wrap}
+        .tab{padding:.55rem 1.2rem;border-radius:9px;font-size:.88rem;font-weight:600;cursor:pointer;color:#64748b;border:none;background:transparent;transition:.15s}
+        .tab.active{background:#0b2a44;color:#fff}
+        .box{background:#fff;border-radius:16px;padding:1.4rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+        .box-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
+        .box-header h3{font-size:1rem;font-weight:700;color:#0b2a44;display:flex;align-items:center;gap:.5rem}
+        .table-wrap{overflow-x:auto}
+        table{width:100%;border-collapse:collapse;font-size:.86rem}
+        th{text-align:left;padding:.65rem 1rem;background:#f1f5f9;color:#475569;font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.4px}
+        td{padding:.7rem 1rem;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:middle}
+        tr:last-child td{border-bottom:none}
+        tr:hover td{background:#f8fafc}
+        .badge{display:inline-block;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600}
+        .badge-pending{background:#fef3c7;color:#92400e}.badge-checked{background:#d1fae5;color:#065f46}
+        .badge-paid{background:#dbeafe;color:#1e40af}.badge-unpaid{background:#fee2e2;color:#991b1b}
+        .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1rem;border-radius:9px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;transition:.15s}
+        .btn-check{background:#16a34a;color:#fff}.btn-check:hover{background:#15803d}
+        .btn-rx{background:#7c3aed;color:#fff}.btn-rx:hover{background:#6d28d9}
+        .btn-mr{background:#0891b2;color:#fff}.btn-mr:hover{background:#0e7490}
+        .btn-primary{background:#0b2a44;color:#fff}.btn-primary:hover{background:#154a72}
+        .btn-sm{font-size:.8rem;padding:.4rem .85rem}
+        .empty-row td{text-align:center;color:#94a3b8;padding:2rem}
+        .alert{padding:.75rem 1.1rem;border-radius:10px;font-size:.88rem;font-weight:500;display:none;margin-bottom:.5rem}
+        .alert-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+        .alert-success{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+        /* modals */
+        .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+        .modal-backdrop.open{display:flex}
+        .modal{background:#fff;border-radius:20px;padding:1.8rem;width:100%;max-width:620px;box-shadow:0 20px 60px rgba(0,0,0,.2);position:relative;max-height:92vh;overflow-y:auto}
+        .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.2rem;color:#64748b;cursor:pointer}
+        .modal-close:hover{color:#0b2a44}
+        .modal h3{font-size:1.1rem;font-weight:700;color:#0b2a44;margin-bottom:1.2rem}
+        .form-group{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+        .form-group label{font-size:.8rem;font-weight:600;color:#374151}
+        .form-group input,.form-group textarea,.form-group select{padding:.6rem .85rem;border:1.5px solid #cbd5e1;border-radius:10px;font-size:.88rem;font-family:inherit;color:#1e293b;background:#f8fafc;outline:none;transition:.15s}
+        .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:#7c3aed;background:#fff}
+        .med-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:.5rem;align-items:center;background:#f8fafc;border-radius:10px;padding:.6rem .8rem;margin-bottom:.4rem;border:1px solid #e2eaf2}
+        .med-row input{padding:.4rem .6rem;border:1px solid #cbd5e1;border-radius:7px;font-size:.82rem;font-family:inherit;background:#fff;outline:none}
+        @media(max-width:768px){.sidebar{display:none}.med-row{grid-template-columns:1fr 1fr;grid-template-rows:auto}}
     </style>
 </head>
-
 <body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text">Clinic<span>Q</span></div>
+        </div>
+        <button class="nav-link active"><i class="fas fa-gauge-high"></i> Dashboard</button>
+        <button class="nav-link nav-logout" onclick="logout()"><i class="fas fa-right-from-bracket"></i> Logout</button>
+    </aside>
 
-<div class="dashboard">
-    <button class="add-details-btn" onclick="addDetails()">
-        <i class="fas fa-user-plus"></i> Add Your Details
-    </button>
+    <div class="main">
+        <header class="topbar">
+            <h2><i class="fas fa-user-md" style="color:#1f6e9c"></i> Doctor Dashboard</h2>
+            <span class="user-badge" id="userBadge">Loading...</span>
+        </header>
+
+        <main class="page">
+            <div id="alertBox" class="alert"></div>
+
+            <!-- Stats -->
+            <div class="stat-row">
+                <div class="stat blue"><h4>This Week</h4><div class="num" id="statWeek">0</div></div>
+                <div class="stat orange"><h4>Pending</h4><div class="num" id="statPending">0</div></div>
+                <div class="stat green"><h4>Checked</h4><div class="num" id="statChecked">0</div></div>
+                <div class="stat purple"><h4>Total</h4><div class="num" id="statTotal">0</div></div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tab-bar">
+                <button class="tab active" onclick="switchTab('week',this)">This Week</button>
+                <button class="tab" onclick="switchTab('pending',this)">Pending</button>
+                <button class="tab" onclick="switchTab('checked',this)">Checked</button>
+                <button class="tab" onclick="switchTab('all',this)">All</button>
+            </div>
+
+            <!-- Table -->
+            <div class="box">
+                <div class="box-header">
+                    <h3 id="tableTitle"><i class="fas fa-calendar-week" style="color:#1f6e9c"></i> This Week</h3>
+                    <button class="btn btn-primary btn-sm" onclick="loadDashboard()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr><th>#</th><th>Patient</th><th>Contact</th><th>Date</th><th>Reason</th><th>Payment</th><th>State</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="apptTable">
+                        <tr class="empty-row"><td colspan="8">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
 
-<script>
-    function addDetails() {
-        window.location.href = "doctors.html";
-    }
-</script>
+<!-- ════════ PRESCRIPTION MODAL ════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="rxModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeRxModal()"><i class="fas fa-times"></i></button>
+        <h3><i class="fas fa-prescription" style="color:#7c3aed"></i> Add Prescription</h3>
+        <div id="rxAlert" class="alert"></div>
+        <input type="hidden" id="rxAppointmentId">
+        <input type="hidden" id="rxPatientId">
+        <div id="rxPatientInfo" style="background:#f8fafc;border-radius:12px;padding:.9rem 1rem;margin-bottom:1rem;border:1px solid #e2eaf2"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+            <div class="form-group"><label>Issue Date</label><input type="date" id="rxIssueDate"></div>
+            <div class="form-group"><label>Valid Until</label><input type="date" id="rxValidUntil"></div>
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Instructions / Notes</label>
+                <textarea id="rxInstructions" rows="2" placeholder="e.g. Take after meals..."></textarea>
+            </div>
+        </div>
+        <div style="margin:.8rem 0 .4rem">
+            <div style="font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.5rem">
+                <i class="fas fa-pills" style="color:#7c3aed;margin-right:.3rem"></i>Medicines
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 36px;gap:.5rem;padding:0 .8rem;font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.3px;margin-bottom:.3rem">
+                <span>Medicine Name</span><span>Dosage</span><span>Frequency</span><span>Start</span><span>End</span><span></span>
+            </div>
+            <div id="medicineRows"></div>
+        </div>
+        <button class="btn" style="background:#ede9fe;color:#7c3aed;font-size:.8rem;margin-bottom:1rem" onclick="addMedicineRow()">
+            <i class="fas fa-plus"></i> Add Medicine
+        </button>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="submitPrescription()" id="rxSubmitBtn">
+            <i class="fas fa-paper-plane"></i> Save Prescription &amp; Send to Patient
+        </button>
+    </div>
+</div>
 
+<!-- ════════ MEDICAL RECORD MODAL ══════════════════════════════════════════ -->
+<div class="modal-backdrop" id="mrModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeMrModal()"><i class="fas fa-times"></i></button>
+        <h3><i class="fas fa-file-medical" style="color:#0891b2"></i> Medical Record</h3>
+        <div id="mrAlert" class="alert"></div>
+        <input type="hidden" id="mrAppointmentId">
+        <div id="mrPatientInfo" style="background:#f0f9ff;border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem;border:1px solid #bfdbfe;font-size:.88rem;color:#374151"></div>
+        <div class="form-group">
+            <label>Diagnosis <span style="color:#dc2626">*</span></label>
+            <textarea id="mrDiagnosis" rows="3" placeholder="Enter diagnosis details..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Treatment</label>
+            <textarea id="mrTreatment" rows="2" placeholder="Prescribed treatment / procedures..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea id="mrNotes" rows="2" placeholder="Additional notes, follow-up instructions..."></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.4rem" onclick="submitMedicalRecord()" id="mrSubmitBtn">
+            <i class="fas fa-save"></i> Save Medical Record
+        </button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+var API      = 'http://localhost:8080';
+function token()   { return localStorage.getItem('token'); }
+function userId()  { return localStorage.getItem('userId'); }
+function authHdr() { return { 'Authorization': 'Bearer ' + token() }; }
+
+var dashData  = null;
+var activeTab = 'week';
+
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+function showAlert(id, msg, type) {
+    var el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+    el.style.display = 'block';
+    setTimeout(function() { el.style.display = 'none'; }, 4500);
+}
+
+$(document).ready(function() {
+    if (!token()) { window.location.href = 'login.html'; return; }
+    $('#userBadge').text(localStorage.getItem('username') || 'Doctor');
+    loadDashboard();
+});
+
+function loadDashboard() {
+    $.ajax({
+        url: API + '/api/doctors/dashboard?userId=' + userId(),
+        method: 'GET', headers: authHdr(),
+        success: function(res) {
+            if (res.status !== 0) { showAlert('alertBox', res.message || 'Failed.', 'error'); return; }
+            dashData = res.body;
+            $('#statWeek').text(dashData.thisWeekCount  || 0);
+            $('#statPending').text(dashData.pendingCount || 0);
+            $('#statChecked').text(dashData.checkedCount || 0);
+            $('#statTotal').text(dashData.totalCount    || 0);
+            renderTab(activeTab);
+        },
+        error: function() { showAlert('alertBox', 'Failed to load dashboard.', 'error'); }
+    });
+}
+
+function switchTab(tab, el) {
+    activeTab = tab;
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    el.classList.add('active');
+    var titles = {
+        week:    '<i class="fas fa-calendar-week" style="color:#1f6e9c"></i> This Week',
+        pending: '<i class="fas fa-hourglass-half" style="color:#ea7c0a"></i> Pending',
+        checked: '<i class="fas fa-check-circle" style="color:#16a34a"></i> Checked',
+        all:     '<i class="fas fa-list" style="color:#7c3aed"></i> All Appointments'
+    };
+    document.getElementById('tableTitle').innerHTML = titles[tab];
+    if (dashData) renderTab(tab);
+}
+
+function renderTab(tab) {
+    var lists = {
+        week:    dashData.thisWeekAppointments || [],
+        pending: dashData.pendingAppointments  || [],
+        checked: dashData.checkedAppointments  || [],
+        all:     dashData.allAppointments      || []
+    };
+    renderTable(lists[tab]);
+}
+
+function renderTable(list) {
+    var tbody = $('#apptTable').empty();
+    if (!list || !list.length) {
+        tbody.html('<tr class="empty-row"><td colspan="8">No appointments found</td></tr>');
+        return;
+    }
+    list.forEach(function(a) {
+        var stateBadge = a.appointmentState === 'CHECKED'
+            ? '<span class="badge badge-checked"><i class="fas fa-check"></i> Checked</span>'
+            : '<span class="badge badge-pending"><i class="fas fa-clock"></i> Pending</span>';
+        var payBadge = a.paymentStatus === 'PAID'
+            ? '<span class="badge badge-paid">Paid</span>'
+            : '<span class="badge badge-unpaid">Unpaid</span>';
+
+        var actions = '';
+        if (a.appointmentState === 'PENDING') {
+            actions += '<button class="btn btn-check btn-sm" style="margin-right:.3rem" '
+                     + 'data-id="' + a.appointmentId + '" onclick="markChecked(this.dataset.id)">'
+                     + '<i class="fas fa-user-check"></i> Check</button>';
+        }
+        if (a.appointmentState === 'CHECKED') {
+            actions += '<button class="btn btn-rx btn-sm" style="margin-right:.3rem" '
+                     + 'data-id="' + a.appointmentId + '" '
+                     + 'data-patid="' + a.patientId + '" '
+                     + 'data-patname="' + (a.patientName||'').replace(/"/g,'') + '" '
+                     + 'data-reason="' + (a.reason||'').replace(/"/g,'') + '" '
+                     + 'data-date="' + (a.appointmentDate||'') + '" '
+                     + 'onclick="openRxModal(this)">'
+                     + '<i class="fas fa-prescription"></i> Prescription</button>';
+            actions += '<button class="btn btn-mr btn-sm" '
+                     + 'data-id="' + a.appointmentId + '" '
+                     + 'data-patid="' + a.patientId + '" '
+                     + 'data-patname="' + (a.patientName||'').replace(/"/g,'') + '" '
+                     + 'data-date="' + (a.appointmentDate||'') + '" '
+                     + 'onclick="openMrModal(this)">'
+                     + '<i class="fas fa-file-medical"></i> Medical Record</button>';
+        }
+        if (!actions) actions = '<span style="color:#94a3b8;font-size:.78rem">—</span>';
+
+        tbody.append('<tr>'
+            + '<td><strong>#' + (a.appointmentNumber||'—') + '</strong></td>'
+            + '<td>' + (a.patientName||'—') + '</td>'
+            + '<td>' + (a.patientContact||'—') + '</td>'
+            + '<td>' + (a.appointmentDate||'—') + '</td>'
+            + '<td>' + (a.reason||'—') + '</td>'
+            + '<td>' + payBadge + '</td>'
+            + '<td>' + stateBadge + '</td>'
+            + '<td style="white-space:nowrap">' + actions + '</td>'
+            + '</tr>');
+    });
+}
+
+function markChecked(appointmentId) {
+    if (!confirm('Mark this patient as checked?')) return;
+    $.ajax({
+        url: API + '/api/appointments/markChecked/' + appointmentId + '?userId=' + userId(),
+        method: 'PUT', headers: authHdr(),
+        success: function(res) {
+            if (res.status === 0) { showAlert('alertBox', 'Patient marked as checked!', 'success'); loadDashboard(); }
+            else showAlert('alertBox', res.message || 'Failed.', 'error');
+        },
+        error: function(xhr) {
+            var m = 'Failed.'; try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
+            showAlert('alertBox', m, 'error');
+        }
+    });
+}
+
+function openRxModal(btn) {
+    var apptId  = btn.dataset.id;
+    var patId   = btn.dataset.patid;
+    var patName = btn.dataset.patname || 'Patient';
+    var reason  = btn.dataset.reason  || '';
+    var date    = btn.dataset.date    || '';
+
+    $('#rxAppointmentId').val(apptId);
+    $('#rxPatientId').val(patId);
+    $('#rxPatientInfo').html(
+        '<strong>' + patName + '</strong>'
+        + '<span style="margin-left:.8rem;color:#64748b;font-size:.82rem">Appointment: ' + apptId + '</span>'
+        + (reason ? '<br><span style="color:#64748b;font-size:.8rem">Reason: ' + reason + '</span>' : '')
+    );
+
+    var today  = new Date().toISOString().split('T')[0];
+    var inWeek = new Date(Date.now() + 7*86400000).toISOString().split('T')[0];
+    $('#rxIssueDate').val(date || today);
+    $('#rxValidUntil').val(inWeek);
+    $('#rxInstructions').val('');
+    $('#rxAlert').hide();
+    $('#medicineRows').empty();
+    addMedicineRow();
+
+    var btn2 = document.getElementById('rxSubmitBtn');
+    btn2.disabled = false;
+    btn2.innerHTML = '<i class="fas fa-paper-plane"></i> Save Prescription &amp; Send to Patient';
+    document.getElementById('rxModal').classList.add('open');
+}
+
+function closeRxModal() {
+    document.getElementById('rxModal').classList.remove('open');
+}
+
+var medRowCount = 0;
+function addMedicineRow() {
+    medRowCount++;
+    var id = 'mrow_' + medRowCount;
+    $('#medicineRows').append(
+        '<div class="med-row" id="' + id + '">'
+        + '<input type="text" placeholder="Medicine name *" class="rx-medname">'
+        + '<input type="text" placeholder="500mg" class="rx-dosage">'
+        + '<input type="text" placeholder="Twice daily" class="rx-freq">'
+        + '<input type="date" class="rx-start">'
+        + '<input type="date" class="rx-end">'
+        + '<button class="btn" style="background:#fee2e2;color:#dc2626;padding:.3rem .5rem" onclick="removeMedRow(\'' + id + '\')"><i class="fas fa-times"></i></button>'
+        + '</div>'
+    );
+    $('#' + id + ' .rx-start').val(new Date().toISOString().split('T')[0]);
+}
+
+function removeMedRow(id) {
+    if ($('#medicineRows .med-row').length <= 1) return;
+    $('#' + id).remove();
+}
+
+function submitPrescription() {
+    var apptId = $('#rxAppointmentId').val();
+    if (!apptId) return;
+
+    var medicines = [];
+    $('#medicineRows .med-row').each(function() {
+        var name = $(this).find('.rx-medname').val().trim();
+        if (!name) return;
+        medicines.push({
+            medicineName: name,
+            dosage:    $(this).find('.rx-dosage').val().trim(),
+            frequency: $(this).find('.rx-freq').val().trim(),
+            startDate: $(this).find('.rx-start').val() || null,
+            endDate:   $(this).find('.rx-end').val()   || null
+        });
+    });
+
+    if (!medicines.length) {
+        showAlert('rxAlert', 'Please add at least one medicine.', 'error');
+        return;
+    }
+
+    var btn = document.getElementById('rxSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    $.ajax({
+        url: API + '/api/prescriptions/save', method: 'POST',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({
+            appointmentId: apptId,
+            patientId:     $('#rxPatientId').val(),
+            issuedDate:    $('#rxIssueDate').val()    || null,
+            validUntil:    $('#rxValidUntil').val()   || null,
+            instructions:  $('#rxInstructions').val().trim(),
+            medicines:     medicines
+        }),
+        success: function(res) {
+            if (res.status === 0) {
+                showAlert('rxAlert', res.message || 'Prescription saved! Patient can see medications.', 'success');
+                setTimeout(function() { closeRxModal(); loadDashboard(); }, 2000);
+            } else {
+                showAlert('rxAlert', res.message || 'Failed.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Save Prescription &amp; Send to Patient';
+            }
+        },
+        error: function(xhr) {
+            var m = 'Failed to save prescription.';
+            try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
+            showAlert('rxAlert', m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Save Prescription &amp; Send to Patient';
+        }
+    });
+}
+
+function openMrModal(btn) {
+    var apptId  = btn.dataset.id;
+    var patName = btn.dataset.patname || 'Patient';
+    var date    = btn.dataset.date    || '';
+
+    $('#mrAppointmentId').val(apptId);
+    $('#mrPatientInfo').html(
+        '<strong>' + patName + '</strong>'
+        + '<span style="margin-left:.8rem;color:#64748b;font-size:.82rem">Appointment: ' + apptId + '</span>'
+        + (date ? '<br><span style="color:#64748b;font-size:.8rem">Visit Date: ' + date + '</span>' : '')
+    );
+
+    $('#mrDiagnosis').val('');
+    $('#mrTreatment').val('');
+    $('#mrNotes').val('');
+    $('#mrAlert').hide();
+    var btn2 = document.getElementById('mrSubmitBtn');
+    btn2.disabled = false;
+    btn2.innerHTML = '<i class="fas fa-save"></i> Save Medical Record';
+
+    $.ajax({
+        url: API + '/api/medicalRecords/byAppointment/' + apptId,
+        method: 'GET', headers: authHdr(),
+        success: function(res) {
+            if (res.body) {
+                $('#mrDiagnosis').val(res.body.diagnosis || '');
+                $('#mrTreatment').val(res.body.treatment || '');
+                $('#mrNotes').val(res.body.notes || '');
+            }
+        },
+        error: function() {}
+    });
+
+    document.getElementById('mrModal').classList.add('open');
+}
+
+function closeMrModal() {
+    document.getElementById('mrModal').classList.remove('open');
+}
+
+function submitMedicalRecord() {
+    var apptId    = $('#mrAppointmentId').val();
+    var diagnosis = $('#mrDiagnosis').val().trim();
+    if (!apptId)    { showAlert('mrAlert', 'No appointment selected.', 'error'); return; }
+    if (!diagnosis) { showAlert('mrAlert', 'Diagnosis is required.', 'error'); return; }
+
+    var btn = document.getElementById('mrSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    $.ajax({
+        url: API + '/api/medicalRecords/save', method: 'POST',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({
+            appointmentId: apptId,
+            diagnosis:     diagnosis,
+            treatment:     $('#mrTreatment').val().trim(),
+            notes:         $('#mrNotes').val().trim()
+        }),
+        success: function(res) {
+            if (res.status === 0) {
+                showAlert('mrAlert', 'Medical record saved successfully!', 'success');
+                setTimeout(function() { closeMrModal(); }, 1500);
+            } else {
+                showAlert('mrAlert', res.message || 'Failed.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Medical Record';
+            }
+        },
+        error: function(xhr) {
+            var m = 'Failed to save.';
+            try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
+            showAlert('mrAlert', m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Medical Record';
+        }
+    });
+}
+</script>
 </body>
 </html>
