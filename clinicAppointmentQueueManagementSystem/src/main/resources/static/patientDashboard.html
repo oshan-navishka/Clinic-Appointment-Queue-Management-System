@@ -212,7 +212,8 @@
 
             <!-- TAB: PROFILE -->
             <div id="tabProfile" style="display:none">
-                <div class="box">
+                <!-- Profile Info Card -->
+                <div class="box" style="margin-bottom:1.2rem">
                     <div class="box-header">
                         <h3><i class="fas fa-user-circle" style="color:#1f6e9c"></i> My Profile</h3>
                         <button class="btn btn-primary btn-sm" onclick="toggleProfileEdit()" id="profileToggleBtn"><i class="fas fa-pen"></i> Edit</button>
@@ -243,6 +244,49 @@
                         <div style="display:flex;gap:.7rem;margin-top:.5rem">
                             <button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save"></i> Save Changes</button>
                             <button class="btn" style="background:#e2eaf2;color:#0b2a44" onclick="toggleProfileEdit()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Credentials Card -->
+                <div class="box">
+                    <div class="box-header">
+                        <h3><i class="fas fa-key" style="color:#1f6e9c"></i> Account Credentials</h3>
+                        <button class="btn btn-primary btn-sm" onclick="toggleCredEdit()" id="credToggleBtn"><i class="fas fa-pen"></i> Change</button>
+                    </div>
+                    <!-- View Mode -->
+                    <div id="credView" class="profile-grid">
+                        <div class="profile-field"><span>Username</span><div id="cvUsername">—</div></div>
+                        <div class="profile-field"><span>Password</span><div>••••••••</div></div>
+                    </div>
+                    <!-- Edit Mode -->
+                    <div id="credEdit" style="display:none;margin-top:1.2rem">
+                        <div id="credAlert" class="alert"></div>
+                        <p style="font-size:.82rem;color:#64748b;margin-bottom:1rem">
+                            <i class="fas fa-info-circle" style="color:#1f6e9c"></i>
+                            Current password is required. Leave new username or new password blank to keep them unchanged.
+                        </p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.9rem">
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label>Current Password <span style="color:#dc2626">*</span></label>
+                                <input type="password" id="credCurrentPw" placeholder="Enter your current password">
+                            </div>
+                            <div class="form-group">
+                                <label>New Username</label>
+                                <input type="text" id="credNewUsername" placeholder="Leave blank to keep current">
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="credNewPw" placeholder="Leave blank to keep current">
+                            </div>
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="credConfirmPw" placeholder="Re-enter new password">
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:.7rem;margin-top:.5rem">
+                            <button class="btn btn-primary" onclick="saveCredentials()"><i class="fas fa-save"></i> Save Credentials</button>
+                            <button class="btn" style="background:#e2eaf2;color:#0b2a44" onclick="toggleCredEdit()">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -801,6 +845,9 @@ function loadProfile() {
             $('#profAge').val(p.age||''); $('#profGender').val(p.gender||'MALE');
             $('#profContact').val(p.contact||''); $('#profAddress').val(p.address||'');
             $('#profEmergency').val(p.emergencyContact||'');
+            // Populate credentials view
+            var storedUsername = localStorage.getItem('username') || '—';
+            $('#cvUsername').text(storedUsername);
             localStorage.setItem('patientId', p.patientId);
             if (!p.address || !p.emergencyContact) {
                 showAlert('globalAlert', 'Please complete your profile — address and emergency contact are missing.', 'error');
@@ -818,6 +865,70 @@ function toggleProfileEdit() {
         $('#profileView').hide(); $('#profileEdit').show();
         $('#profileToggleBtn').html('<i class="fas fa-times"></i> Cancel');
     }
+}
+
+function toggleCredEdit() {
+    var editing = $('#credEdit').is(':visible');
+    if (editing) {
+        $('#credEdit').hide(); $('#credView').show();
+        $('#credToggleBtn').html('<i class="fas fa-pen"></i> Change');
+        $('#credCurrentPw').val(''); $('#credNewUsername').val('');
+        $('#credNewPw').val(''); $('#credConfirmPw').val('');
+        $('#credAlert').hide();
+    } else {
+        $('#credView').hide(); $('#credEdit').show();
+        $('#credToggleBtn').html('<i class="fas fa-times"></i> Cancel');
+    }
+}
+
+function saveCredentials() {
+    var currentPw  = $('#credCurrentPw').val().trim();
+    var newUsername = $('#credNewUsername').val().trim();
+    var newPw       = $('#credNewPw').val();
+    var confirmPw   = $('#credConfirmPw').val();
+
+    if (!currentPw) { showAlert('credAlert', 'Current password is required.', 'error'); return; }
+    if (!newUsername && !newPw) { showAlert('credAlert', 'Provide a new username or new password to update.', 'error'); return; }
+    if (newPw && newPw !== confirmPw) { showAlert('credAlert', 'New passwords do not match.', 'error'); return; }
+    if (newPw && newPw.length < 6) { showAlert('credAlert', 'New password must be at least 6 characters.', 'error'); return; }
+
+    $.ajax({
+        url: API + '/api/users/changeCredentials', method: 'PUT',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({
+            userId:      userId(),
+            currentPassword: currentPw,
+            newUsername: newUsername || null,
+            newPassword: newPw       || null
+        }),
+        success: function(res) {
+            if (res.status === 0) {
+                showAlert('credAlert', 'Credentials updated successfully! Please log in again.', 'success');
+                if (newUsername) {
+                    localStorage.setItem('username', newUsername);
+                    $('#userBadge').text(newUsername);
+                    $('#cvUsername').text(newUsername);
+                }
+                // Clear fields and close edit panel after a short delay
+                setTimeout(function() {
+                    $('#credCurrentPw').val(''); $('#credNewUsername').val('');
+                    $('#credNewPw').val(''); $('#credConfirmPw').val('');
+                    toggleCredEdit();
+                    // If password was changed, force re-login for security
+                    if (newPw) {
+                        setTimeout(function() { localStorage.clear(); window.location.href = 'login.html'; }, 1500);
+                    }
+                }, 1800);
+            } else {
+                showAlert('credAlert', res.message || 'Update failed.', 'error');
+            }
+        },
+        error: function(xhr) {
+            var m = 'Update failed.';
+            try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
+            showAlert('credAlert', m, 'error');
+        }
+    });
 }
 
 function saveProfile() {

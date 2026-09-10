@@ -31,6 +31,38 @@
             margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem;
         }
         .super-only-banner i { font-size:2rem; opacity:.85; }
+
+        /* Action buttons */
+        .btn-edit   { background:#e0f2fe; color:#0369a1; border:none; border-radius:8px;
+                      padding:.32rem .75rem; font-size:.78rem; font-weight:600;
+                      cursor:pointer; transition:.15s; }
+        .btn-edit:hover { background:#0369a1; color:#fff; }
+        .btn-delete { background:#fee2e2; color:#dc2626; border:none; border-radius:8px;
+                      padding:.32rem .75rem; font-size:.78rem; font-weight:600;
+                      cursor:pointer; transition:.15s; margin-left:.35rem; }
+        .btn-delete:hover { background:#dc2626; color:#fff; }
+
+        /* Modal */
+        .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200;
+                          display:none; align-items:center; justify-content:center; padding:1rem; }
+        .modal-backdrop.open { display:flex; }
+        .modal { background:#fff; border-radius:20px; padding:1.8rem; width:100%; max-width:480px;
+                 box-shadow:0 20px 60px rgba(0,0,0,.2); position:relative; }
+        .modal-close { position:absolute; top:1rem; right:1rem; background:none; border:none;
+                       font-size:1.2rem; color:#64748b; cursor:pointer; }
+        .modal-close:hover { color:#0b2a44; }
+        .modal h3 { font-size:1.05rem; font-weight:700; color:#0b2a44; margin-bottom:1.2rem; }
+        .form-group { display:flex; flex-direction:column; gap:.35rem; margin-bottom:.9rem; }
+        .form-group label { font-size:.82rem; font-weight:600; color:#374151; }
+        .form-group input, .form-group select {
+            padding:.65rem .9rem; border:1.5px solid #cbd5e1; border-radius:10px;
+            font-size:.9rem; font-family:inherit; color:#1e293b; background:#f8fafc;
+            outline:none; transition:.15s; }
+        .form-group input:focus, .form-group select:focus { border-color:#1f6e9c; background:#fff; }
+        .modal-alert { padding:.6rem .9rem; border-radius:8px; font-size:.84rem;
+                       font-weight:500; display:none; margin-bottom:.8rem; }
+        .modal-alert-error   { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+        .modal-alert-success { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
     </style>
 </head>
 <body>
@@ -41,10 +73,8 @@
             <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
             <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
         </div>
-        <!-- nav built by sidebar.js based on role -->
     </aside>
 
-    <!-- ── Main ─────────────────────────────────────────────────────────── -->
     <div class="content">
         <header class="topbar">
             <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
@@ -65,7 +95,7 @@
                         Super Admin — System User Management
                     </div>
                     <div style="font-size:.9rem;opacity:.85">
-                        Only Super Admins can create, view, and manage system user accounts including Admin users.
+                        Only Super Admins can create, view, update, and delete system user accounts.
                     </div>
                 </div>
             </div>
@@ -94,48 +124,40 @@
                 </div>
             </div>
 
-            <!-- Create Admin User form -->
+            <!-- Create User form -->
             <div class="dashboard-box" style="margin-bottom:1.5rem">
                 <div class="dashboard-box-header">
-                    <h3><i class="fas fa-user-plus" style="color:var(--accent)"></i> Create Admin Account</h3>
+                    <h3><i class="fas fa-user-plus" style="color:var(--accent)"></i> Create User Account</h3>
                     <button class="btn btn-sm btn-secondary" onclick="clearForm()">
                         <i class="fas fa-times"></i> Clear
                     </button>
                 </div>
-
-                <!-- info note -->
                 <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-md);
                             padding:.9rem 1.1rem;margin-bottom:1rem;font-size:.88rem;color:#15803d">
                     <i class="fas fa-info-circle" style="margin-right:.4rem"></i>
-                    Creating an <strong>ADMIN</strong> user here allows that person to log in and access
-                    the Admin Dashboard. Only Super Admins can perform this action.
+                    Creating an <strong>ADMIN</strong> user allows that person to log in and access the Admin Dashboard.
                 </div>
-
                 <form id="userForm" class="form-grid" onsubmit="createUser();return false;">
                     <div>
-                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
-                                      display:block;margin-bottom:.4rem">
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">
                             Username <span style="color:#dc2626">*</span>
                         </label>
                         <input class="field-input" id="uUsername" placeholder="admin_user" required>
                     </div>
                     <div>
-                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
-                                      display:block;margin-bottom:.4rem">
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">
                             Email <span style="color:#dc2626">*</span>
                         </label>
-                        <input class="field-input" type="email" id="uEmail"
-                               placeholder="admin@clinic.com" required>
+                        <input class="field-input" type="email" id="uEmail" placeholder="admin@clinic.com" required>
                     </div>
                     <div>
-                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
-                                      display:block;margin-bottom:.4rem">
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">
                             Password <span style="color:#dc2626">*</span>
                         </label>
                         <div style="position:relative">
                             <input class="field-input" type="password" id="uPassword"
-                                   placeholder="Min 8 characters" required style="padding-right:2.8rem">
-                            <span onclick="togglePwd()" id="toggleEye"
+                                   placeholder="Min 6 characters" required style="padding-right:2.8rem">
+                            <span onclick="togglePwd('uPassword','toggleEye')" id="toggleEye"
                                   style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);
                                          cursor:pointer;color:var(--text-muted)">
                                 <i class="fas fa-eye-slash"></i>
@@ -143,8 +165,7 @@
                         </div>
                     </div>
                     <div>
-                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
-                                      display:block;margin-bottom:.4rem">
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);display:block;margin-bottom:.4rem">
                             Role <span style="color:#dc2626">*</span>
                         </label>
                         <select class="field-input" id="uRole">
@@ -153,7 +174,6 @@
                             <option value="SUPER_ADMIN">SUPER_ADMIN</option>
                         </select>
                     </div>
-
                     <div style="grid-column:1/-1;margin-top:.3rem">
                         <button type="submit" class="btn" id="createBtn">
                             <i class="fas fa-user-plus"></i> Create User Account
@@ -189,15 +209,104 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody id="userTable">
-                        <tr><td colspan="5" class="empty">Loading...</td></tr>
+                        <tr><td colspan="6" class="empty">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </main>
+    </div>
+</div>
+
+<!-- ── EDIT USER MODAL ─────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="editModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('editModal')"><i class="fas fa-times"></i></button>
+        <h3><i class="fas fa-user-pen" style="color:#0369a1;margin-right:.5rem"></i> Edit User</h3>
+        <div id="editAlert" class="modal-alert"></div>
+        <input type="hidden" id="editUserId">
+
+        <!-- User info fields -->
+        <div class="form-group">
+            <label>Username <span style="color:#dc2626">*</span></label>
+            <input type="text" id="editUsername" placeholder="Username">
+        </div>
+        <div class="form-group">
+            <label>Email <span style="color:#dc2626">*</span></label>
+            <input type="email" id="editEmail" placeholder="Email">
+        </div>
+        <div class="form-group">
+            <label>Role <span style="color:#dc2626">*</span></label>
+            <select id="editRole">
+                <option value="ADMIN">ADMIN</option>
+                <option value="DOCTOR">DOCTOR</option>
+                <option value="PATIENT">PATIENT</option>
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+            </select>
+        </div>
+        <div style="display:flex;gap:.7rem;margin-top:.3rem;margin-bottom:1.4rem">
+            <button class="btn" id="editSaveBtn" onclick="saveEditUser()">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+        </div>
+
+        <!-- Divider -->
+        <div style="border-top:1.5px dashed #e2eaf2;margin-bottom:1.2rem"></div>
+
+        <!-- Password reset section -->
+        <div style="background:#fff8f1;border:1.5px solid #fed7aa;border-radius:12px;padding:1rem 1.1rem">
+            <div style="font-size:.85rem;font-weight:700;color:#c2410c;margin-bottom:.7rem">
+                <i class="fas fa-key" style="margin-right:.4rem"></i> Reset Password
+            </div>
+            <p style="font-size:.8rem;color:#92400e;margin-bottom:.8rem">
+                Set a new password for this user directly — no current password required.
+            </p>
+            <div id="pwResetAlert" class="modal-alert"></div>
+            <div class="form-group" style="margin-bottom:.7rem">
+                <label>New Password <span style="color:#dc2626">*</span></label>
+                <div style="position:relative">
+                    <input type="password" id="resetNewPw" placeholder="Min 6 characters"
+                           style="padding-right:2.8rem">
+                    <span onclick="togglePwd('resetNewPw','resetPwEye')" id="resetPwEye"
+                          style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);
+                                 cursor:pointer;color:#94a3b8">
+                        <i class="fas fa-eye-slash"></i>
+                    </span>
+                </div>
+            </div>
+            <button class="btn" id="resetPwBtn" onclick="doResetPassword()"
+                    style="background:#c2410c;color:#fff;width:100%;justify-content:center">
+                <i class="fas fa-key"></i> Reset Password
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── DELETE CONFIRM MODAL ────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="deleteModal">
+    <div class="modal" style="max-width:420px;text-align:center">
+        <button class="modal-close" onclick="closeModal('deleteModal')"><i class="fas fa-times"></i></button>
+        <div style="background:#fee2e2;width:56px;height:56px;border-radius:50%;display:flex;
+                    align-items:center;justify-content:center;margin:0 auto 1rem">
+            <i class="fas fa-trash" style="color:#dc2626;font-size:1.4rem"></i>
+        </div>
+        <h3 style="margin-bottom:.5rem">Delete User?</h3>
+        <p id="deleteModalMsg" style="font-size:.9rem;color:#64748b;margin-bottom:1.2rem">
+            This action cannot be undone.
+        </p>
+        <div id="deleteAlert" class="modal-alert" style="text-align:left"></div>
+        <div style="display:flex;gap:.7rem;justify-content:center">
+            <button class="btn" id="deleteConfirmBtn"
+                    style="background:#dc2626;color:#fff" onclick="confirmDelete()">
+                <i class="fas fa-trash"></i> Yes, Delete
+            </button>
+            <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -207,7 +316,8 @@
     const token   = () => localStorage.getItem('token');
     const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
 
-    let allUsers = [];
+    let allUsers      = [];
+    let pendingDelete = null; // userId staged for deletion
 
     function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
@@ -219,16 +329,21 @@
         setTimeout(() => el.style.display = 'none', 5000);
     }
 
-    function togglePwd() {
-        const p = document.getElementById('uPassword');
-        const e = document.getElementById('toggleEye').querySelector('i');
-        if (p.type === 'password') {
-            p.type = 'text';
-            e.className = 'fas fa-eye';
-        } else {
-            p.type = 'password';
-            e.className = 'fas fa-eye-slash';
-        }
+    function showModalAlert(id, msg, type) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.className = 'modal-alert ' + (type === 'success' ? 'modal-alert-success' : 'modal-alert-error');
+        el.style.display = 'block';
+    }
+
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function togglePwd(inputId, eyeId) {
+        const p = document.getElementById(inputId);
+        const e = document.getElementById(eyeId).querySelector('i');
+        if (p.type === 'password') { p.type = 'text';     e.className = 'fas fa-eye'; }
+        else                       { p.type = 'password'; e.className = 'fas fa-eye-slash'; }
     }
 
     function clearForm() {
@@ -253,6 +368,7 @@
         loadUsers();
     });
 
+    /* ── Load & Render ──────────────────────────────────────────────────── */
     function loadUsers() {
         $.ajax({
             url: API + '/api/users/allUsers', method: 'GET', headers: authHdr(),
@@ -277,14 +393,13 @@
 
     function filterUsers() {
         const role = document.getElementById('roleFilter').value;
-        const filtered = role === 'ALL' ? allUsers : allUsers.filter(u => u.userRole === role);
-        renderTable(filtered);
+        renderTable(role === 'ALL' ? allUsers : allUsers.filter(u => u.userRole === role));
     }
 
     function renderTable(list) {
         const tbody = $('#userTable').empty();
         if (!list.length) {
-            tbody.html('<tr><td colspan="5" class="empty">No users found.</td></tr>');
+            tbody.html('<tr><td colspan="6" class="empty">No users found.</td></tr>');
             return;
         }
 
@@ -294,37 +409,49 @@
             'DOCTOR':      '<span class="badge badge-doctor">Doctor</span>',
             'PATIENT':     '<span class="badge badge-patient">Patient</span>'
         };
-        const statusBadge = r =>
-            r === 'ACTIVE'
+        const statusBadge = s =>
+            s === 'ACTIVE'
                 ? '<span class="badge badge-active">● Active</span>'
                 : '<span class="badge badge-inactive">○ Inactive</span>';
 
+        const myUserId = localStorage.getItem('userId') || '';
+
         list.forEach(u => {
+            const isSelf       = u.userId === myUserId;
+            const isSuperAdmin = u.userRole === 'SUPER_ADMIN';
+
+            // Edit button — always shown
+            const editBtn = `<button class="btn-edit" onclick="openEditModal('${u.userId}','${u.username}','${u.userEmail || ''}','${u.userRole}')">
+                                <i class="fas fa-pen"></i> Edit
+                             </button>`;
+
+            // Delete button — hidden for SUPER_ADMIN accounts and own account
+            const deleteBtn = (!isSuperAdmin && !isSelf)
+                ? `<button class="btn-delete" onclick="openDeleteModal('${u.userId}','${u.username}')">
+                       <i class="fas fa-trash"></i> Delete
+                   </button>`
+                : `<span style="font-size:.75rem;color:#94a3b8">${isSelf ? '(you)' : 'Protected'}</span>`;
+
             tbody.append(`<tr>
-                <td><code style="font-size:.82rem;background:#f1f5f9;padding:.15rem .5rem;
-                          border-radius:6px">${u.userId}</code></td>
+                <td><code style="font-size:.82rem;background:#f1f5f9;padding:.15rem .5rem;border-radius:6px">${u.userId}</code></td>
                 <td><strong>${u.username}</strong></td>
                 <td>${u.userEmail || '—'}</td>
                 <td>${roleBadge[u.userRole] || u.userRole}</td>
                 <td>${statusBadge(u.status)}</td>
+                <td style="white-space:nowrap">${editBtn}${deleteBtn}</td>
             </tr>`);
         });
     }
 
+    /* ── Create User ────────────────────────────────────────────────────── */
     function createUser() {
         const username = $('#uUsername').val().trim();
         const email    = $('#uEmail').val().trim();
         const password = $('#uPassword').val().trim();
         const role     = $('#uRole').val();
 
-        if (!username || !email || !password) {
-            showAlert('Please fill in all required fields.', 'error');
-            return;
-        }
-        if (password.length < 6) {
-            showAlert('Password must be at least 6 characters.', 'error');
-            return;
-        }
+        if (!username || !email || !password) { showAlert('Please fill in all required fields.', 'error'); return; }
+        if (password.length < 6) { showAlert('Password must be at least 6 characters.', 'error'); return; }
 
         const btn = document.getElementById('createBtn');
         btn.disabled = true;
@@ -333,19 +460,10 @@
         $.ajax({
             url: API + '/api/users/register', method: 'POST',
             contentType: 'application/json', headers: authHdr(),
-            data: JSON.stringify({
-                username:  username,
-                userEmail: email,
-                password:  password,
-                userRole:  role
-            }),
+            data: JSON.stringify({ username, userEmail: email, password, userRole: role }),
             success: function (res) {
                 if (res.status === 0) {
-                    showAlert(
-                        role + ' account created successfully! ' +
-                        'They can now login with: ' + username + ' / [their password]',
-                        'success'
-                    );
+                    showAlert(`${role} account created! Login: ${username}`, 'success');
                     clearForm();
                     loadUsers();
                 } else {
@@ -363,7 +481,140 @@
             }
         });
     }
+
+    /* ── Edit User ──────────────────────────────────────────────────────── */
+    function openEditModal(userId, username, email, role) {
+        $('#editUserId').val(userId);
+        $('#editUsername').val(username);
+        $('#editEmail').val(email);
+        $('#editRole').val(role);
+        $('#editAlert').hide();
+        $('#pwResetAlert').hide();
+        $('#resetNewPw').val('');
+        const btn = document.getElementById('editSaveBtn');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        const resetBtn = document.getElementById('resetPwBtn');
+        resetBtn.disabled = false;
+        resetBtn.innerHTML = '<i class="fas fa-key"></i> Reset Password';
+        openModal('editModal');
+    }
+
+    function saveEditUser() {
+        const userId   = $('#editUserId').val();
+        const username = $('#editUsername').val().trim();
+        const email    = $('#editEmail').val().trim();
+        const role     = $('#editRole').val();
+
+        if (!username || !email) { showModalAlert('editAlert', 'Username and email are required.', 'error'); return; }
+
+        const btn = document.getElementById('editSaveBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        $.ajax({
+            url: API + '/api/users/updateUsers', method: 'PUT',
+            contentType: 'application/json', headers: authHdr(),
+            data: JSON.stringify({ userId, username, userEmail: email, userRole: role }),
+            success: function (res) {
+                if (res.status === 0) {
+                    showModalAlert('editAlert', 'User updated successfully!', 'success');
+                    loadUsers();
+                    setTimeout(() => closeModal('editModal'), 1400);
+                } else {
+                    showModalAlert('editAlert', res.message || 'Update failed.', 'error');
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            },
+            error: function (xhr) {
+                let m = 'Update failed.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showModalAlert('editAlert', m, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            }
+        });
+    }
+
+    /* ── Reset Password (Super Admin) ───────────────────────────────────── */
+    function doResetPassword() {
+        const userId  = $('#editUserId').val();
+        const newPass = $('#resetNewPw').val().trim();
+
+        if (!newPass) { showModalAlert('pwResetAlert', 'Please enter a new password.', 'error'); return; }
+        if (newPass.length < 6) { showModalAlert('pwResetAlert', 'Password must be at least 6 characters.', 'error'); return; }
+
+        const btn = document.getElementById('resetPwBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resetting...';
+
+        $.ajax({
+            url: API + '/api/users/resetPassword?userId=' + encodeURIComponent(userId)
+                     + '&newPassword=' + encodeURIComponent(newPass),
+            method: 'POST', headers: authHdr(),
+            success: function (res) {
+                if (res.status === 0) {
+                    showModalAlert('pwResetAlert', 'Password reset successfully!', 'success');
+                    $('#resetNewPw').val('');
+                } else {
+                    showModalAlert('pwResetAlert', res.message || 'Reset failed.', 'error');
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-key"></i> Reset Password';
+            },
+            error: function (xhr) {
+                let m = 'Reset failed.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showModalAlert('pwResetAlert', m, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-key"></i> Reset Password';
+            }
+        });
+    }
+
+    /* ── Delete User ────────────────────────────────────────────────────── */
+    function openDeleteModal(userId, username) {
+        pendingDelete = userId;
+        $('#deleteModalMsg').text(`Are you sure you want to delete "${username}" (${userId})? This cannot be undone.`);
+        $('#deleteAlert').hide();
+        const btn = document.getElementById('deleteConfirmBtn');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash"></i> Yes, Delete';
+        openModal('deleteModal');
+    }
+
+    function confirmDelete() {
+        if (!pendingDelete) return;
+
+        const btn = document.getElementById('deleteConfirmBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+        $.ajax({
+            url: API + '/api/users/deleteUser/' + pendingDelete,
+            method: 'DELETE', headers: authHdr(),
+            success: function (res) {
+                if (res.status === 0) {
+                    closeModal('deleteModal');
+                    showAlert('User deleted successfully.', 'success');
+                    loadUsers();
+                } else {
+                    showModalAlert('deleteAlert', res.message || 'Delete failed.', 'error');
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i> Yes, Delete';
+                pendingDelete = null;
+            },
+            error: function (xhr) {
+                let m = 'Delete failed.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showModalAlert('deleteAlert', m, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i> Yes, Delete';
+            }
+        });
+    }
 </script>
 </body>
 </html>
-

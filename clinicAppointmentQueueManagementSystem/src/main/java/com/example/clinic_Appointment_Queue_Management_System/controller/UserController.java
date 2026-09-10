@@ -1,6 +1,7 @@
 package com.example.clinic_Appointment_Queue_Management_System.controller;
 
 import com.example.clinic_Appointment_Queue_Management_System.dto.AuthDTO;
+import com.example.clinic_Appointment_Queue_Management_System.dto.ChangeCredentialsDTO;
 import com.example.clinic_Appointment_Queue_Management_System.dto.CommonResponse;
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDataDTO;
@@ -73,6 +74,18 @@ public class UserController {
     public CommonResponse deleteUser(@PathVariable String userId){
         userService.deleteUser(userId);
         return new CommonResponse(0, "User has been deleted successfully");
+    }
+
+    @PutMapping(value = "changeCredentials", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse changeCredentials(@RequestBody ChangeCredentialsDTO changeCredentialsDTO){
+        userService.changeCredentials(changeCredentialsDTO);
+        return new CommonResponse(0, "Credentials updated successfully");
+    }
+
+    @PostMapping(value = "resetPassword", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse resetPassword(@RequestParam String userId, @RequestParam String newPassword){
+        userService.resetPassword(userId, newPassword);
+        return new CommonResponse(0, "Password has been reset successfully");
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.clinic_Appointment_Queue_Management_System.service.impl;
 
+import com.example.clinic_Appointment_Queue_Management_System.dto.ChangeCredentialsDTO;
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
@@ -161,6 +162,67 @@ public class UserServiceImpl implements UserService {
             log.info("User {} deleted successfully", userId);
         } catch (Exception e) {
             log.error("Error deleting user {}", userId);
+            throw e;
+        }
+    }
+
+    @Override
+    public void changeCredentials(ChangeCredentialsDTO dto) {
+        log.info("Changing credentials for user {}", dto.getUserId());
+        try {
+            Optional<User> userOptional = userRepository.findById(dto.getUserId());
+            if (userOptional.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+            User user = userOptional.get();
+
+            // Verify current password before allowing any change
+            if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+                throw new RuntimeException("Current password is incorrect");
+            }
+
+            // Update username if provided and not already taken by another user
+            if (dto.getNewUsername() != null && !dto.getNewUsername().isBlank()) {
+                String newUsername = dto.getNewUsername().trim();
+                if (!newUsername.equals(user.getUsername()) && userRepository.existsByUsername(newUsername)) {
+                    throw new RuntimeException("Username already taken");
+                }
+                user.setUsername(newUsername);
+            }
+
+            // Update password if a new one is provided
+            if (dto.getNewPassword() != null && !dto.getNewPassword().isBlank()) {
+                user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+            }
+
+            userRepository.save(user);
+            log.info("Credentials updated successfully for user {}", dto.getUserId());
+        } catch (Exception e) {
+            log.error("Error changing credentials for user {}", dto.getUserId());
+            throw e;
+        }
+    }
+
+    @Override
+    public void resetPassword(String userId, String newPassword) {
+        log.info("Super Admin resetting password for user {}", userId);
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (userOptional.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+            if (newPassword == null || newPassword.isBlank()) {
+                throw new RuntimeException("New password cannot be empty");
+            }
+            if (newPassword.length() < 6) {
+                throw new RuntimeException("Password must be at least 6 characters");
+            }
+            User user = userOptional.get();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            log.info("Password reset successfully for user {}", userId);
+        } catch (Exception e) {
+            log.error("Error resetting password for user {}", userId);
             throw e;
         }
     }
