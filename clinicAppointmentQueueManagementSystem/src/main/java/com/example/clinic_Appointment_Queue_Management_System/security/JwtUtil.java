@@ -3,12 +3,12 @@ package com.example.clinic_Appointment_Queue_Management_System.security;
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,7 +22,7 @@ public class JwtUtil {
     private String secretKey;
 
     @Value("${jwt.expiration}")
-    private Long expiration; // Changed from String to Long
+    private Long expiration;
 
     public String generateToken(UserDTO user) {
         Map<String, Object> claims = new HashMap<>();
@@ -31,11 +31,11 @@ public class JwtUtil {
         claims.put("userRole", user.getUserRole());
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(user.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration)) // Now works with Long
-                .signWith(getSignKey(), SignatureAlgorithm.HS256) // Use HS256, not HS512 with secretKey
+                .claims(claims)
+                .subject(user.getUsername())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignKey())
                 .compact();
     }
 
@@ -54,13 +54,13 @@ public class JwtUtil {
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(getSignKey())
+                .verifyWith(getSignKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
-    private java.security.Key getSignKey() {
+    private SecretKey getSignKey() {
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
