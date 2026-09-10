@@ -8,6 +8,7 @@ import com.example.clinic_Appointment_Queue_Management_System.entity.Specializat
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.UserRole;
+import com.example.clinic_Appointment_Queue_Management_System.exception.CustomException;
 import com.example.clinic_Appointment_Queue_Management_System.repository.*;
 import com.example.clinic_Appointment_Queue_Management_System.service.DoctorService;
 import com.example.clinic_Appointment_Queue_Management_System.service.EmailService;
@@ -36,7 +37,6 @@ public class DoctorServiceImpl implements DoctorService {
     private final RatingRepository             ratingRepository;
     private final EmailService                 emailService;
 
-
     @Override
     public void addDoctor(DoctorDTO doctorDTO) {
         log.info("Adding doctor");
@@ -45,8 +45,7 @@ public class DoctorServiceImpl implements DoctorService {
 
             Specializations specialization = specializationsRepository
                     .findById(doctorDTO.getSpecializationId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Specialization not found: " + doctorDTO.getSpecializationId()));
+                    .orElseThrow(() -> new CustomException(404, "Specialization not found"));
 
             long count = doctorRepository.count();
             String generatedId = String.format("D%03d", count + 1);
@@ -67,19 +66,20 @@ public class DoctorServiceImpl implements DoctorService {
                 String email = user.getUserEmail();
                 if (email != null && !email.isBlank()
                         && doctorDTO.getPassword() != null && !doctorDTO.getPassword().isBlank()) {
-                    String fullName = "Dr. " + doctorDTO.getFirstName() + " " + doctorDTO.getLastName();
-                    emailService.sendWelcomeEmail(email, fullName,
+                    emailService.sendWelcomeEmail(email,
+                            "Dr. " + doctorDTO.getFirstName() + " " + doctorDTO.getLastName(),
                             user.getUsername(), doctorDTO.getPassword(), "DOCTOR");
                 }
             } catch (Exception ex) {
                 log.warn("Could not send welcome email for doctor: {}", ex.getMessage());
             }
-        } catch (Exception e) {
-            log.error("Doctor could not be added", e);
+        } catch (CustomException e) {
             throw e;
+        } catch (Exception e) {
+            log.error("Error adding doctor", e);
+            throw new CustomException(500, "Error occurred while adding doctor");
         }
     }
-
 
     @Override
     public List<DoctorDTO> getAllDoctors() {
@@ -103,22 +103,19 @@ public class DoctorServiceImpl implements DoctorService {
             return list;
         } catch (Exception e) {
             log.error("Error fetching all doctors", e);
-            throw e;
+            throw new CustomException(500, "Error occurred while fetching doctors");
         }
     }
-
 
     @Override
     public void updateDoctor(DoctorDTO doctorDTO) {
         log.info("Updating doctor {}", doctorDTO.getDoctorId());
         try {
             Doctor doctor = doctorRepository.findById(doctorDTO.getDoctorId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Doctor not found: " + doctorDTO.getDoctorId()));
+                    .orElseThrow(() -> new CustomException(404, "Doctor not found"));
             Specializations specialization = specializationsRepository
                     .findById(doctorDTO.getSpecializationId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Specialization not found: " + doctorDTO.getSpecializationId()));
+                    .orElseThrow(() -> new CustomException(404, "Specialization not found"));
 
             doctor.setFirstName(doctorDTO.getFirstName());
             doctor.setLastName(doctorDTO.getLastName());
@@ -128,32 +125,38 @@ public class DoctorServiceImpl implements DoctorService {
             doctor.setEmail(doctorDTO.getEmail());
             doctor.setStatus(Status.ACTIVE);
             doctorRepository.save(doctor);
-        } catch (Exception e) {
-            log.error("Doctor could not be updated", e);
+        } catch (CustomException e) {
             throw e;
+        } catch (Exception e) {
+            log.error("Error updating doctor", e);
+            throw new CustomException(500, "Error occurred while updating doctor");
         }
     }
 
-
     @Override
     public DoctorDTO getByUserId(String userId) {
-        Doctor d = doctorRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new RuntimeException(
-                        "Doctor profile not found for user: " + userId));
-        DoctorDTO dto = new DoctorDTO();
-        dto.setDoctorId(d.getDoctorId());
-        dto.setUserId(d.getUser().getUserId());
-        dto.setFirstName(d.getFirstName());
-        dto.setLastName(d.getLastName());
-        dto.setSpecializationName(d.getSpecializations().getName());
-        dto.setSpecializationId(d.getSpecializations().getSpecializationId());
-        dto.setLicenseNumber(d.getLicenseNumber());
-        dto.setPhoneNumber(d.getPhoneNumber());
-        dto.setEmail(d.getEmail());
-        dto.setStatus(d.getStatus());
-        return dto;
+        try {
+            Doctor d = doctorRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new CustomException(404, "Doctor profile not found"));
+            DoctorDTO dto = new DoctorDTO();
+            dto.setDoctorId(d.getDoctorId());
+            dto.setUserId(d.getUser().getUserId());
+            dto.setFirstName(d.getFirstName());
+            dto.setLastName(d.getLastName());
+            dto.setSpecializationName(d.getSpecializations().getName());
+            dto.setSpecializationId(d.getSpecializations().getSpecializationId());
+            dto.setLicenseNumber(d.getLicenseNumber());
+            dto.setPhoneNumber(d.getPhoneNumber());
+            dto.setEmail(d.getEmail());
+            dto.setStatus(d.getStatus());
+            return dto;
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching doctor for user {}", userId, e);
+            throw new CustomException(500, "Error occurred while fetching doctor profile");
+        }
     }
-
 
     @Override
     public List<DoctorCardDTO> getDoctorsWithAvailabilityAndFee() {
@@ -229,7 +232,6 @@ public class DoctorServiceImpl implements DoctorService {
                         }
 
                         return card;
-
                     } catch (Exception ex) {
                         log.error("Error building card for doctor {}: {}", d.getDoctorId(), ex.getMessage());
                         DoctorCardDTO fallback = new DoctorCardDTO();
@@ -248,30 +250,30 @@ public class DoctorServiceImpl implements DoctorService {
                 }).collect(Collectors.toList());
     }
 
-
     private User resolveOrCreateDoctorUser(DoctorDTO dto) {
         if (dto.getUserId() != null && !dto.getUserId().isBlank()) {
             return userRepository.findById(dto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found: " + dto.getUserId()));
+                    .orElseThrow(() -> new CustomException(404, "User not found"));
         }
         if (dto.getUsername() == null || dto.getUsername().isBlank()
                 || dto.getPassword() == null || dto.getPassword().isBlank()) {
-            throw new RuntimeException("Doctor username and password are required");
+            throw new CustomException(400, "Doctor username and password are required");
         }
-        if (userRepository.existsByUsername(dto.getUsername()))
-            throw new RuntimeException("Username already exists");
-
+        if (userRepository.existsByUsername(dto.getUsername())) {
+            throw new CustomException(409, "Username already exists");
+        }
         String email = dto.getUserEmail() != null && !dto.getUserEmail().isBlank()
                 ? dto.getUserEmail() : dto.getEmail();
-        if (email == null || email.isBlank())
-            throw new RuntimeException("Doctor email is required");
-        if (userRepository.existsByUserEmail(email))
-            throw new RuntimeException("Email already exists");
+        if (email == null || email.isBlank()) {
+            throw new CustomException(400, "Doctor email is required");
+        }
+        if (userRepository.existsByUserEmail(email)) {
+            throw new CustomException(409, "Email already exists");
+        }
 
         long count = userRepository.count();
-        String uid = String.format("U%03d", count + 1);
         User user = new User();
-        user.setUserId(uid);
+        user.setUserId(String.format("U%03d", count + 1));
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setUserEmail(email);

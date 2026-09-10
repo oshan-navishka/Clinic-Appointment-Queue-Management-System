@@ -214,6 +214,76 @@
                 <button class="tab-btn" id="navDoc" onclick="showSection('doctors')">
                     <i class="fas fa-user-doctor"></i> Doctors
                 </button>
+                <button class="tab-btn" id="navAccount" onclick="showSection('account')">
+                    <i class="fas fa-key"></i> My Account
+                </button>
+            </div>
+
+            <!-- ══ SECTION: MY ACCOUNT ══════════════════════════════════ -->
+            <div id="secAccount" style="display:none">
+                <div class="dashboard-box" style="max-width:560px;margin:0 auto">
+                    <div class="dashboard-box-header">
+                        <h3><i class="fas fa-key" style="color:var(--accent)"></i> Change My Credentials</h3>
+                    </div>
+
+                    <!-- Current info display -->
+                    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--radius-md);
+                                padding:.9rem 1.1rem;margin-bottom:1.4rem;font-size:.9rem;color:#0369a1">
+                        <i class="fas fa-user-circle" style="margin-right:.4rem"></i>
+                        Logged in as: <strong id="accountUsername">—</strong>
+                    </div>
+
+                    <div id="accountAlert" class="alert" style="display:none"></div>
+
+                    <div style="display:grid;gap:.9rem">
+                        <div>
+                            <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                          display:block;margin-bottom:.4rem">
+                                Current Password <span style="color:#dc2626">*</span>
+                            </label>
+                            <input class="field-input" type="password" id="acCurrentPw"
+                                   placeholder="Enter your current password">
+                        </div>
+                        <div>
+                            <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                          display:block;margin-bottom:.4rem">
+                                New Username
+                                <span style="font-weight:400;color:var(--text-muted)">(leave blank to keep current)</span>
+                            </label>
+                            <input class="field-input" type="text" id="acNewUsername"
+                                   placeholder="New username">
+                        </div>
+                        <div>
+                            <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                          display:block;margin-bottom:.4rem">
+                                New Password
+                                <span style="font-weight:400;color:var(--text-muted)">(leave blank to keep current)</span>
+                            </label>
+                            <div style="position:relative">
+                                <input class="field-input" type="password" id="acNewPw"
+                                       placeholder="Min 6 characters" style="padding-right:2.8rem">
+                                <span onclick="toggleAccPwd('acNewPw','eyeNewPw')" id="eyeNewPw"
+                                      style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);
+                                             cursor:pointer;color:var(--text-muted)">
+                                    <i class="fas fa-eye-slash"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                          display:block;margin-bottom:.4rem">
+                                Confirm New Password
+                            </label>
+                            <input class="field-input" type="password" id="acConfirmPw"
+                                   placeholder="Re-enter new password">
+                        </div>
+                        <div style="margin-top:.3rem">
+                            <button class="btn" id="acSaveBtn" onclick="saveAccountCredentials()">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- ══ SECTION: MEDICATIONS ═════════════════════════════════ -->
@@ -306,10 +376,10 @@ function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 function showSection(s) {
-    ['secAppointments','secPayments','secMedications','secDoctors'].forEach(id => {
+    ['secAppointments','secPayments','secMedications','secDoctors','secAccount'].forEach(id => {
         document.getElementById(id).style.display = 'none';
     });
-    ['navAppts','navPay','navMeds','navDoc'].forEach(id => {
+    ['navAppts','navPay','navMeds','navDoc','navAccount'].forEach(id => {
         document.getElementById(id).classList.remove('active');
     });
     if (s === 'appointments') {
@@ -326,6 +396,16 @@ function showSection(s) {
     } else if (s === 'doctors') {
         document.getElementById('secDoctors').style.display = 'block';
         document.getElementById('navDoc').classList.add('active');
+    } else if (s === 'account') {
+        document.getElementById('secAccount').style.display = 'block';
+        document.getElementById('navAccount').classList.add('active');
+        document.getElementById('accountUsername').textContent =
+            localStorage.getItem('username') || '—';
+        // clear fields each time section opens
+        ['acCurrentPw','acNewUsername','acNewPw','acConfirmPw'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('accountAlert').style.display = 'none';
     }
 }
 
@@ -683,6 +763,80 @@ function approveAllForPatient(commaSeparatedIds) {
             success: function () { if (++done === ids.length) { showAlert('All ' + ids.length + ' medicines confirmed!', 'success'); loadPendingMeds(); } },
             error: function ()   { if (++done === ids.length) loadPendingMeds(); }
         });
+    });
+}
+
+function toggleAccPwd(inputId, eyeId) {
+    const p = document.getElementById(inputId);
+    const e = document.getElementById(eyeId).querySelector('i');
+    if (p.type === 'password') { p.type = 'text'; e.className = 'fas fa-eye'; }
+    else                       { p.type = 'password'; e.className = 'fas fa-eye-slash'; }
+}
+
+function showAccountAlert(msg, type) {
+    const el = document.getElementById('accountAlert');
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 5000);
+}
+
+function saveAccountCredentials() {
+    const currentPw  = document.getElementById('acCurrentPw').value.trim();
+    const newUsername = document.getElementById('acNewUsername').value.trim();
+    const newPw       = document.getElementById('acNewPw').value;
+    const confirmPw   = document.getElementById('acConfirmPw').value;
+
+    if (!currentPw) { showAccountAlert('Current password is required.', 'error'); return; }
+    if (!newUsername && !newPw) { showAccountAlert('Provide a new username or new password to update.', 'error'); return; }
+    if (newPw && newPw !== confirmPw) { showAccountAlert('New passwords do not match.', 'error'); return; }
+    if (newPw && newPw.length < 6)    { showAccountAlert('New password must be at least 6 characters.', 'error'); return; }
+
+    const btn = document.getElementById('acSaveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    $.ajax({
+        url: API + '/api/users/changeCredentials', method: 'PUT',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({
+            userId:      localStorage.getItem('userId'),
+            currentPassword: currentPw,
+            newUsername: newUsername || null,
+            newPassword: newPw       || null
+        }),
+        success: function (res) {
+            if (res.status === 0) {
+                showAccountAlert('Credentials updated successfully!', 'success');
+                if (newUsername) {
+                    localStorage.setItem('username', newUsername);
+                    document.getElementById('who').textContent = 'Logged in as: ' + newUsername;
+                    document.getElementById('accountUsername').textContent = newUsername;
+                    document.getElementById('welcome-msg').textContent = 'Welcome back, ' + newUsername + '!';
+                }
+                ['acCurrentPw','acNewUsername','acNewPw','acConfirmPw'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                // Password changed → force re-login for security
+                if (newPw) {
+                    setTimeout(function () {
+                        localStorage.clear();
+                        window.location.href = 'login.html';
+                    }, 1800);
+                }
+            } else {
+                showAccountAlert(res.message || 'Update failed.', 'error');
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        },
+        error: function (xhr) {
+            let m = 'Update failed.';
+            try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+            showAccountAlert(m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        }
     });
 }
 

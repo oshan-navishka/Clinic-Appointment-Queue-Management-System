@@ -5,6 +5,7 @@ import com.example.clinic_Appointment_Queue_Management_System.entity.Appointment
 import com.example.clinic_Appointment_Queue_Management_System.entity.Doctor;
 import com.example.clinic_Appointment_Queue_Management_System.entity.Patient;
 import com.example.clinic_Appointment_Queue_Management_System.entity.Rating;
+import com.example.clinic_Appointment_Queue_Management_System.exception.CustomException;
 import com.example.clinic_Appointment_Queue_Management_System.repository.AppointmentRepository;
 import com.example.clinic_Appointment_Queue_Management_System.repository.DoctorRepository;
 import com.example.clinic_Appointment_Queue_Management_System.repository.PatientRepository;
@@ -24,61 +25,78 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RatingServiceImpl implements RatingService {
 
-    private final RatingRepository ratingRepository;
-    private final DoctorRepository doctorRepository;
-    private final PatientRepository patientRepository;
+    private final RatingRepository      ratingRepository;
+    private final DoctorRepository      doctorRepository;
+    private final PatientRepository     patientRepository;
     private final AppointmentRepository appointmentRepository;
 
     @Override
     @Transactional
     public void saveRating(RatingDTO dto) {
-        if (dto.getStars() == null || dto.getStars() < 1 || dto.getStars() > 5) {
-            throw new RuntimeException("Stars must be between 1 and 5");
+        log.info("Saving rating for appointment {}", dto.getAppointmentId());
+        try {
+            if (dto.getStars() == null || dto.getStars() < 1 || dto.getStars() > 5) {
+                throw new CustomException(400, "Stars must be between 1 and 5");
+            }
+            if (ratingRepository.existsByAppointment_AppointmentId(dto.getAppointmentId())) {
+                throw new CustomException(409, "You have already rated this appointment");
+            }
+
+            Doctor doctor = doctorRepository.findById(dto.getDoctorId())
+                    .orElseThrow(() -> new CustomException(404, "Doctor not found"));
+            Patient patient = patientRepository.findById(dto.getPatientId())
+                    .orElseThrow(() -> new CustomException(404, "Patient not found"));
+            Appointments appointment = appointmentRepository.findById(dto.getAppointmentId())
+                    .orElseThrow(() -> new CustomException(404, "Appointment not found"));
+
+            long count = ratingRepository.count();
+            String id = String.format("R%03d", count + 1);
+
+            Rating rating = new Rating();
+            rating.setRatingId(id);
+            rating.setDoctor(doctor);
+            rating.setPatient(patient);
+            rating.setAppointment(appointment);
+            rating.setStars(dto.getStars());
+            rating.setComment(dto.getComment());
+            rating.setRatedAt(LocalDateTime.now());
+            ratingRepository.save(rating);
+            log.info("Rating {} saved for doctor {}", id, doctor.getDoctorId());
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error saving rating", e);
+            throw new CustomException(500, "Error occurred while saving rating");
         }
-        if (ratingRepository.existsByAppointment_AppointmentId(dto.getAppointmentId())) {
-            throw new RuntimeException("You have already rated this appointment");
-        }
-
-        Doctor doctor = doctorRepository.findById(dto.getDoctorId())
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
-        Patient patient = patientRepository.findById(dto.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
-        Appointments appointment = appointmentRepository.findById(dto.getAppointmentId())
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        long count = ratingRepository.count();
-        String id = String.format("R%03d", count + 1);
-
-        Rating rating = new Rating();
-        rating.setRatingId(id);
-        rating.setDoctor(doctor);
-        rating.setPatient(patient);
-        rating.setAppointment(appointment);
-        rating.setStars(dto.getStars());
-        rating.setComment(dto.getComment());
-        rating.setRatedAt(LocalDateTime.now());
-
-        ratingRepository.save(rating);
-        log.info("Rating {} saved for doctor {}", id, doctor.getDoctorId());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<RatingDTO> getDoctorRatings(String doctorId) {
-        return ratingRepository.findByDoctor_DoctorIdOrderByRatedAtDesc(doctorId)
-                .stream().map(this::toDto).collect(Collectors.toList());
+        try {
+            return ratingRepository.findByDoctor_DoctorIdOrderByRatedAtDesc(doctorId)
+                    .stream().map(this::toDto).collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error fetching ratings for doctor {}", doctorId, e);
+            throw new CustomException(500, "Error occurred while fetching ratings");
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public RatingDTO getDoctorRatingSummary(String doctorId) {
-        Double avg = ratingRepository.findAverageRatingByDoctorId(doctorId);
-        long total = ratingRepository.countByDoctorId(doctorId);
-        RatingDTO summary = new RatingDTO();
-        summary.setDoctorId(doctorId);
-        summary.setAverageRating(avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0);
-        summary.setTotalRatings(total);
-        return summary;
+        try {
+            Double avg   = ratingRepository.findAverageRatingByDoctorId(doctorId);
+            long   total = ratingRepository.countByDoctorId(doctorId);
+            RatingDTO summary = new RatingDTO();
+            summary.setDoctorId(doctorId);
+            summary.setAverageRating(avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0);
+            summary.setTotalRatings(total);
+            return summary;
+        } catch (Exception e) {
+            log.error("Error fetching rating summary for doctor {}", doctorId, e);
+            throw new CustomException(500, "Error occurred while fetching rating summary");
+        }
     }
 
     @Override

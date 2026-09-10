@@ -6,6 +6,7 @@ import com.example.clinic_Appointment_Queue_Management_System.enumaration.Appoin
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.BookingSource;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.PaymentStatus;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
+import com.example.clinic_Appointment_Queue_Management_System.exception.CustomException;
 import com.example.clinic_Appointment_Queue_Management_System.repository.AppointmentRepository;
 import com.example.clinic_Appointment_Queue_Management_System.repository.DoctorRepository;
 import com.example.clinic_Appointment_Queue_Management_System.repository.InvoiceRepository;
@@ -36,13 +37,13 @@ public class AppointmentServiceImpl implements AppointmentService {
     private static final double DEFAULT_FEE = 2500.00;
 
     private final AppointmentRepository appointmentRepository;
-    private final PatientRepository patientRepository;
-    private final DoctorRepository doctorRepository;
-    private final InvoiceRepository invoiceRepository;
-    private final PatientService patientService;
-    private final DoctorService doctorService;
-    private final EmailService emailService;
-    private final NotificationService notificationService;
+    private final PatientRepository     patientRepository;
+    private final DoctorRepository      doctorRepository;
+    private final InvoiceRepository     invoiceRepository;
+    private final PatientService        patientService;
+    private final DoctorService         doctorService;
+    private final EmailService          emailService;
+    private final NotificationService   notificationService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -61,71 +62,68 @@ public class AppointmentServiceImpl implements AppointmentService {
         saveAppointment(appointmentDTO);
     }
 
-    private void saveAppointment(AppointmentDTO appointmentDTO) {
-        log.info("Saving appointment {}", appointmentDTO);
+    private void saveAppointment(AppointmentDTO dto) {
+        log.info("Saving appointment {}", dto);
+        try {
+            Patient patient = resolvePatient(dto);
+            Doctor doctor = doctorRepository.findById(dto.getDoctorId())
+                    .orElseThrow(() -> new CustomException(404, "Doctor not found"));
 
-        Patient patient = resolvePatient(appointmentDTO);
-        Doctor doctor = doctorRepository.findById(appointmentDTO.getDoctorId())
-                .orElseThrow(() -> new RuntimeException("Doctor not found: " + appointmentDTO.getDoctorId()));
+            if (dto.getAppointmentDate() == null) {
+                throw new CustomException(400, "Appointment date is required");
+            }
 
-        if (appointmentDTO.getAppointmentDate() == null) {
-            throw new RuntimeException("Appointment date is required");
-        }
+            LocalTime time = dto.getAppointmentTime() != null ? dto.getAppointmentTime() : LocalTime.of(9, 0);
 
-        LocalTime time = appointmentDTO.getAppointmentTime() != null
-                ? appointmentDTO.getAppointmentTime()
-                : LocalTime.of(9, 0);
+            long dailyCount = appointmentRepository.countByDoctor_DoctorIdAndAppointmentDate(
+                    doctor.getDoctorId(), dto.getAppointmentDate());
+            long count = appointmentRepository.count();
+            String generatedId = String.format("A%03d", count + 1);
+            double fee = dto.getPaymentAmount() != null ? dto.getPaymentAmount() : DEFAULT_FEE;
 
-        long dailyCount = appointmentRepository.countByDoctor_DoctorIdAndAppointmentDate(
-                doctor.getDoctorId(), appointmentDTO.getAppointmentDate());
+            Appointments appointment = new Appointments();
+            appointment.setAppointmentId(generatedId);
+            appointment.setPatient(patient);
+            appointment.setDoctor(doctor);
+            appointment.setAppointmentDate(dto.getAppointmentDate());
+            appointment.setAppointmentTime(time);
+            appointment.setAppointmentNumber((int) dailyCount + 1);
+            appointment.setReason(dto.getReason());
+            appointment.setStatus(Status.ACTIVE);
+            appointment.setBookingSource(dto.getBookingSource());
+            appointment.setAppointmentState(AppointmentState.PENDING);
+            appointment.setPaymentStatus(PaymentStatus.UNPAID);
+            appointment.setPaymentAmount(fee);
 
-        long count = appointmentRepository.count();
-        String generatedId = String.format("A%03d", count + 1);
+            if (dto.getBranchId() != null && !dto.getBranchId().isBlank()) {
+                appointment.setClinicBranches(entityManager.getReference(ClinicBranches.class, dto.getBranchId()));
+            }
 
-        double fee = appointmentDTO.getPaymentAmount() != null
-                ? appointmentDTO.getPaymentAmount() : DEFAULT_FEE;
+            appointmentRepository.save(appointment);
+            log.info("Appointment {} saved", generatedId);
 
-        Appointments appointment = new Appointments();
-        appointment.setAppointmentId(generatedId);
-        appointment.setPatient(patient);
-        appointment.setDoctor(doctor);
-        appointment.setAppointmentDate(appointmentDTO.getAppointmentDate());
-        appointment.setAppointmentTime(time);
-        appointment.setAppointmentNumber((int) dailyCount + 1);
-        appointment.setReason(appointmentDTO.getReason());
-        appointment.setStatus(Status.ACTIVE);
-        appointment.setBookingSource(appointmentDTO.getBookingSource());
-        appointment.setAppointmentState(AppointmentState.PENDING);
-        appointment.setPaymentStatus(PaymentStatus.UNPAID);
-        appointment.setPaymentAmount(fee);
+            AppointmentDTO savedDto = toDto(appointment);
+            createInvoice(appointment, patient, fee);
 
-        if (appointmentDTO.getBranchId() != null && !appointmentDTO.getBranchId().isBlank()) {
-            ClinicBranches branch = entityManager.getReference(ClinicBranches.class, appointmentDTO.getBranchId());
-            appointment.setClinicBranches(branch);
-        }
+            notificationService.createNotification(
+                    patient.getUser().getUserId(),
+                    "Appointment Booked",
+                    "Your appointment #" + generatedId + " with Dr. " +
+                            doctor.getFirstName() + " " + doctor.getLastName() +
+                            " on " + dto.getAppointmentDate() + " has been confirmed.",
+                    "APPOINTMENT_BOOKED",
+                    generatedId
+            );
 
-        appointmentRepository.save(appointment);
-        log.info("Appointment {} saved", generatedId);
-
-        AppointmentDTO savedDto = toDto(appointment);
-
-        createInvoice(appointment, patient, fee);
-
-        String patientUserId = patient.getUser().getUserId();
-        notificationService.createNotification(
-                patientUserId,
-                "Appointment Booked",
-                "Your appointment #" + generatedId + " with Dr. " +
-                        doctor.getFirstName() + " " + doctor.getLastName() +
-                        " on " + appointmentDTO.getAppointmentDate() + " has been confirmed.",
-                "APPOINTMENT_BOOKED",
-                generatedId
-        );
-
-        String patientEmail = patient.getUser().getUserEmail();
-        String patientName  = patient.getFirstName() + " " + patient.getLastName();
-        if (patientEmail != null && !patientEmail.isBlank()) {
-            emailService.sendBookingConfirmation(patientEmail, patientName, savedDto);
+            String email = patient.getUser().getUserEmail();
+            if (email != null && !email.isBlank()) {
+                emailService.sendBookingConfirmation(email, patient.getFirstName() + " " + patient.getLastName(), savedDto);
+            }
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error saving appointment", e);
+            throw new CustomException(500, "Error occurred while saving appointment");
         }
     }
 
@@ -150,242 +148,296 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
 
-
     @Override
     @Transactional
     public void payAppointment(String appointmentId, String userId) {
-        Appointments appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        log.info("Patient {} paying for appointment {}", userId, appointmentId);
+        try {
+            Appointments appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new CustomException(404, "Appointment not found"));
 
-        Patient patient = patientRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new RuntimeException("Patient profile not found for this account"));
+            Patient patient = patientRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new CustomException(404, "Patient profile not found for this account"));
 
-        if (!appointment.getPatient().getPatientId().equals(patient.getPatientId())) {
-            throw new RuntimeException("You can only pay for your own appointments");
-        }
-        if (appointment.getPaymentStatus() == PaymentStatus.PAID) {
-            throw new RuntimeException("Appointment is already paid");
-        }
+            if (!appointment.getPatient().getPatientId().equals(patient.getPatientId())) {
+                throw new CustomException(403, "You can only pay for your own appointments");
+            }
+            if (appointment.getPaymentStatus() == PaymentStatus.PAID) {
+                throw new CustomException(400, "Appointment is already paid");
+            }
 
-        appointment.setPaymentStatus(PaymentStatus.PAID);
-        appointment.setPaidAt(LocalDateTime.now());
-        appointmentRepository.save(appointment);
+            appointment.setPaymentStatus(PaymentStatus.PAID);
+            appointment.setPaidAt(LocalDateTime.now());
+            appointmentRepository.save(appointment);
 
-        invoiceRepository.findByAppointment_AppointmentId(appointmentId).ifPresent(inv -> {
-            inv.setInvoiceStatus("PAID");
-            inv.setPaymentMethod("ONLINE");
-            inv.setPaidAt(LocalDateTime.now());
-            invoiceRepository.save(inv);
-        });
+            invoiceRepository.findByAppointment_AppointmentId(appointmentId).ifPresent(inv -> {
+                inv.setInvoiceStatus("PAID");
+                inv.setPaymentMethod("ONLINE");
+                inv.setPaidAt(LocalDateTime.now());
+                invoiceRepository.save(inv);
+            });
 
-        notificationService.createNotification(
-                userId,
-                "Payment Confirmed",
-                "Payment of LKR " + appointment.getPaymentAmount() +
-                        " for appointment #" + appointmentId + " received.",
-                "PAYMENT_DONE",
-                appointmentId
-        );
+            notificationService.createNotification(
+                    userId,
+                    "Payment Confirmed",
+                    "Payment of LKR " + appointment.getPaymentAmount() +
+                            " for appointment #" + appointmentId + " received.",
+                    "PAYMENT_DONE",
+                    appointmentId
+            );
 
-        AppointmentDTO dto = toDto(appointment);
-        String email = patient.getUser().getUserEmail();
-        String name  = patient.getFirstName() + " " + patient.getLastName();
-        if (email != null && !email.isBlank()) {
-            emailService.sendPaymentConfirmation(email, name, dto);
+            String email = patient.getUser().getUserEmail();
+            if (email != null && !email.isBlank()) {
+                emailService.sendPaymentConfirmation(email,
+                        patient.getFirstName() + " " + patient.getLastName(), toDto(appointment));
+            }
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error processing payment for appointment {}", appointmentId, e);
+            throw new CustomException(500, "Error occurred while processing payment");
         }
     }
-
 
     @Override
     @Transactional
     public void markChecked(String appointmentId, String userId) {
-        Appointments appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        log.info("Doctor {} marking appointment {} as checked", userId, appointmentId);
+        try {
+            Appointments appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new CustomException(404, "Appointment not found"));
 
-        Doctor doctor = doctorRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new RuntimeException("Doctor profile not found for this account"));
+            Doctor doctor = doctorRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new CustomException(404, "Doctor profile not found for this account"));
 
-        if (!appointment.getDoctor().getDoctorId().equals(doctor.getDoctorId())) {
-            throw new RuntimeException("You can only check your own patients");
+            if (!appointment.getDoctor().getDoctorId().equals(doctor.getDoctorId())) {
+                throw new CustomException(403, "You can only check your own patients");
+            }
+
+            appointment.setAppointmentState(AppointmentState.CHECKED);
+            appointmentRepository.save(appointment);
+
+            notificationService.createNotification(
+                    appointment.getPatient().getUser().getUserId(),
+                    "Consultation Complete",
+                    "Your appointment #" + appointmentId + " with Dr. " +
+                            doctor.getFirstName() + " " + doctor.getLastName() + " has been marked as checked.",
+                    "CHECKED",
+                    appointmentId
+            );
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error marking appointment {} as checked", appointmentId, e);
+            throw new CustomException(500, "Error occurred while marking appointment as checked");
         }
-
-        appointment.setAppointmentState(AppointmentState.CHECKED);
-        appointmentRepository.save(appointment);
-
-        String patientUserId = appointment.getPatient().getUser().getUserId();
-        notificationService.createNotification(
-                patientUserId,
-                "Consultation Complete",
-                "Your appointment #" + appointmentId + " with Dr. " +
-                        doctor.getFirstName() + " " + doctor.getLastName() + " has been marked as checked.",
-                "CHECKED",
-                appointmentId
-        );
     }
 
     @Override
     @Transactional
     public void adminConfirmPayment(String appointmentId) {
-        Appointments appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found: " + appointmentId));
-        if (appointment.getPaymentStatus() == PaymentStatus.PAID) {
-            throw new RuntimeException("Appointment is already paid");
+        log.info("Admin confirming payment for appointment {}", appointmentId);
+        try {
+            Appointments appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new CustomException(404, "Appointment not found"));
+            if (appointment.getPaymentStatus() == PaymentStatus.PAID) {
+                throw new CustomException(400, "Appointment is already paid");
+            }
+
+            appointment.setPaymentStatus(PaymentStatus.PAID);
+            appointment.setPaidAt(LocalDateTime.now());
+            appointmentRepository.save(appointment);
+
+            invoiceRepository.findByAppointment_AppointmentId(appointmentId).ifPresent(inv -> {
+                inv.setInvoiceStatus("PAID");
+                inv.setPaymentMethod("CASH");
+                inv.setPaidAt(LocalDateTime.now());
+                invoiceRepository.save(inv);
+            });
+
+            notificationService.createNotification(
+                    appointment.getPatient().getUser().getUserId(),
+                    "Payment Confirmed by Admin",
+                    "Your payment of LKR " + appointment.getPaymentAmount()
+                            + " for appointment #" + appointmentId + " has been confirmed by the clinic administration.",
+                    "PAYMENT_DONE",
+                    appointmentId
+            );
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error confirming payment for appointment {}", appointmentId, e);
+            throw new CustomException(500, "Error occurred while confirming payment");
         }
-        appointment.setPaymentStatus(PaymentStatus.PAID);
-        appointment.setPaidAt(LocalDateTime.now());
-        appointmentRepository.save(appointment);
-
-        invoiceRepository.findByAppointment_AppointmentId(appointmentId).ifPresent(inv -> {
-            inv.setInvoiceStatus("PAID");
-            inv.setPaymentMethod("CASH");
-            inv.setPaidAt(LocalDateTime.now());
-            invoiceRepository.save(inv);
-        });
-
-        String patientUserId = appointment.getPatient().getUser().getUserId();
-        notificationService.createNotification(
-                patientUserId,
-                "Payment Confirmed by Admin",
-                "Your payment of LKR " + appointment.getPaymentAmount()
-                        + " for appointment #" + appointmentId + " has been confirmed by the clinic administration.",
-                "PAYMENT_DONE",
-                appointmentId
-        );
-        log.info("Admin confirmed payment for appointment {}", appointmentId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentDTO> getAllAppointments() {
-        return appointmentRepository.findAllWithDetails().stream()
-                .map(this::toDto).collect(Collectors.toList());
+        try {
+            return appointmentRepository.findAllWithDetails().stream()
+                    .map(this::toDto).collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error fetching all appointments", e);
+            throw new CustomException(500, "Error occurred while fetching appointments");
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentDTO> getDoctorWeekAppointments(String userId) {
-        Doctor doctor = doctorRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new RuntimeException("Doctor profile not found"));
-        LocalDate today = LocalDate.now();
-        LocalDate start = today.with(DayOfWeek.MONDAY);
-        LocalDate end   = today.with(DayOfWeek.SUNDAY);
-        return appointmentRepository.findDoctorWeek(doctor.getDoctorId(), start, end)
-                .stream().map(this::toDto).collect(Collectors.toList());
+        try {
+            Doctor doctor = doctorRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new CustomException(404, "Doctor profile not found"));
+            LocalDate today = LocalDate.now();
+            return appointmentRepository.findDoctorWeek(
+                    doctor.getDoctorId(),
+                    today.with(DayOfWeek.MONDAY),
+                    today.with(DayOfWeek.SUNDAY)
+            ).stream().map(this::toDto).collect(Collectors.toList());
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching week appointments for doctor user {}", userId, e);
+            throw new CustomException(500, "Error occurred while fetching appointments");
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentDTO> getDoctorAllAppointments(String userId) {
-        Doctor doctor = doctorRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new RuntimeException("Doctor profile not found"));
-        return appointmentRepository.findByDoctorId(doctor.getDoctorId())
-                .stream().map(this::toDto).collect(Collectors.toList());
+        try {
+            Doctor doctor = doctorRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new CustomException(404, "Doctor profile not found"));
+            return appointmentRepository.findByDoctorId(doctor.getDoctorId())
+                    .stream().map(this::toDto).collect(Collectors.toList());
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching all appointments for doctor user {}", userId, e);
+            throw new CustomException(500, "Error occurred while fetching appointments");
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentDTO> getMyAppointments(String userId) {
-        Patient patient = patientRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new RuntimeException("Patient profile not found"));
-        return appointmentRepository.findByPatientId(patient.getPatientId())
-                .stream().map(this::toDto).collect(Collectors.toList());
+        try {
+            Patient patient = patientRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new CustomException(404, "Patient profile not found"));
+            return appointmentRepository.findByPatientId(patient.getPatientId())
+                    .stream().map(this::toDto).collect(Collectors.toList());
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching appointments for patient user {}", userId, e);
+            throw new CustomException(500, "Error occurred while fetching appointments");
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public DoctorDashboardDTO getDoctorDashboard(String userId) {
-        Doctor doctor = doctorRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new RuntimeException("Doctor profile not found"));
+        try {
+            Doctor doctor = doctorRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new CustomException(404, "Doctor profile not found"));
 
-        List<AppointmentDTO> all = appointmentRepository.findByDoctorId(doctor.getDoctorId())
-                .stream().map(this::toDto).collect(Collectors.toList());
+            List<AppointmentDTO> all = appointmentRepository.findByDoctorId(doctor.getDoctorId())
+                    .stream().map(this::toDto).collect(Collectors.toList());
 
-        LocalDate today     = LocalDate.now();
-        LocalDate weekStart = today.with(DayOfWeek.MONDAY);
-        LocalDate weekEnd   = today.with(DayOfWeek.SUNDAY);
+            LocalDate today     = LocalDate.now();
+            LocalDate weekStart = today.with(DayOfWeek.MONDAY);
+            LocalDate weekEnd   = today.with(DayOfWeek.SUNDAY);
 
-        List<AppointmentDTO> thisWeek = all.stream()
-                .filter(a -> !a.getAppointmentDate().isBefore(weekStart)
-                          && !a.getAppointmentDate().isAfter(weekEnd))
-                .collect(Collectors.toList());
-        List<AppointmentDTO> pending = all.stream()
-                .filter(a -> a.getAppointmentState() == AppointmentState.PENDING)
-                .collect(Collectors.toList());
-        List<AppointmentDTO> checked = all.stream()
-                .filter(a -> a.getAppointmentState() == AppointmentState.CHECKED)
-                .collect(Collectors.toList());
+            List<AppointmentDTO> thisWeek = all.stream()
+                    .filter(a -> !a.getAppointmentDate().isBefore(weekStart)
+                              && !a.getAppointmentDate().isAfter(weekEnd))
+                    .collect(Collectors.toList());
+            List<AppointmentDTO> pending = all.stream()
+                    .filter(a -> a.getAppointmentState() == AppointmentState.PENDING).collect(Collectors.toList());
+            List<AppointmentDTO> checked = all.stream()
+                    .filter(a -> a.getAppointmentState() == AppointmentState.CHECKED).collect(Collectors.toList());
 
-        String spec = doctor.getSpecializations() != null
-                ? doctor.getSpecializations().getName() : "";
-
-        DoctorDashboardDTO d = new DoctorDashboardDTO();
-        d.setDoctorId(doctor.getDoctorId());
-        d.setDoctorName((doctor.getFirstName() + " " + doctor.getLastName()).trim());
-        d.setSpecializationName(spec);
-        d.setAllAppointments(all);
-        d.setThisWeekAppointments(thisWeek);
-        d.setPendingAppointments(pending);
-        d.setCheckedAppointments(checked);
-        d.setTotalCount((long) all.size());
-        d.setThisWeekCount((long) thisWeek.size());
-        d.setPendingCount((long) pending.size());
-        d.setCheckedCount((long) checked.size());
-        return d;
+            DoctorDashboardDTO d = new DoctorDashboardDTO();
+            d.setDoctorId(doctor.getDoctorId());
+            d.setDoctorName((doctor.getFirstName() + " " + doctor.getLastName()).trim());
+            d.setSpecializationName(doctor.getSpecializations() != null ? doctor.getSpecializations().getName() : "");
+            d.setAllAppointments(all);
+            d.setThisWeekAppointments(thisWeek);
+            d.setPendingAppointments(pending);
+            d.setCheckedAppointments(checked);
+            d.setTotalCount((long) all.size());
+            d.setThisWeekCount((long) thisWeek.size());
+            d.setPendingCount((long) pending.size());
+            d.setCheckedCount((long) checked.size());
+            return d;
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching doctor dashboard for user {}", userId, e);
+            throw new CustomException(500, "Error occurred while fetching doctor dashboard");
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public AdminOverviewDTO getAdminOverview() {
-        List<AppointmentDTO> all     = getAllAppointments();
-        List<AppointmentDTO> pending = all.stream()
-                .filter(a -> a.getAppointmentState() == AppointmentState.PENDING).collect(Collectors.toList());
-        List<AppointmentDTO> checked = all.stream()
-                .filter(a -> a.getAppointmentState() == AppointmentState.CHECKED).collect(Collectors.toList());
+        try {
+            List<AppointmentDTO> all     = getAllAppointments();
+            List<AppointmentDTO> pending = all.stream()
+                    .filter(a -> a.getAppointmentState() == AppointmentState.PENDING).collect(Collectors.toList());
+            List<AppointmentDTO> checked = all.stream()
+                    .filter(a -> a.getAppointmentState() == AppointmentState.CHECKED).collect(Collectors.toList());
 
-        List<DoctorDTO>  doctors  = doctorService.getAllDoctors();
-        List<PatientDTO> patients = patientService.getAllPatients();
+            List<DoctorDTO>  doctors  = doctorService.getAllDoctors();
+            List<PatientDTO> patients = patientService.getAllPatients();
 
-        Map<String, DoctorPatientsDTO> grouped = new LinkedHashMap<>();
-        for (DoctorDTO doc : doctors) {
-            DoctorPatientsDTO row = new DoctorPatientsDTO();
-            row.setDoctorId(doc.getDoctorId());
-            row.setDoctorName((doc.getFirstName() + " " + doc.getLastName()).trim());
-            row.setSpecializationName(doc.getSpecializationName());
-            row.setAppointments(new ArrayList<>());
-            row.setPendingAppointments(new ArrayList<>());
-            row.setCheckedAppointments(new ArrayList<>());
-            grouped.put(doc.getDoctorId(), row);
-        }
-        for (AppointmentDTO a : all) {
-            DoctorPatientsDTO row = grouped.get(a.getDoctorId());
-            if (row != null) {
-                row.getAppointments().add(a);
-                if (a.getAppointmentState() == AppointmentState.PENDING)
-                    row.getPendingAppointments().add(a);
-                else if (a.getAppointmentState() == AppointmentState.CHECKED)
-                    row.getCheckedAppointments().add(a);
+            Map<String, DoctorPatientsDTO> grouped = new LinkedHashMap<>();
+            for (DoctorDTO doc : doctors) {
+                DoctorPatientsDTO row = new DoctorPatientsDTO();
+                row.setDoctorId(doc.getDoctorId());
+                row.setDoctorName((doc.getFirstName() + " " + doc.getLastName()).trim());
+                row.setSpecializationName(doc.getSpecializationName());
+                row.setAppointments(new ArrayList<>());
+                row.setPendingAppointments(new ArrayList<>());
+                row.setCheckedAppointments(new ArrayList<>());
+                grouped.put(doc.getDoctorId(), row);
             }
+            for (AppointmentDTO a : all) {
+                DoctorPatientsDTO row = grouped.get(a.getDoctorId());
+                if (row != null) {
+                    row.getAppointments().add(a);
+                    if (a.getAppointmentState() == AppointmentState.PENDING)
+                        row.getPendingAppointments().add(a);
+                    else if (a.getAppointmentState() == AppointmentState.CHECKED)
+                        row.getCheckedAppointments().add(a);
+                }
+            }
+            grouped.values().forEach(row -> {
+                row.setPendingCount((long) row.getPendingAppointments().size());
+                row.setCheckedCount((long) row.getCheckedAppointments().size());
+            });
+
+            AdminOverviewDTO overview = new AdminOverviewDTO();
+            overview.setDoctorCount((long) doctors.size());
+            overview.setPatientCount((long) patients.size());
+            overview.setPendingCount((long) pending.size());
+            overview.setCheckedCount((long) checked.size());
+            overview.setUnpaidCount(all.stream().filter(a -> a.getPaymentStatus() == PaymentStatus.UNPAID).count());
+            overview.setDoctors(doctors);
+            overview.setPatients(patients);
+            overview.setPendingAppointments(pending);
+            overview.setCheckedAppointments(checked);
+            overview.setAllAppointments(all);
+            overview.setDoctorPatients(new ArrayList<>(grouped.values()));
+            return overview;
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching admin overview", e);
+            throw new CustomException(500, "Error occurred while fetching admin overview");
         }
-        grouped.values().forEach(row -> {
-            row.setPendingCount((long) row.getPendingAppointments().size());
-            row.setCheckedCount((long) row.getCheckedAppointments().size());
-        });
-
-        AdminOverviewDTO overview = new AdminOverviewDTO();
-        overview.setDoctorCount((long) doctors.size());
-        overview.setPatientCount((long) patients.size());
-        overview.setPendingCount((long) pending.size());
-        overview.setCheckedCount((long) checked.size());
-        overview.setUnpaidCount(all.stream().filter(a -> a.getPaymentStatus() == PaymentStatus.UNPAID).count());
-        overview.setDoctors(doctors);
-        overview.setPatients(patients);
-        overview.setPendingAppointments(pending);
-        overview.setCheckedAppointments(checked);
-        overview.setAllAppointments(all);
-        overview.setDoctorPatients(new ArrayList<>(grouped.values()));
-        return overview;
     }
-
 
     private AppointmentDTO toDto(Appointments a) {
         AppointmentDTO dto = new AppointmentDTO();
@@ -412,15 +464,13 @@ public class AppointmentServiceImpl implements AppointmentService {
         return dto;
     }
 
-
     private Patient resolvePatient(AppointmentDTO dto) {
         if (dto.getPatientId() != null && !dto.getPatientId().isBlank())
             return patientRepository.findById(dto.getPatientId())
-                    .orElseThrow(() -> new RuntimeException("Patient not found: " + dto.getPatientId()));
+                    .orElseThrow(() -> new CustomException(404, "Patient not found"));
         if (dto.getUserId() != null && !dto.getUserId().isBlank())
             return patientRepository.findByUser_UserId(dto.getUserId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Patient profile not found. Please complete patient details first."));
-        throw new RuntimeException("Patient is required");
+                    .orElseThrow(() -> new CustomException(404, "Patient profile not found. Please complete patient details first."));
+        throw new CustomException(400, "Patient is required");
     }
 }
