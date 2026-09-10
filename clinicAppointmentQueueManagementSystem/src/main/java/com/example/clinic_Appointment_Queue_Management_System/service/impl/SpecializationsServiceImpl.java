@@ -74,4 +74,21 @@ public class SpecializationsServiceImpl implements SpecializationsService {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void deleteSpecialization(String specializationId) {
+        log.info("In SpecializationsImpl deleteSpecialization");
+        try{
+            Optional<Specializations> optionalSpecialization = specializationsRepository.findById(specializationId);
+
+            if (optionalSpecialization.isEmpty())
+                throw new RuntimeException("Specialization not found with ID: " + specializationId);
+            Specializations specializations = optionalSpecialization.get();
+            specializations.setStatus(Status.INACTIVE);
+            specializationsRepository.save(specializations);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

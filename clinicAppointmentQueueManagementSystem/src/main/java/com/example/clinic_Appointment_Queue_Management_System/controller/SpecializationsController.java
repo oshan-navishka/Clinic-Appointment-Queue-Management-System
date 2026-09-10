@@ -37,4 +37,11 @@ public class SpecializationsController {
         List<SpecializationsDTO> specializationsDTOList = specializationsService.getAllSpecializations();
         return new CommonResponse(0, specializationsDTOList, "Specialization fetched successfully");
     }
+
+    @DeleteMapping(value = "/deleteSpecialization/{specializationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse deleteSpecialization(@PathVariable String specializationId) {
+        log.info("Delete Specialization");
+        specializationsService.deleteSpecialization(specializationId);
+        return new CommonResponse(0, "Specialization deleted successfully");
+    }
 }

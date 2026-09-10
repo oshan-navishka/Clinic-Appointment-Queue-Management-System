@@ -10,4 +10,6 @@ public interface SpecializationsService {
     List<SpecializationsDTO> getAllSpecializations();
 
     void updateSpecialization(SpecializationsDTO specializationsDTO);
+
+    void deleteSpecialization(String specializationId);
 }
