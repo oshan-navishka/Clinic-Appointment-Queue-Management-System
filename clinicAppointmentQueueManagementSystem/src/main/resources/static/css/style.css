@@ -712,3 +712,98 @@ tr:hover td {
         padding: 1.25rem;
     }
 }
+
+/* ── Form Utilities (shared across all admin pages) ───────────────────── */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.field-input {
+    width: 100%;
+    padding: 0.72rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: #f8fafc;
+    color: var(--text-main);
+    outline: none;
+    transition: var(--transition);
+}
+
+.field-input:focus {
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(0, 180, 219, 0.10);
+}
+
+/* Logo icon shared */
+.logo-icon {
+    background: var(--accent);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.logo-text { font-weight: 700; font-size: 1.3rem; }
+.logo-text span { font-weight: 400; opacity: 0.75; }
+
+/* Tab button pattern */
+.tab-row { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+
+.tab-btn {
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--info-bg);
+    color: var(--navy);
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.tab-btn.active {
+    background: var(--accent-grad);
+    color: white;
+    box-shadow: 0 3px 10px rgba(0, 180, 219, 0.2);
+}
+
+.tab-btn:hover:not(.active) { background: #d0ebf7; }
+
+/* Empty state */
+.empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    z-index: 200; display: none; align-items: center;
+    justify-content: center; padding: 1rem;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+    background: #fff; border-radius: var(--radius-lg);
+    padding: 2rem; width: 100%; max-width: 520px;
+    box-shadow: var(--shadow-lg); position: relative;
+    max-height: 90vh; overflow-y: auto;
+}
+.modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: none; border: none; font-size: 1.2rem;
+    color: var(--text-muted); cursor: pointer;
+}
+.modal-close:hover { color: var(--navy); }
