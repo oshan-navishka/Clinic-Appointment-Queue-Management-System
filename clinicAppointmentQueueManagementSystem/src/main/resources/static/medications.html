@@ -1,0 +1,562 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Medications</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+        <!-- nav built by sidebar.js based on role -->
+    </aside>
+
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2>Patient Medications</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert alert-error" style="display:none"></div>
+
+            <!-- ── Pending Approvals Section ──────────────────────────── -->
+            <div id="pendingSection" class="dashboard-box" style="display:none;margin-bottom:1.5rem;
+                 border-left:4px solid #7c3aed">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-clock" style="color:#7c3aed"></i> Pending Medication Confirmations
+                        <span id="pendingCountBadge" style="background:#7c3aed;color:#fff;font-size:.72rem;
+                              font-weight:600;padding:.2rem .7rem;border-radius:20px;margin-left:.5rem">0</span>
+                    </h3>
+                    <button class="btn btn-sm btn-secondary" onclick="loadAllMedications()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div id="pendingMedContainer"></div>
+            </div>
+
+            <!-- Stats -->
+            <div class="cards">
+                <div class="card card-blue">
+                    <div class="card-header-icon"><h3>Total Records</h3>
+                        <div class="icon-wrapper"><i class="fas fa-pills"></i></div></div>
+                    <div class="num" id="cTotal">0</div>
+                </div>
+                <div class="card card-green">
+                    <div class="card-header-icon"><h3>Active</h3>
+                        <div class="icon-wrapper"><i class="fas fa-check-circle"></i></div></div>
+                    <div class="num" id="cActive">0</div>
+                </div>
+                <div class="card card-emerald">
+                    <div class="card-header-icon"><h3>Completed</h3>
+                        <div class="icon-wrapper"><i class="fas fa-flag-checkered"></i></div></div>
+                    <div class="num" id="cCompleted">0</div>
+                </div>
+                <div class="card card-red">
+                    <div class="card-header-icon"><h3>Stopped</h3>
+                        <div class="icon-wrapper"><i class="fas fa-ban"></i></div></div>
+                    <div class="num" id="cStopped">0</div>
+                </div>
+            </div>
+
+            <!-- Form + Search -->
+<!--            <div class="dashboard-box" style="margin-bottom:1.5rem">-->
+<!--                <div class="dashboard-box-header">-->
+<!--                    <h3 id="formTitle"><i class="fas fa-plus-circle"></i> Add Medication</h3>-->
+<!--                    <button class="btn btn-sm btn-secondary" onclick="clearForm()">-->
+<!--                        <i class="fas fa-times"></i> Clear-->
+<!--                    </button>-->
+<!--                </div>-->
+
+<!--                <form id="medForm" class="form-grid">-->
+<!--                    <input type="hidden" id="medicationId">-->
+
+<!--                    &lt;!&ndash; Patient search row &ndash;&gt;-->
+<!--                    <div style="grid-column:1/-1;display:flex;gap:.7rem;align-items:flex-end">-->
+<!--                        <div style="flex:1">-->
+<!--                            <label style="font-size:.82rem;font-weight:600;color:var(&#45;&#45;navy-light);-->
+<!--                                          display:block;margin-bottom:.4rem">-->
+<!--                                Search Patient-->
+<!--                            </label>-->
+<!--                            <input type="text" id="patientSearch"-->
+<!--                                   class="field-input" placeholder="Type name or phone to search..."-->
+<!--                                   oninput="searchPatients(this.value)">-->
+<!--                        </div>-->
+<!--                        <select class="field-input" id="patientId" style="flex:1.2"-->
+<!--                                onchange="onPatientSelected()">-->
+<!--                            <option value="" disabled selected>Select Patient</option>-->
+<!--                        </select>-->
+<!--                    </div>-->
+
+<!--                    <input class="field-input" id="medicineName" placeholder="Medicine name *" required>-->
+<!--                    <input class="field-input" id="dosage"       placeholder="Dosage (e.g. 500mg)">-->
+<!--                    <input class="field-input" id="frequency"    placeholder="Frequency (e.g. Twice daily)">-->
+<!--                    <select class="field-input" id="status">-->
+<!--                        <option value="ACTIVE">Active</option>-->
+<!--                        <option value="COMPLETED">Completed</option>-->
+<!--                        <option value="STOPPED">Stopped</option>-->
+<!--                    </select>-->
+<!--                    <input class="field-input" type="date" id="startDate" placeholder="Start date">-->
+<!--                    <input class="field-input" type="date" id="endDate"   placeholder="End date">-->
+
+<!--                    <div style="grid-column:1/-1;display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.3rem">-->
+<!--                        <button class="btn" type="button" onclick="saveMedication()">-->
+<!--                            <i class="fas fa-plus"></i> Save Medication-->
+<!--                        </button>-->
+<!--                        <button class="btn btn-secondary" type="button" onclick="updateSelectedStatus()">-->
+<!--                            <i class="fas fa-pen"></i> Update Status-->
+<!--                        </button>-->
+<!--                        <button class="btn btn-danger" type="button" onclick="deleteMedication()">-->
+<!--                            <i class="fas fa-trash"></i> Delete-->
+<!--                        </button>-->
+<!--                    </div>-->
+<!--                </form>-->
+<!--            </div>-->
+
+            <!-- Medications Table -->
+            <div class="dashboard-box">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-list"></i> Medication Records</h3>
+                    <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+                        <input type="text" id="medSearchInput" class="field-input"
+                               style="width:230px"
+                               placeholder="Search by name or phone..."
+                               oninput="handleMedSearch(this.value)">
+                        <button class="btn btn-sm" onclick="handleMedSearch($('#medSearchInput').val())">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="clearMedSearch()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
+                <!-- search results dropdown -->
+                <div id="searchResultsBox" style="display:none;background:#f8fafc;border:1px solid #e2eaf2;
+                     border-radius:var(--radius-md);padding:.6rem;margin-bottom:1rem">
+                    <div style="font-size:.78rem;font-weight:600;color:#64748b;text-transform:uppercase;
+                                letter-spacing:.4px;margin-bottom:.4rem">Select a patient:</div>
+                    <div id="searchResultsList"></div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Patient</th>
+                            <th>Medicine</th>
+                            <th>Dosage</th>
+                            <th>Frequency</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="medTable">
+                        <tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:1.5rem">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+    const statusStyle = {
+        ACTIVE:            'background:#d1fae5;color:#065f46',
+        COMPLETED:         'background:#dbeafe;color:#1e40af',
+        STOPPED:           'background:#fee2e2;color:#991b1b',
+        PENDING_APPROVAL:  'background:#fef3c7;color:#92400e'
+    };
+
+    // function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.textContent = msg;
+        el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+        el.style.display = 'flex';
+        setTimeout(() => el.style.display = 'none', 4000);
+    }
+
+    function clearForm() {
+        document.getElementById('medForm').reset();
+        document.getElementById('medicationId').value = '';
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Add Medication';
+    }
+
+    $(document).ready(function () {
+        if (!token()) { window.location.href = 'login.html'; return; }
+        $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Admin'));
+        loadAllMedications();
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#searchResultsBox, #medSearchInput').length) {
+                $('#searchResultsBox').hide();
+            }
+        });
+    });
+
+    var _searchTimer = null;
+
+    function handleMedSearch(keyword) {
+        keyword = (keyword || '').trim();
+        if (!keyword || keyword.length < 2) {
+            $('#searchResultsBox').hide();
+            return;
+        }
+        clearTimeout(_searchTimer);
+        _searchTimer = setTimeout(function() { doPatientSearch(keyword); }, 300);
+    }
+
+    function doPatientSearch(keyword) {
+        $.ajax({
+            url: API + '/api/patients/searchPatients?keyword=' + encodeURIComponent(keyword),
+            method: 'GET', headers: authHdr(),
+            success: function (res) {
+                const patients = res.body || [];
+                const list = $('#searchResultsList').empty();
+                $('#searchResultsBox').show();
+
+                if (!patients.length) {
+                    list.html('<div style="font-size:.85rem;color:#94a3b8;padding:.4rem .2rem">No patients found for "' + keyword + '"</div>');
+                    return;
+                }
+                patients.forEach(p => {
+                    const item = $(`
+                        <div style="display:flex;align-items:center;justify-content:space-between;
+                                    padding:.55rem .8rem;border-radius:8px;cursor:pointer;
+                                    background:#fff;border:1px solid #e2eaf2;margin-bottom:.3rem;
+                                    transition:.15s" onmouseover="this.style.background='#e8f4fd'"
+                                    onmouseout="this.style.background='#fff'">
+                            <div>
+                                <div style="font-weight:600;font-size:.9rem;color:#0b2a44">
+                                    ${p.firstName} ${p.lastName}
+                                </div>
+                                <div style="font-size:.78rem;color:#64748b;margin-top:.1rem">
+                                    <i class="fas fa-phone" style="margin-right:.3rem;color:#94a3b8"></i>${p.contact||'—'}
+                                    &nbsp;·&nbsp;
+                                    <code style="font-size:.75rem;background:#f1f5f9;padding:.1rem .4rem;border-radius:4px">${p.patientId}</code>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm" style="background:#0b2a44;color:#fff;font-size:.78rem">
+                                <i class="fas fa-search"></i> View Meds
+                            </button>
+                        </div>
+                    `);
+                    item.on('click', function () {
+                        $('#medSearchInput').val(p.firstName + ' ' + p.lastName);
+                        $('#searchResultsBox').hide();
+                        loadMedicationsByPatient(p.patientId);
+                    });
+                    list.append(item);
+                });
+            },
+            error: function () { $('#searchResultsBox').hide(); }
+        });
+    }
+
+    function clearMedSearch() {
+        $('#medSearchInput').val('');
+        $('#searchResultsBox').hide();
+        loadAllMedications();
+    }
+
+    function loadAllMedications() {
+        $('#medTable').html('<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:1.5rem">'
+            + '<i class="fas fa-spinner fa-spin"></i> Loading all medications...</td></tr>');
+
+        loadPendingCount();
+        loadAllFromAllPatients();
+    }
+
+    function loadPendingCount() {
+        $.ajax({
+            url: API + '/api/medications/pendingApproval', method: 'GET', headers: authHdr(),
+            success: function (res) {
+                const count = (res.body || []).length;
+                const badge = document.getElementById('pendingCountBadge');
+                if (badge) { badge.textContent = count > 0 ? count + ' pending' : 'None'; }
+                if (count > 0 && document.getElementById('pendingSection')) {
+                    document.getElementById('pendingSection').style.display = 'block';
+                    renderPendingSection(res.body || []);
+                }
+            },
+            error: function () {}
+        });
+    }
+
+    function renderPendingSection(list) {
+        const container = $('#pendingMedContainer').empty();
+        if (!list.length) { container.html('<p style="color:#16a34a;font-weight:600"><i class="fas fa-check-circle"></i> No pending approvals.</p>'); return; }
+        const byPatient = {};
+        list.forEach(m => {
+            if (!byPatient[m.patientId]) byPatient[m.patientId] = { name: m.patientName, meds: [] };
+            byPatient[m.patientId].meds.push(m);
+        });
+        Object.values(byPatient).forEach(grp => {
+            let rows = '';
+            grp.meds.forEach(m => {
+                rows += `<tr>
+                    <td><strong>${m.medicineName||'—'}</strong></td>
+                    <td>${m.dosage||'—'}</td>
+                    <td>${m.frequency||'—'}</td>
+                    <td>${m.startDate||'—'}</td>
+                    <td>${m.endDate||'—'}</td>
+                    <td><button class="btn btn-sm" style="background:#16a34a;color:#fff;font-size:.78rem;padding:.3rem .8rem"
+                        onclick="approveMed('${m.medicationId}','${m.patientId}')">
+                        <i class="fas fa-check"></i> Confirm</button></td>
+                </tr>`;
+            });
+            const allIds = grp.meds.map(m => m.medicationId).join(',');
+            container.append(`
+                <div style="border:1.5px solid #c4b5fd;border-radius:var(--radius-md);margin-bottom:1rem;overflow:hidden">
+                    <div style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);padding:.8rem 1rem;
+                                display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap">
+                        <div style="font-weight:700;color:var(--navy)">${grp.name}
+                            <span style="font-size:.78rem;color:#5b21b6;font-weight:400;margin-left:.5rem">
+                                (${grp.meds.length} medicine(s))
+                            </span>
+                        </div>
+                        <button class="btn btn-sm" style="background:#7c3aed;color:#fff"
+                            onclick="approveAllMeds('${allIds}','${grp.meds[0].patientId}')">
+                            <i class="fas fa-check-double"></i> Confirm All
+                        </button>
+                    </div>
+                    <div class="table-wrap" style="padding:0 1rem .8rem">
+                        <table><thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th>
+                            <th>Start</th><th>End</th><th>Action</th></tr></thead>
+                        <tbody>${rows}</tbody></table>
+                    </div>
+                </div>`);
+        });
+    }
+
+    function approveAllMeds(ids, patientId) {
+        if (!confirm('Confirm all medicines for this patient?')) return;
+        const arr = ids.split(',').filter(Boolean);
+        let done = 0;
+        arr.forEach(id => $.ajax({
+            url: API + '/api/medications/approve/' + id, method: 'PUT', headers: authHdr(),
+            success: function () { if (++done === arr.length) { showAlert('All confirmed!', 'success'); loadAllMedications(); loadMedicationsByPatient(patientId); } },
+            error:   function () { if (++done === arr.length) loadAllMedications(); }
+        }));
+    }
+
+    function loadAllFromAllPatients() {
+        $.ajax({
+            url: API + '/api/patients/allPatients', method: 'GET', headers: authHdr(),
+            success: function (res) {
+                const patients = res.body || [];
+                if (!patients.length) {
+                    $('#medTable').html('<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:1.5rem">No patients found.</td></tr>');
+                    return;
+                }
+                let allMeds = [], loaded = 0;
+                patients.forEach(p => {
+                    $.ajax({
+                        url: API + '/api/medications/byPatient/' + p.patientId, method: 'GET', headers: authHdr(),
+                        success: function (mr) { allMeds = allMeds.concat(mr.body || []); },
+                        error: function () {},
+                        complete: function () {
+                            loaded++;
+                            if (loaded === patients.length) renderTable(allMeds);
+                        }
+                    });
+                });
+            },
+            error: function () {
+                $('#medTable').html('<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:1.5rem">Use search to find a patient.</td></tr>');
+            }
+        });
+    }
+
+    function loadMedicationsByPatient(patientId) {
+        $.ajax({
+            url: API + '/api/medications/byPatient/' + patientId,
+            method: 'GET', headers: authHdr(),
+            success: function (res) {
+                renderTable(res.body || []);
+            },
+            error: () => showAlert('Failed to load medications.', 'error')
+        });
+    }
+
+    function filterByPatient() {
+        const pid = $('#medSearchInput').val().trim();
+        if (!pid) { showAlert('Enter a search term.', 'error'); return; }
+        doPatientSearch(pid);
+    }
+
+    function renderTable(list) {
+        const tbody = $('#medTable').empty();
+
+        $('#cTotal').text(list.length);
+        $('#cActive').text(list.filter(m => m.status === 'ACTIVE').length);
+        $('#cCompleted').text(list.filter(m => m.status === 'COMPLETED').length);
+        $('#cStopped').text(list.filter(m => m.status === 'STOPPED').length);
+
+        if (!list.length) {
+            tbody.html('<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:1.5rem">No medications found.</td></tr>');
+            return;
+        }
+
+        list.forEach(m => {
+            const st = statusStyle[m.status] || '';
+            const approveBtn = m.status === 'PENDING_APPROVAL'
+                ? `<button class="btn btn-sm" style="background:#16a34a;color:#fff;font-size:.75rem;padding:.25rem .7rem"
+                     onclick="approveMed('${m.medicationId}','${m.patientId}')">
+                     <i class="fas fa-check"></i> Approve</button>`
+                : '';
+            const row = $(`
+                <tr style="cursor:pointer">
+                    <td><strong>${m.medicationId}</strong></td>
+                    <td>${m.patientName || '—'}</td>
+                    <td><strong>${m.medicineName || '—'}</strong></td>
+                    <td>${m.dosage || '—'}</td>
+                    <td>${m.frequency || '—'}</td>
+                    <td>${m.startDate || '—'}</td>
+                    <td>${m.endDate   || '—'}</td>
+                    <td>
+                      <span style="display:inline-block;padding:.22rem .65rem;border-radius:999px;
+                                   font-size:.75rem;font-weight:600;${st}">${m.status}</span>
+                      ${approveBtn}
+                    </td>
+                </tr>
+            `);
+            row.on('click', () => {
+                $('#medicationId').val(m.medicationId);
+                $('#patientId').empty().append(`<option value="${m.patientId}" selected>${m.patientName}</option>`);
+                $('#medicineName').val(m.medicineName);
+                $('#dosage').val(m.dosage);
+                $('#frequency').val(m.frequency);
+                $('#status').val(m.status);
+                $('#startDate').val(m.startDate || '');
+                $('#endDate').val(m.endDate || '');
+                document.getElementById('formTitle').innerHTML =
+                    '<i class="fas fa-pen"></i> Edit — ' + m.medicineName;
+            });
+            tbody.append(row);
+        });
+    }
+
+    function saveMedication() {
+        const patientId   = $('#patientId').val();
+        const medicineName = $('#medicineName').val().trim();
+        if (!patientId)    { showAlert('Please select a patient.', 'error'); return; }
+        if (!medicineName) { showAlert('Medicine name is required.', 'error'); return; }
+
+        $.ajax({
+            url: API + '/api/medications/save', method: 'POST',
+            contentType: 'application/json', headers: authHdr(),
+            data: JSON.stringify({
+                patientId,
+                medicineName,
+                dosage:    $('#dosage').val().trim(),
+                frequency: $('#frequency').val().trim(),
+                status:    $('#status').val(),
+                startDate: $('#startDate').val() || null,
+                endDate:   $('#endDate').val()   || null
+            }),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Medication saved!', 'success');
+                    clearForm();
+                    loadMedicationsByPatient(patientId);
+                } else showAlert(res.message || 'Failed.', 'error');
+            },
+            error: function (xhr) {
+                let m = 'Error saving.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showAlert(m, 'error');
+            }
+        });
+    }
+
+    function updateSelectedStatus() {
+        const medicationId = $('#medicationId').val().trim();
+        const patientId    = $('#patientId').val();
+        const newStatus    = $('#status').val();
+        if (!medicationId) { showAlert('Select a medication record from the table first.', 'error'); return; }
+
+        $.ajax({
+            url: `${API}/api/medications/updateStatus/${medicationId}?status=${newStatus}`,
+            method: 'PUT', headers: authHdr(),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Status updated to ' + newStatus + '!', 'success');
+                    if (patientId) loadMedicationsByPatient(patientId);
+                } else showAlert(res.message || 'Failed.', 'error');
+            },
+            error: function (xhr) {
+                let m = 'Error updating.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showAlert(m, 'error');
+            }
+        });
+    }
+
+    function approveMed(medicationId, patientId) {
+        if (!confirm('Approve this medication? Patient will be notified.')) return;
+        $.ajax({
+            url: API + '/api/medications/approve/' + medicationId,
+            method: 'PUT', headers: authHdr(),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Medication approved! Patient notified.', 'success');
+                    loadMedicationsByPatient(patientId);
+                } else showAlert(res.message || 'Failed.', 'error');
+            },
+            error: function (xhr) {
+                let m = 'Approval failed.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showAlert(m, 'error');
+            }
+        });
+    }
+
+    function deleteMedication() {
+        const medicationId = $('#medicationId').val().trim();
+        const patientId    = $('#patientId').val();
+        if (!medicationId) { showAlert('Select a medication from the table first.', 'error'); return; }
+        if (!confirm('Delete this medication record?')) return;
+
+        $.ajax({
+            url: API + '/api/medications/' + medicationId,
+            method: 'DELETE', headers: authHdr(),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Medication deleted.', 'success');
+                    clearForm();
+                    if (patientId) loadMedicationsByPatient(patientId);
+                } else showAlert(res.message || 'Failed.', 'error');
+            },
+            error: function (xhr) {
+                let m = 'Error deleting.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showAlert(m, 'error');
+            }
+        });
+    }
+</script>
+</body>
+</html>
+
