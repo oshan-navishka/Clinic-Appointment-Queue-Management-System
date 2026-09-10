@@ -1,0 +1,368 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - User Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+    <style>
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+        .field-input { width:100%; padding:.72rem 1rem; border:1.5px solid var(--border-color);
+                       border-radius:var(--radius-md); font-size:.95rem; font-family:inherit;
+                       background:#f8fafc; color:var(--text-main); outline:none; transition:.2s; }
+        .field-input:focus { border-color:var(--accent); background:#fff;
+                             box-shadow:0 0 0 3px rgba(0,180,219,.1); }
+        .badge { display:inline-block; padding:.22rem .65rem; border-radius:999px;
+                 font-size:.75rem; font-weight:600; }
+        .badge-admin    { background:#ede9fe; color:#5b21b6; }
+        .badge-super    { background:#fee2e2; color:#991b1b; }
+        .badge-doctor   { background:#d1fae5; color:#065f46; }
+        .badge-patient  { background:#dbeafe; color:#1e40af; }
+        .badge-active   { background:#d1fae5; color:#065f46; }
+        .badge-inactive { background:#f1f5f9; color:#64748b; }
+        .empty { text-align:center; color:var(--text-muted); padding:2rem; }
+        .super-only-banner {
+            background:linear-gradient(135deg,#7c3aed,#4f46e5);
+            color:#fff; border-radius:var(--radius-lg); padding:1.4rem 1.8rem;
+            margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem;
+        }
+        .super-only-banner i { font-size:2rem; opacity:.85; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+        <!-- nav built by sidebar.js based on role -->
+    </aside>
+
+    <!-- ── Main ─────────────────────────────────────────────────────────── -->
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2>User Management</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert alert-error" style="display:none"></div>
+
+            <!-- Super admin only banner -->
+            <div class="super-only-banner">
+                <i class="fas fa-shield-halved"></i>
+                <div>
+                    <div style="font-size:1.05rem;font-weight:700;margin-bottom:.25rem">
+                        Super Admin — System User Management
+                    </div>
+                    <div style="font-size:.9rem;opacity:.85">
+                        Only Super Admins can create, view, and manage system user accounts including Admin users.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="cards" style="margin-bottom:1.5rem">
+                <div class="card card-red">
+                    <div class="card-header-icon"><h3>Super Admins</h3>
+                        <div class="icon-wrapper"><i class="fas fa-shield-halved"></i></div></div>
+                    <div class="num" id="cSuper">0</div>
+                </div>
+                <div class="card card-purple">
+                    <div class="card-header-icon"><h3>Admins</h3>
+                        <div class="icon-wrapper"><i class="fas fa-users-gear"></i></div></div>
+                    <div class="num" id="cAdmin">0</div>
+                </div>
+                <div class="card card-green">
+                    <div class="card-header-icon"><h3>Doctors</h3>
+                        <div class="icon-wrapper"><i class="fas fa-user-doctor"></i></div></div>
+                    <div class="num" id="cDoctor">0</div>
+                </div>
+                <div class="card card-blue">
+                    <div class="card-header-icon"><h3>Patients</h3>
+                        <div class="icon-wrapper"><i class="fas fa-user-injured"></i></div></div>
+                    <div class="num" id="cPatient">0</div>
+                </div>
+            </div>
+
+            <!-- Create Admin User form -->
+            <div class="dashboard-box" style="margin-bottom:1.5rem">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-user-plus" style="color:var(--accent)"></i> Create Admin Account</h3>
+                    <button class="btn btn-sm btn-secondary" onclick="clearForm()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+
+                <!-- info note -->
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-md);
+                            padding:.9rem 1.1rem;margin-bottom:1rem;font-size:.88rem;color:#15803d">
+                    <i class="fas fa-info-circle" style="margin-right:.4rem"></i>
+                    Creating an <strong>ADMIN</strong> user here allows that person to log in and access
+                    the Admin Dashboard. Only Super Admins can perform this action.
+                </div>
+
+                <form id="userForm" class="form-grid" onsubmit="createUser();return false;">
+                    <div>
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                      display:block;margin-bottom:.4rem">
+                            Username <span style="color:#dc2626">*</span>
+                        </label>
+                        <input class="field-input" id="uUsername" placeholder="admin_user" required>
+                    </div>
+                    <div>
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                      display:block;margin-bottom:.4rem">
+                            Email <span style="color:#dc2626">*</span>
+                        </label>
+                        <input class="field-input" type="email" id="uEmail"
+                               placeholder="admin@clinic.com" required>
+                    </div>
+                    <div>
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                      display:block;margin-bottom:.4rem">
+                            Password <span style="color:#dc2626">*</span>
+                        </label>
+                        <div style="position:relative">
+                            <input class="field-input" type="password" id="uPassword"
+                                   placeholder="Min 8 characters" required style="padding-right:2.8rem">
+                            <span onclick="togglePwd()" id="toggleEye"
+                                  style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);
+                                         cursor:pointer;color:var(--text-muted)">
+                                <i class="fas fa-eye-slash"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                      display:block;margin-bottom:.4rem">
+                            Role <span style="color:#dc2626">*</span>
+                        </label>
+                        <select class="field-input" id="uRole">
+                            <option value="ADMIN" selected>ADMIN</option>
+                            <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                        </select>
+                    </div>
+
+                    <div style="grid-column:1/-1;margin-top:.3rem">
+                        <button type="submit" class="btn" id="createBtn">
+                            <i class="fas fa-user-plus"></i> Create User Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- All users table -->
+            <div class="dashboard-box">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-users"></i> All System Users</h3>
+                    <div style="display:flex;gap:.5rem;align-items:center">
+                        <select id="roleFilter" class="field-input" style="width:140px;padding:.45rem .8rem"
+                                onchange="filterUsers()">
+                            <option value="ALL">All Roles</option>
+                            <option value="SUPER_ADMIN">Super Admin</option>
+                            <option value="ADMIN">Admin</option>
+                            <option value="DOCTOR">Doctor</option>
+                            <option value="PATIENT">Patient</option>
+                        </select>
+                        <button class="btn btn-sm btn-secondary" onclick="loadUsers()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="userTable">
+                        <tr><td colspan="5" class="empty">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+    let allUsers = [];
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.textContent = msg;
+        el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+        el.style.display = 'flex';
+        setTimeout(() => el.style.display = 'none', 5000);
+    }
+
+    function togglePwd() {
+        const p = document.getElementById('uPassword');
+        const e = document.getElementById('toggleEye').querySelector('i');
+        if (p.type === 'password') {
+            p.type = 'text';
+            e.className = 'fas fa-eye';
+        } else {
+            p.type = 'password';
+            e.className = 'fas fa-eye-slash';
+        }
+    }
+
+    function clearForm() {
+        document.getElementById('userForm').reset();
+        document.getElementById('uRole').value = 'ADMIN';
+    }
+
+    $(document).ready(function () {
+        if (!token()) { window.location.href = 'login.html'; return; }
+        const role = localStorage.getItem('userRole');
+        if (role !== 'SUPER_ADMIN') {
+            document.querySelector('.page').innerHTML =
+                '<div style="text-align:center;padding:4rem;color:#dc2626">'
+                + '<i class="fas fa-ban" style="font-size:3rem;margin-bottom:1rem;display:block"></i>'
+                + '<h2>Access Denied</h2>'
+                + '<p style="margin-top:.5rem">Only Super Admins can access this page.</p>'
+                + '<a href="dashboard.html" class="btn" style="margin-top:1.5rem">Back to Dashboard</a>'
+                + '</div>';
+            return;
+        }
+        $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Super Admin'));
+        loadUsers();
+    });
+
+    function loadUsers() {
+        $.ajax({
+            url: API + '/api/users/allUsers', method: 'GET', headers: authHdr(),
+            success: function (res) {
+                allUsers = res.body || [];
+                updateStats(allUsers);
+                renderTable(allUsers);
+            },
+            error: function (xhr) {
+                if (xhr.status === 401 || xhr.status === 403) { logout(); return; }
+                showAlert('Failed to load users.', 'error');
+            }
+        });
+    }
+
+    function updateStats(list) {
+        $('#cSuper').text(list.filter(u => u.userRole === 'SUPER_ADMIN').length);
+        $('#cAdmin').text(list.filter(u => u.userRole === 'ADMIN').length);
+        $('#cDoctor').text(list.filter(u => u.userRole === 'DOCTOR').length);
+        $('#cPatient').text(list.filter(u => u.userRole === 'PATIENT').length);
+    }
+
+    function filterUsers() {
+        const role = document.getElementById('roleFilter').value;
+        const filtered = role === 'ALL' ? allUsers : allUsers.filter(u => u.userRole === role);
+        renderTable(filtered);
+    }
+
+    function renderTable(list) {
+        const tbody = $('#userTable').empty();
+        if (!list.length) {
+            tbody.html('<tr><td colspan="5" class="empty">No users found.</td></tr>');
+            return;
+        }
+
+        const roleBadge = {
+            'SUPER_ADMIN': '<span class="badge badge-super">Super Admin</span>',
+            'ADMIN':       '<span class="badge badge-admin">Admin</span>',
+            'DOCTOR':      '<span class="badge badge-doctor">Doctor</span>',
+            'PATIENT':     '<span class="badge badge-patient">Patient</span>'
+        };
+        const statusBadge = r =>
+            r === 'ACTIVE'
+                ? '<span class="badge badge-active">● Active</span>'
+                : '<span class="badge badge-inactive">○ Inactive</span>';
+
+        list.forEach(u => {
+            tbody.append(`<tr>
+                <td><code style="font-size:.82rem;background:#f1f5f9;padding:.15rem .5rem;
+                          border-radius:6px">${u.userId}</code></td>
+                <td><strong>${u.username}</strong></td>
+                <td>${u.userEmail || '—'}</td>
+                <td>${roleBadge[u.userRole] || u.userRole}</td>
+                <td>${statusBadge(u.status)}</td>
+            </tr>`);
+        });
+    }
+
+    function createUser() {
+        const username = $('#uUsername').val().trim();
+        const email    = $('#uEmail').val().trim();
+        const password = $('#uPassword').val().trim();
+        const role     = $('#uRole').val();
+
+        if (!username || !email || !password) {
+            showAlert('Please fill in all required fields.', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            showAlert('Password must be at least 6 characters.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('createBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+        $.ajax({
+            url: API + '/api/users/register', method: 'POST',
+            contentType: 'application/json', headers: authHdr(),
+            data: JSON.stringify({
+                username:  username,
+                userEmail: email,
+                password:  password,
+                userRole:  role
+            }),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert(
+                        role + ' account created successfully! ' +
+                        'They can now login with: ' + username + ' / [their password]',
+                        'success'
+                    );
+                    clearForm();
+                    loadUsers();
+                } else {
+                    showAlert(res.message || 'Failed to create user.', 'error');
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Create User Account';
+            },
+            error: function (xhr) {
+                let m = 'Error creating user.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showAlert(m, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Create User Account';
+            }
+        });
+    }
+</script>
+</body>
+</html>
+
