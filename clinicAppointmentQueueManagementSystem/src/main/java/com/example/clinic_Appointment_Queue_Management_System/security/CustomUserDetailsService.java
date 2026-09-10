@@ -1,5 +1,6 @@
 package com.example.clinic_Appointment_Queue_Management_System.security;
 
+import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
