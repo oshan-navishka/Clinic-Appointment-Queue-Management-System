@@ -439,10 +439,10 @@
         <form class="login-form" onsubmit="handleLogin(); return false;">
             <!-- email / username -->
             <div class="input-group">
-                <label for="username"><i class="fas fa-envelope"></i> Username</label>
+                <label for="username"><i class="fas fa-envelope"></i> Username or email</label>
                 <div class="input-field">
                     <i class="fas fa-user-circle"></i>
-                    <input type="text" id="username" placeholder="doctor">
+                    <input type="text" id="username" placeholder="email or username">
                 </div>
             </div>
 
@@ -472,7 +472,7 @@
             </button>
 
             <div class="signup-prompt">
-                New to ClinicQ? <a href="register.html">Create account</a>
+                Patient? <a href="registerP.html">Create account with email</a>
             </div>
         </form>
     </div>
@@ -540,6 +540,9 @@
                     localStorage.setItem("token", userData.token);
                     localStorage.setItem("userId", userData.userId);
                     localStorage.setItem("username", username);
+                    localStorage.setItem("userRole", userData.userRole);
+                    if (userData.patientId) localStorage.setItem("patientId", userData.patientId);
+                    if (userData.doctorId) localStorage.setItem("doctorId", userData.doctorId);
 
                     alert(response.message || "Login successful!");
 
@@ -548,8 +551,11 @@
                         window.location.href = "doctorDashboard.html";
                     } else if (role === "PATIENT") {
                         window.location.href = "patientDashboard.html";
+                    } else if (role === "ADMIN") {
+                        window.location.href = "adminDashboard.html";
+                    } else if (role === "SUPER_ADMIN") {
+                        window.location.href = "dashboard.html";
                     } else {
-                        alert("Unknown role. Redirecting to dashboard.");
                         window.location.href = "dashboard.html";
                     }
                 } else {
