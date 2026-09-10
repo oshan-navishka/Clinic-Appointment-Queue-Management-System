@@ -1,0 +1,321 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Doctor Availability &amp; Fees</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+    <style>
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+        .field-input { width:100%; padding:.72rem 1rem; border:1.5px solid var(--border-color);
+                       border-radius:var(--radius-md); font-size:.95rem; font-family:inherit;
+                       background:#f8fafc; color:var(--text-main); outline:none; transition:.2s; }
+        .field-input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(0,180,219,.1); }
+        .empty { text-align:center; color:var(--text-muted); padding:2rem; }
+        .section-label { font-size:.78rem; font-weight:700; color:var(--accent); text-transform:uppercase;
+                         letter-spacing:.5px; padding:.2rem 0; border-bottom:1px solid var(--border-color); margin:.4rem 0 .8rem; }
+        .chip { display:inline-block; background:var(--info-bg); color:var(--info-text); font-size:.78rem;
+                font-weight:600; padding:.25rem .65rem; border-radius:999px; margin:.15rem; }
+        .chip-slot { background:#e8f4fd; color:#1d6fa4; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+        <!-- nav built by sidebar.js based on role -->
+    </aside>
+
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+            <h2>Doctor Availability &amp; Fees</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert alert-error" style="display:none"></div>
+
+            <div class="dashboard-grid">
+                <!-- ── Left: set availability ────────────────────────────── -->
+                <div>
+                    <div class="dashboard-box" style="margin-bottom:1.5rem">
+                        <div class="dashboard-box-header">
+                            <h3><i class="fas fa-calendar-alt"></i> Set Availability Slot</h3>
+                        </div>
+                        <div class="section-label">Doctor &amp; Day</div>
+                        <div class="form-grid">
+                            <select class="field-input" id="avDocSelect">
+                                <option value="" disabled selected>Select Doctor</option>
+                            </select>
+                            <select class="field-input" id="avBranchSelect">
+                                <option value="">No specific branch</option>
+                            </select>
+                            <select class="field-input" id="avDay">
+                                <option value="MONDAY">Monday</option>
+                                <option value="TUESDAY">Tuesday</option>
+                                <option value="WEDNESDAY">Wednesday</option>
+                                <option value="THURSDAY">Thursday</option>
+                                <option value="FRIDAY">Friday</option>
+                                <option value="SATURDAY">Saturday</option>
+                                <option value="SUNDAY">Sunday</option>
+                            </select>
+                            <input class="field-input" type="time" id="avStart" placeholder="Start time">
+                            <input class="field-input" type="time" id="avEnd" placeholder="End time">
+                            <input class="field-input" type="number" id="avMaxSlots" placeholder="Max slots (e.g. 20)" min="1">
+                            <div></div>
+                            <div style="grid-column:1/-1">
+                                <button class="btn" onclick="saveAvailability()">
+                                    <i class="fas fa-plus"></i> Add Slot
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box">
+                        <div class="dashboard-box-header">
+                            <h3><i class="fas fa-coins"></i> Set Consultation Fee</h3>
+                        </div>
+                        <div class="section-label">Doctor &amp; Fee</div>
+                        <div class="form-grid">
+                            <select class="field-input" id="feeDocSelect">
+                                <option value="" disabled selected>Select Doctor</option>
+                            </select>
+                            <input class="field-input" type="number" id="feeAmount"
+                                   placeholder="Fee amount (LKR)" min="0" step="50">
+                            <input class="field-input" id="feeNotes" placeholder="Notes (optional)">
+                            <div></div>
+                            <div style="grid-column:1/-1">
+                                <button class="btn" onclick="saveFee()">
+                                    <i class="fas fa-save"></i> Save Fee
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Right: doctor cards preview ───────────────────────── -->
+                <div class="dashboard-box">
+                    <div class="dashboard-box-header">
+                        <h3><i class="fas fa-user-md"></i> Doctor Schedule Preview</h3>
+                        <button class="btn btn-sm btn-secondary" onclick="loadPreview()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="previewList">
+                        <div class="empty">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.textContent = msg; el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+        el.style.display = 'flex'; setTimeout(() => el.style.display = 'none', 4500);
+    }
+
+    $(document).ready(function () {
+        if (!token()) { window.location.href = 'login.html'; return; }
+        $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Admin'));
+        loadDoctors();
+        loadPreview();
+    });
+
+    function loadDoctors() {
+        $.ajax({ url: API + '/api/doctors/loadAllDct', method:'GET', headers:authHdr(),
+            success: function(r) {
+                ['#avDocSelect','#feeDocSelect'].forEach(id => {
+                    const s = $(id).empty().append('<option value="" disabled selected>Select Doctor</option>');
+                    (r.body||[]).forEach(d => s.append(`<option value="${d.doctorId}">${d.firstName} ${d.lastName}</option>`));
+                });
+            }
+        });
+        $.ajax({ url: API + '/api/clinicBranches/getAllBranches', method:'GET', headers:authHdr(),
+            success: function(r) {
+                const s = $('#avBranchSelect').empty().append('<option value="">No specific branch</option>');
+                (r.body||[]).filter(b => b.status === 'ACTIVE').forEach(b =>
+                    s.append(`<option value="${b.branchId}">${b.branchName}</option>`)
+                );
+            }
+        });
+    }
+
+    function saveAvailability() {
+        const doctorId = $('#avDocSelect').val();
+        const day      = $('#avDay').val();
+        const start    = $('#avStart').val();
+        const end      = $('#avEnd').val();
+        const slots    = $('#avMaxSlots').val();
+        if (!doctorId || !day || !start || !end) { showAlert('Please fill all required fields.','error'); return; }
+
+        $.ajax({
+            url: API + '/api/availability/save', method:'POST',
+            contentType:'application/json', headers:authHdr(),
+            data: JSON.stringify({ doctorId, branchId: $('#avBranchSelect').val() || null,
+                                   dayOfWeek:day, startTime:start, endTime:end,
+                                   maxSlots:parseInt(slots)||20, available:true }),
+            success: function(r) {
+                if (r.status === 0) { showAlert('Availability slot saved!','success'); loadPreview(); }
+                else showAlert(r.message||'Failed.','error');
+            },
+            error: function(xhr) {
+                let m = 'Error saving.'; try{ m = JSON.parse(xhr.responseText).message||m; }catch(e){}
+                showAlert(m,'error');
+            }
+        });
+    }
+
+    function saveFee() {
+        const doctorId = $('#feeDocSelect').val();
+        const fee      = $('#feeAmount').val();
+        if (!doctorId || !fee) { showAlert('Please select a doctor and enter a fee.','error'); return; }
+
+        $.ajax({
+            url: API + '/api/fees/save', method:'POST',
+            contentType:'application/json', headers:authHdr(),
+            data: JSON.stringify({ doctorId, consultationFee:parseFloat(fee), currency:'LKR',
+                                   notes:$('#feeNotes').val().trim() }),
+            success: function(r) {
+                if (r.status === 0) { showAlert('Fee saved!','success'); loadPreview(); }
+                else showAlert(r.message||'Failed.','error');
+            },
+            error: function(xhr) {
+                let m = 'Error saving fee.'; try{ m = JSON.parse(xhr.responseText).message||m; }catch(e){}
+                showAlert(m,'error');
+            }
+        });
+    }
+
+    function loadPreview() {
+        $.ajax({ url: API + '/api/doctors/cards', method:'GET', headers:authHdr(),
+            success: function(r) {
+                const list    = r.body || [];
+                const preview = $('#previewList').empty();
+                if (!list.length) {
+                    preview.html('<div class="empty">No doctors found.</div>');
+                    return;
+                }
+
+                list.forEach(d => {
+                    const fee = d.consultationFee
+                        ? 'LKR ' + Number(d.consultationFee).toLocaleString('en-LK', {minimumFractionDigits:2})
+                        : 'LKR 2,500.00 (default)';
+
+                    // group slots by branch
+                    const byBranch = {};
+                    (d.availableSlots || []).forEach(s => {
+                        const key  = s.branchId  || '__none__';
+                        const name = s.branchName || 'No Branch Assigned';
+                        if (!byBranch[key]) byBranch[key] = { name, slots: [] };
+                        byBranch[key].slots.push(s);
+                    });
+
+                    let scheduleHtml = '';
+                    const branchKeys = Object.keys(byBranch);
+
+                    if (branchKeys.length === 0) {
+                        scheduleHtml = '<div style="font-size:.8rem;color:var(--text-muted);font-style:italic">'
+                            + 'No schedule set yet</div>';
+                    } else {
+                        branchKeys.forEach(key => {
+                            const grp = byBranch[key];
+                            const chips = grp.slots.map(s => {
+                                const day = (s.dayOfWeek || '').substring(0,3);
+                                return `<span class="chip chip-slot">${day} ${s.startTime||''}–${s.endTime||''}</span>`;
+                            }).join('');
+                            scheduleHtml += `
+                                <div style="margin-bottom:.5rem">
+                                    <div style="font-size:.75rem;font-weight:700;color:var(--navy-light);
+                                                text-transform:uppercase;letter-spacing:.4px;
+                                                margin-bottom:.3rem">
+                                        <i class="fas fa-hospital" style="margin-right:.3rem;color:var(--accent)"></i>
+                                        ${grp.name}
+                                    </div>
+                                    <div style="display:flex;flex-wrap:wrap;gap:.25rem">${chips}</div>
+                                </div>`;
+                        });
+                    }
+
+                    // star rating
+                    let starsHtml = '';
+                    const avg = d.averageRating || 0;
+                    for (let i = 1; i <= 5; i++) {
+                        starsHtml += `<i class="fas fa-star" style="font-size:.8rem;color:${i <= Math.round(avg) ? '#f59e0b' : '#d1d5db'}"></i>`;
+                    }
+
+                    preview.append(`
+                        <div style="border:1px solid var(--border-color);border-radius:var(--radius-md);
+                                    padding:1rem 1.1rem;margin-bottom:.8rem;background:#fff;
+                                    box-shadow:var(--shadow-sm)">
+
+                            <!-- Doctor header -->
+                            <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem">
+                                <div style="background:linear-gradient(135deg,var(--primary),var(--navy));
+                                            color:#fff;width:38px;height:38px;border-radius:10px;
+                                            display:flex;align-items:center;justify-content:center;
+                                            font-size:1rem;flex-shrink:0">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:700;color:var(--navy);font-size:.95rem">
+                                        ${d.fullName || '—'}
+                                    </div>
+                                    <div style="font-size:.78rem;color:var(--text-muted)">
+                                        <i class="fas fa-stethoscope" style="margin-right:.3rem;color:var(--accent)"></i>
+                                        ${d.specializationName || '—'}
+                                    </div>
+                                    <div style="margin-top:.2rem">${starsHtml}
+                                        <span style="font-size:.72rem;color:var(--text-muted)">
+                                            ${Number(avg).toFixed(1)} (${d.totalRatings || 0} reviews)
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fee -->
+                            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;
+                                        padding:.45rem .8rem;margin-bottom:.7rem;
+                                        font-size:.85rem;font-weight:600;color:#15803d">
+                                <i class="fas fa-tag" style="margin-right:.4rem"></i>${fee}
+                            </div>
+
+                            <!-- Schedule by branch -->
+                            <div>
+                                <div style="font-size:.72rem;font-weight:700;color:var(--text-muted);
+                                            text-transform:uppercase;letter-spacing:.4px;margin-bottom:.5rem">
+                                    <i class="fas fa-calendar-alt" style="margin-right:.3rem"></i>Schedule
+                                </div>
+                                ${scheduleHtml}
+                            </div>
+                        </div>
+                    `);
+                });
+            },
+            error: function() {
+                $('#previewList').html('<div class="empty" style="color:var(--danger)">Failed to load preview.</div>');
+            }
+        });
+    }
+</script>
+</body>
+</html>
+
