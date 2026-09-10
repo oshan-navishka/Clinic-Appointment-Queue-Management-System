@@ -2,6 +2,7 @@ package com.example.clinic_Appointment_Queue_Management_System.controller;
 
 import com.example.clinic_Appointment_Queue_Management_System.dto.CommonResponse;
 import com.example.clinic_Appointment_Queue_Management_System.dto.SpecializationsDTO;
+import com.example.clinic_Appointment_Queue_Management_System.service.SpecializationsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;

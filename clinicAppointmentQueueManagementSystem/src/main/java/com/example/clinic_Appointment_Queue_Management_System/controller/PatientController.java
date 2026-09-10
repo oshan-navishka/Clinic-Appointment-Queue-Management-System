@@ -2,6 +2,7 @@ package com.example.clinic_Appointment_Queue_Management_System.controller;
 
 import com.example.clinic_Appointment_Queue_Management_System.dto.CommonResponse;
 import com.example.clinic_Appointment_Queue_Management_System.dto.PatientDTO;
+import com.example.clinic_Appointment_Queue_Management_System.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -49,5 +50,17 @@ public class PatientController {
         log.info("Searching patients with keyword: {}", keyword);
         List<PatientDTO> patientDTOS = patientService.searchPatients(keyword);
         return new CommonResponse(0, patientDTOS, "Patients found successfully");
+    }
+
+    @PostMapping(value = "/selfRegister", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse selfRegister(@RequestBody PatientDTO patientDTO) {
+        log.info("Patient self register {}", patientDTO.getUserEmail());
+        patientService.selfRegister(patientDTO);
+        return new CommonResponse(0, "Account created successfully. You can now log in.");
+    }
+
+    @GetMapping(value = "/byUser/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getByUser(@PathVariable String userId) {
+        return new CommonResponse(0, patientService.getByUserId(userId), "Patient profile loaded");
     }
 }

@@ -2,6 +2,8 @@ package com.example.clinic_Appointment_Queue_Management_System.controller;
 
 import com.example.clinic_Appointment_Queue_Management_System.dto.CommonResponse;
 import com.example.clinic_Appointment_Queue_Management_System.dto.DoctorDTO;
+import com.example.clinic_Appointment_Queue_Management_System.service.AppointmentService;
+import com.example.clinic_Appointment_Queue_Management_System.service.DoctorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -15,9 +17,10 @@ import java.util.List;
 @Slf4j
 public class DoctorController {
     private final DoctorService doctorService;
+    private final AppointmentService appointmentService;
 
     @PostMapping(value = "/addDct", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CommonResponse  addDoctor(@RequestBody DoctorDTO doctorDTO){
+    public CommonResponse addDoctor(@RequestBody DoctorDTO doctorDTO) {
         log.info("Adding doctor: {}", doctorDTO);
         doctorService.addDoctor(doctorDTO);
         return new CommonResponse(0, "Doctor added successfully");
@@ -31,9 +34,36 @@ public class DoctorController {
     }
 
     @PutMapping(value = "/updateDoctor", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CommonResponse updateDoctor(@RequestBody DoctorDTO doctorDTO){
+    public CommonResponse updateDoctor(@RequestBody DoctorDTO doctorDTO) {
         log.info("Updating doctor: {}", doctorDTO);
         doctorService.updateDoctor(doctorDTO);
         return new CommonResponse(0, "Doctor updated successfully");
+    }
+
+    @GetMapping(value = "/byUser/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getByUser(@PathVariable String userId) {
+        return new CommonResponse(0, doctorService.getByUserId(userId), "Doctor profile loaded");
+    }
+
+    /**
+     * Doctor dashboard — returns this week's appointments, all pending/checked splits,
+     * and overall counts for the logged-in doctor identified by their userId.
+     *
+     * GET /api/doctors/dashboard?userId=U002
+     */
+    @GetMapping(value = "/dashboard", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getDoctorDashboard(@RequestParam String userId) {
+        log.info("Loading doctor dashboard for userId: {}", userId);
+        return new CommonResponse(0, appointmentService.getDoctorDashboard(userId), "Doctor dashboard loaded");
+    }
+
+    /**
+     * Patient booking page — active doctors with availability, fee and rating.
+     * GET /api/doctors/cards
+     */
+    @GetMapping(value = "/cards", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getDoctorCards() {
+        log.info("Loading doctor cards for patient booking");
+        return new CommonResponse(0, doctorService.getDoctorsWithAvailabilityAndFee(), "Doctor cards loaded");
     }
 }

@@ -4,7 +4,11 @@ import com.example.clinic_Appointment_Queue_Management_System.dto.AuthDTO;
 import com.example.clinic_Appointment_Queue_Management_System.dto.CommonResponse;
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDataDTO;
+import com.example.clinic_Appointment_Queue_Management_System.enumaration.UserRole;
 import com.example.clinic_Appointment_Queue_Management_System.security.JwtUtil;
+import com.example.clinic_Appointment_Queue_Management_System.service.DoctorService;
+import com.example.clinic_Appointment_Queue_Management_System.service.PatientService;
+import com.example.clinic_Appointment_Queue_Management_System.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +22,8 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final PatientService patientService;
+    private final DoctorService doctorService;
 
     @PostMapping(value = "register", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse saveUser(@RequestBody UserDTO userDTO){
@@ -34,6 +40,18 @@ public class UserController {
         userDataDTO.setUserId(userDTO.getUserId());
         userDataDTO.setToken(token);
         userDataDTO.setUserRole(userDTO.getUserRole());
+        if (userDTO.getUserRole() == UserRole.PATIENT) {
+            try {
+                userDataDTO.setPatientId(patientService.getByUserId(userDTO.getUserId()).getPatientId());
+            } catch (Exception ignored) {
+            }
+        }
+        if (userDTO.getUserRole() == UserRole.DOCTOR) {
+            try {
+                userDataDTO.setDoctorId(doctorService.getByUserId(userDTO.getUserId()).getDoctorId());
+            } catch (Exception ignored) {
+            }
+        }
 
         return new CommonResponse(0, userDataDTO, "User has been logged in successfully");
 
