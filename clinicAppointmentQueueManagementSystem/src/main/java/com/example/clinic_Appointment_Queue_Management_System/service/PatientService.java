@@ -14,4 +14,8 @@ public interface PatientService {
     void deletePatient(String patientId);
 
     List<PatientDTO> searchPatients(String keyword);
+
+    void selfRegister(PatientDTO patientDTO);
+
+    PatientDTO getByUserId(String userId);
 }

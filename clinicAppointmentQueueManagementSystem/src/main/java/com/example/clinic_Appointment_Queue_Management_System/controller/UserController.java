@@ -5,7 +5,6 @@ import com.example.clinic_Appointment_Queue_Management_System.dto.CommonResponse
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
 import com.example.clinic_Appointment_Queue_Management_System.dto.UserDataDTO;
 import com.example.clinic_Appointment_Queue_Management_System.security.JwtUtil;
-import com.example.clinic_Appointment_Queue_Management_System.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;

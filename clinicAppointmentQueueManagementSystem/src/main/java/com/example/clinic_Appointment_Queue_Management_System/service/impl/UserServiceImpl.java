@@ -4,6 +4,7 @@ import com.example.clinic_Appointment_Queue_Management_System.dto.UserDTO;
 import com.example.clinic_Appointment_Queue_Management_System.entity.User;
 import com.example.clinic_Appointment_Queue_Management_System.enumaration.Status;
 import com.example.clinic_Appointment_Queue_Management_System.repository.UserRepository;
+import com.example.clinic_Appointment_Queue_Management_System.service.EmailService;
 import com.example.clinic_Appointment_Queue_Management_System.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,13 +19,21 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
-    private final UserRepository userRepository;
+    private final UserRepository  userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService    emailService;
 
     @Override
     public void saveUser(UserDTO userDTO) {
         log.info("Saving user {}", userDTO);
-        try{
+        try {
+            if (userRepository.existsByUsername(userDTO.getUsername())) {
+                throw new RuntimeException("Username already exists");
+            }
+            if (userDTO.getUserEmail() != null && userRepository.existsByUserEmail(userDTO.getUserEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+
             long count = userRepository.count();
             String generatedId = String.format("U%03d", count + 1);
 
@@ -36,7 +45,25 @@ public class UserServiceImpl implements UserService {
             user.setUserRole(userDTO.getUserRole());
             user.setStatus(Status.ACTIVE);
             userRepository.save(user);
-        }catch (Exception e){
+
+            try {
+                if (userDTO.getUserEmail() != null && !userDTO.getUserEmail().isBlank()
+                        && userDTO.getPassword() != null && !userDTO.getPassword().isBlank()) {
+                    String role = userDTO.getUserRole() != null
+                            ? userDTO.getUserRole().name() : "ADMIN";
+                    emailService.sendWelcomeEmail(
+                            userDTO.getUserEmail(),
+                            userDTO.getUsername(),
+                            userDTO.getUsername(),
+                            userDTO.getPassword(),
+                            role
+                    );
+                }
+            } catch (Exception ex) {
+                log.warn("Could not send welcome email for user {}: {}", userDTO.getUsername(), ex.getMessage());
+            }
+
+        } catch (Exception e) {
             log.error("Error saving user {}", userDTO);
             throw e;
         }
@@ -47,6 +74,9 @@ public class UserServiceImpl implements UserService {
         log.info("Fetching user {}", username);
         try{
             Optional<User> userOptional = userRepository.findByUsername(username);
+            if (userOptional.isEmpty()) {
+                userOptional = userRepository.findByUserEmail(username);
+            }
             if (userOptional.isEmpty()) {
                 throw new RuntimeException("User not found");
             }

@@ -7,17 +7,16 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PatientRepository extends JpaRepository<Patient,String> {
-
-//    List<Patient> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrContactContaining(
-//            String firstName, String lastName, String contact
-//    );
+    
     @Query("SELECT p FROM Patient p WHERE LOWER(p.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR LOWER(p.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR p.contact LIKE CONCAT('%', :keyword, '%')")
     List<Patient> searchPatients(@Param("keyword") String keyword);
 
+    Optional<Patient> findByUser_UserId(String userId);
 
 }
