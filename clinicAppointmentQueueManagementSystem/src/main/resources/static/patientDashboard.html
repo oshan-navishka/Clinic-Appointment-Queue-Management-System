@@ -122,9 +122,6 @@
             <i class="fas fa-bell"></i> Notifications
             <span class="notif-dot" id="notifBadge" style="display:none">0</span>
         </button>
-        <button class="nav-link" onclick="showTab('chatbot')">
-            <i class="fas fa-robot"></i> Ask ClinicBot
-        </button>
         <div class="nav-bottom">
             <button class="nav-link" onclick="logout()"><i class="fas fa-right-from-bracket"></i> Logout</button>
         </div>
@@ -320,60 +317,94 @@
                 </div>
             </div>
 
-            <!-- TAB: CHATBOT -->
-            <div id="tabChatbot" style="display:none">
-                <div class="box" style="max-width:700px;margin:0 auto">
-                    <div class="box-header">
-                        <h3><i class="fas fa-robot" style="color:#1f6e9c"></i> ClinicBot
-                            <span style="font-size:.75rem;font-weight:400;color:#64748b;margin-left:.5rem">
-                                Powered by Ollama
-                            </span>
-                        </h3>
-                        <button class="btn btn-primary btn-sm" onclick="clearChat()">
-                            <i class="fas fa-trash-alt"></i> Clear
-                        </button>
-                    </div>
-
-                    <!-- Intro banner -->
-                    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;
-                                padding:.85rem 1rem;margin-bottom:1rem;font-size:.85rem;color:#0369a1">
-                        <i class="fas fa-info-circle" style="margin-right:.4rem"></i>
-                        I can answer questions about our <strong>doctors, schedules, fees, and clinic branches</strong>.
-                        For anything outside that, I'll ask if you'd like me to search online.
-                    </div>
-
-                    <!-- Chat messages -->
-                    <div id="chatMessages" style="height:360px;overflow-y:auto;display:flex;
-                                                   flex-direction:column;gap:.7rem;padding:.5rem 0;
-                                                   margin-bottom:1rem">
-                        <div class="chat-msg bot">
-                            <div class="chat-bubble bot-bubble">
-                                👋 Hi! I'm ClinicBot. Ask me anything about ClinicQ — doctors, schedules, fees, or branches!
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Input area -->
-                    <div style="display:flex;gap:.6rem;align-items:flex-end">
-                        <textarea id="chatInput" rows="2"
-                            placeholder="Ask me about doctors, schedules, fees..."
-                            style="flex:1;padding:.7rem .9rem;border:1.5px solid #cbd5e1;
-                                   border-radius:12px;font-size:.9rem;font-family:inherit;
-                                   color:#1e293b;background:#f8fafc;outline:none;
-                                   resize:none;transition:.15s;line-height:1.4"
-                            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}">
-                        </textarea>
-                        <button class="btn btn-primary" id="chatSendBtn" onclick="sendChat()"
-                                style="padding:.7rem 1.1rem;border-radius:12px;flex-shrink:0">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                    <div style="font-size:.73rem;color:#94a3b8;margin-top:.4rem">
-                        Press Enter to send · Shift+Enter for new line
-                    </div>
-                </div>
-            </div>
         </main>
+    </div>
+</div>
+
+<!-- ════ FLOATING CHAT BUBBLE ════════════════════════════════════════════════ -->
+<!-- Floating button -->
+<button id="chatBubbleBtn" onclick="toggleChatWindow()"
+        style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000;
+               width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
+               background:linear-gradient(135deg,#0b2a44,#1f6e9c);
+               color:#fff;font-size:1.4rem;
+               box-shadow:0 4px 16px rgba(11,42,68,.4);
+               display:flex;align-items:center;justify-content:center;
+               transition:.2s;outline:none;">
+    <i class="fas fa-robot" id="chatBubbleIcon"></i>
+</button>
+
+<!-- Chat window -->
+<div id="chatWindow"
+     style="position:fixed;bottom:5rem;right:1.5rem;z-index:999;
+            width:360px;max-width:calc(100vw - 2rem);
+            background:#fff;border-radius:20px;
+            box-shadow:0 8px 40px rgba(0,0,0,.18);
+            display:none;flex-direction:column;overflow:hidden;
+            border:1px solid #e2eaf2;">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#0b2a44,#1f6e9c);
+                padding:.9rem 1.1rem;display:flex;align-items:center;
+                justify-content:space-between;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:.6rem">
+            <div style="background:rgba(255,255,255,.2);width:34px;height:34px;
+                        border-radius:50%;display:flex;align-items:center;
+                        justify-content:center;font-size:1rem;color:#fff">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;color:#fff;font-size:.95rem">ClinicBot</div>
+                <div style="font-size:.72rem;color:rgba(255,255,255,.7)">Powered by Ollama</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:.4rem">
+            <button onclick="clearChat()"
+                    style="background:rgba(255,255,255,.15);border:none;
+                           border-radius:8px;padding:.3rem .55rem;
+                           color:#fff;cursor:pointer;font-size:.78rem;transition:.15s"
+                    title="Clear chat">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+            <button onclick="toggleChatWindow()"
+                    style="background:rgba(255,255,255,.15);border:none;
+                           border-radius:8px;padding:.3rem .55rem;
+                           color:#fff;cursor:pointer;font-size:.78rem;transition:.15s">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div id="chatMessages"
+         style="flex:1;height:320px;overflow-y:auto;
+                display:flex;flex-direction:column;gap:.6rem;
+                padding:.9rem;background:#f8fafc;">
+        <div class="chat-msg bot">
+            <div class="chat-bubble bot-bubble">
+                👋 Hi! I'm ClinicBot. Ask me anything about ClinicQ — doctors, schedules, fees, or branches!
+            </div>
+        </div>
+    </div>
+
+    <!-- Input -->
+    <div style="padding:.75rem;background:#fff;border-top:1px solid #e2eaf2;
+                display:flex;gap:.5rem;align-items:flex-end;flex-shrink:0">
+        <textarea id="chatInput" rows="1"
+            placeholder="Ask me about doctors, fees..."
+            style="flex:1;padding:.6rem .85rem;border:1.5px solid #cbd5e1;
+                   border-radius:12px;font-size:.88rem;font-family:inherit;
+                   color:#1e293b;background:#f8fafc;outline:none;
+                   resize:none;line-height:1.4;max-height:80px;overflow-y:auto;
+                   transition:.15s;"
+            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}">
+        </textarea>
+        <button class="btn btn-primary" id="chatSendBtn" onclick="sendChat()"
+                style="padding:.55rem .9rem;border-radius:10px;flex-shrink:0;
+                       min-width:40px;display:flex;align-items:center;justify-content:center">
+            <i class="fas fa-paper-plane"></i>
+        </button>
     </div>
 </div>
 
@@ -497,10 +528,10 @@ function showAlert(id, msg, type) {
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-var tabIds = ['tabDoctors','tabAppointments','tabMedications','tabRecords','tabProfile','tabNotifications','tabChatbot'];
+var tabIds = ['tabDoctors','tabAppointments','tabMedications','tabRecords','tabProfile','tabNotifications'];
 var tabMap = {
     doctors:'tabDoctors', appointments:'tabAppointments', medications:'tabMedications',
-    records:'tabRecords', profile:'tabProfile', notifications:'tabNotifications', chatbot:'tabChatbot'
+    records:'tabRecords', profile:'tabProfile', notifications:'tabNotifications'
 };
 var tabTitles = {
     doctors:       '<i class="fas fa-user-md" style="color:#1f6e9c"></i> Find Doctors',
@@ -508,8 +539,7 @@ var tabTitles = {
     medications:   '<i class="fas fa-pills" style="color:#1f6e9c"></i> My Medications',
     records:       '<i class="fas fa-file-medical" style="color:#0891b2"></i> Medical Records',
     profile:       '<i class="fas fa-user-circle" style="color:#1f6e9c"></i> My Profile',
-    notifications: '<i class="fas fa-bell" style="color:#1f6e9c"></i> Notifications',
-    chatbot:       '<i class="fas fa-robot" style="color:#1f6e9c"></i> ClinicBot'
+    notifications: '<i class="fas fa-bell" style="color:#1f6e9c"></i> Notifications'
 };
 
 function showTab(name) {
@@ -1248,6 +1278,20 @@ function downloadMedicationSlip() {
 }
 
 var _pendingSearchMessage = null;
+
+function toggleChatWindow() {
+    var win  = document.getElementById('chatWindow');
+    var icon = document.getElementById('chatBubbleIcon');
+    var isOpen = win.style.display === 'flex';
+    win.style.display = isOpen ? 'none' : 'flex';
+    icon.className    = isOpen ? 'fas fa-robot' : 'fas fa-times';
+    if (!isOpen) {
+        // scroll to bottom when opening
+        var msgs = document.getElementById('chatMessages');
+        if (msgs) msgs.scrollTop = msgs.scrollHeight;
+        setTimeout(function() { document.getElementById('chatInput').focus(); }, 100);
+    }
+}
 
 function clearChat() {
     var msgs = document.getElementById('chatMessages');
