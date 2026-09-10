@@ -54,6 +54,7 @@ public class SecurityConfig {
                         // Specializations — SUPER_ADMIN only
                         .requestMatchers(HttpMethod.POST,   "/api/specializations/saveSpecialization").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.PUT,    "/api/specializations/updateSpecialization").hasRole("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/specializations/deleteSpecialization/**").hasRole("SUPER_ADMIN")
                         // Clinic branches — SUPER_ADMIN only
                         .requestMatchers(HttpMethod.POST,   "/api/clinicBranches/addBranch").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.PUT,    "/api/clinicBranches/updateBranch").hasRole("SUPER_ADMIN")

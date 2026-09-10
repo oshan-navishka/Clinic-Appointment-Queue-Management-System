@@ -42,7 +42,7 @@ public class SpecializationsServiceImpl implements SpecializationsService {
         log.info("In SpecializationsImpl getAllSpecializations");
         try {
             List<SpecializationsDTO> specializationsDTOS = new ArrayList<>();
-            List<Specializations> specializationsList = specializationsRepository.findAll();
+            List<Specializations> specializationsList = specializationsRepository.findByStatus(Status.ACTIVE);
             for (Specializations specializations : specializationsList) {
                 SpecializationsDTO specializationsDTO = new SpecializationsDTO();
                 specializationsDTO.setSpecializationId(specializations.getSpecializationId());
