@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/clinicBranches/deleteBranch/**").hasRole("SUPER_ADMIN")
                         // Doctor availability & fees — SUPER_ADMIN only
                         .requestMatchers(HttpMethod.POST,   "/api/availability/save").hasRole("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/api/availability/**").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/availability/**").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.POST,   "/api/fees/save").hasRole("SUPER_ADMIN")
 

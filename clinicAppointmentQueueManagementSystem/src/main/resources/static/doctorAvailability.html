@@ -10,17 +10,41 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="js/sidebar.js" defer></script>
     <style>
-        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
         .field-input { width:100%; padding:.72rem 1rem; border:1.5px solid var(--border-color);
                        border-radius:var(--radius-md); font-size:.95rem; font-family:inherit;
                        background:#f8fafc; color:var(--text-main); outline:none; transition:.2s; }
         .field-input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(0,180,219,.1); }
+        .field-input.field-error { border-color:#ef4444; background:#fff5f5; }
+        .field-error-msg { font-size:.76rem; color:#dc2626; margin-top:.25rem; display:none; }
         .empty { text-align:center; color:var(--text-muted); padding:2rem; }
         .section-label { font-size:.78rem; font-weight:700; color:var(--accent); text-transform:uppercase;
                          letter-spacing:.5px; padding:.2rem 0; border-bottom:1px solid var(--border-color); margin:.4rem 0 .8rem; }
         .chip { display:inline-block; background:var(--info-bg); color:var(--info-text); font-size:.78rem;
                 font-weight:600; padding:.25rem .65rem; border-radius:999px; margin:.15rem; }
         .chip-slot { background:#e8f4fd; color:#1d6fa4; }
+        /* slot table */
+        .slot-table { width:100%; border-collapse:collapse; font-size:.86rem; margin-top:.8rem; }
+        .slot-table th { text-align:left; padding:.55rem .8rem; background:#f1f5f9; color:#475569;
+                         font-size:.74rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+        .slot-table td { padding:.65rem .8rem; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+        .slot-table tr:last-child td { border-bottom:none; }
+        .slot-table tr:hover td { background:#f8fafc; }
+        .btn-icon { background:none; border:none; cursor:pointer; padding:.3rem .4rem;
+                    border-radius:6px; font-size:.88rem; transition:.15s; }
+        .btn-icon-edit   { color:#0369a1; } .btn-icon-edit:hover   { background:#e0f2fe; }
+        .btn-icon-delete { color:#dc2626; } .btn-icon-delete:hover { background:#fee2e2; }
+        /* modal */
+        .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200;
+                          display:none; align-items:center; justify-content:center; padding:1rem; }
+        .modal-backdrop.open { display:flex; }
+        .modal { background:#fff; border-radius:var(--radius-lg); padding:1.8rem; width:100%;
+                 max-width:480px; box-shadow:var(--shadow-lg); position:relative; }
+        .modal-close { position:absolute; top:1rem; right:1rem; background:none; border:none;
+                       font-size:1.2rem; color:var(--text-muted); cursor:pointer; }
+        .modal-close:hover { color:var(--navy); }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-bottom:.8rem; }
+        .form-group { display:flex; flex-direction:column; gap:.28rem; }
+        .form-group label { font-size:.82rem; font-weight:600; color:#374151; }
     </style>
 </head>
 <body>
@@ -31,78 +55,109 @@
             <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
             <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
         </div>
-        <!-- nav built by sidebar.js based on role -->
     </aside>
 
     <div class="content">
         <header class="topbar">
-            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
             <h2>Doctor Availability &amp; Fees</h2>
             <div id="who"></div>
         </header>
 
         <main class="page">
-            <div id="alert" class="alert alert-error" style="display:none"></div>
+            <div id="alert" class="alert" style="display:none"></div>
 
             <div class="dashboard-grid">
-                <!-- ── Left: set availability ────────────────────────────── -->
+                <!-- LEFT: forms -->
                 <div>
+                    <!-- Availability form -->
                     <div class="dashboard-box" style="margin-bottom:1.5rem">
                         <div class="dashboard-box-header">
                             <h3><i class="fas fa-calendar-alt"></i> Set Availability Slot</h3>
                         </div>
+
                         <div class="section-label">Doctor &amp; Day</div>
-                        <div class="form-grid">
-                            <select class="field-input" id="avDocSelect">
-                                <option value="" disabled selected>Select Doctor</option>
-                            </select>
-                            <select class="field-input" id="avBranchSelect">
-                                <option value="">No specific branch</option>
-                            </select>
-                            <select class="field-input" id="avDay">
-                                <option value="MONDAY">Monday</option>
-                                <option value="TUESDAY">Tuesday</option>
-                                <option value="WEDNESDAY">Wednesday</option>
-                                <option value="THURSDAY">Thursday</option>
-                                <option value="FRIDAY">Friday</option>
-                                <option value="SATURDAY">Saturday</option>
-                                <option value="SUNDAY">Sunday</option>
-                            </select>
-                            <input class="field-input" type="time" id="avStart" placeholder="Start time">
-                            <input class="field-input" type="time" id="avEnd" placeholder="End time">
-                            <input class="field-input" type="number" id="avMaxSlots" placeholder="Max slots (e.g. 20)" min="1">
-                            <div></div>
-                            <div style="grid-column:1/-1">
-                                <button class="btn" onclick="saveAvailability()">
-                                    <i class="fas fa-plus"></i> Add Slot
-                                </button>
+                        <div class="form-row">
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label>Doctor <span style="color:#dc2626">*</span></label>
+                                <select class="field-input" id="avDocSelect">
+                                    <option value="" disabled selected>Select Doctor</option>
+                                </select>
+                                <div class="field-error-msg" id="err_avDoc">Please select a doctor.</div>
+                            </div>
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label>Branch</label>
+                                <select class="field-input" id="avBranchSelect">
+                                    <option value="">No specific branch</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Day of Week <span style="color:#dc2626">*</span></label>
+                                <select class="field-input" id="avDay">
+                                    <option value="MONDAY">Monday</option>
+                                    <option value="TUESDAY">Tuesday</option>
+                                    <option value="WEDNESDAY">Wednesday</option>
+                                    <option value="THURSDAY">Thursday</option>
+                                    <option value="FRIDAY">Friday</option>
+                                    <option value="SATURDAY">Saturday</option>
+                                    <option value="SUNDAY">Sunday</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Slots</label>
+                                <input class="field-input" type="number" id="avMaxSlots"
+                                       placeholder="e.g. 20" min="1" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label>Start Time <span style="color:#dc2626">*</span></label>
+                                <input class="field-input" type="time" id="avStart">
+                                <div class="field-error-msg" id="err_avStart">Please set a start time.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>End Time <span style="color:#dc2626">*</span></label>
+                                <input class="field-input" type="time" id="avEnd">
+                                <div class="field-error-msg" id="err_avEnd">End time must be after start time.</div>
                             </div>
                         </div>
+                        <button class="btn" id="avSaveBtn" onclick="saveAvailability()">
+                            <i class="fas fa-plus"></i> Add Slot
+                        </button>
                     </div>
 
+                    <!-- Fee form -->
                     <div class="dashboard-box">
                         <div class="dashboard-box-header">
                             <h3><i class="fas fa-coins"></i> Set Consultation Fee</h3>
                         </div>
                         <div class="section-label">Doctor &amp; Fee</div>
-                        <div class="form-grid">
-                            <select class="field-input" id="feeDocSelect">
-                                <option value="" disabled selected>Select Doctor</option>
-                            </select>
-                            <input class="field-input" type="number" id="feeAmount"
-                                   placeholder="Fee amount (LKR)" min="0" step="50">
-                            <input class="field-input" id="feeNotes" placeholder="Notes (optional)">
-                            <div></div>
-                            <div style="grid-column:1/-1">
-                                <button class="btn" onclick="saveFee()">
-                                    <i class="fas fa-save"></i> Save Fee
-                                </button>
+                        <div style="display:grid;gap:.8rem;margin-bottom:.8rem">
+                            <div class="form-group">
+                                <label>Doctor <span style="color:#dc2626">*</span></label>
+                                <select class="field-input" id="feeDocSelect">
+                                    <option value="" disabled selected>Select Doctor</option>
+                                </select>
+                                <div class="field-error-msg" id="err_feeDoc">Please select a doctor.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Consultation Fee (LKR) <span style="color:#dc2626">*</span></label>
+                                <input class="field-input" type="number" id="feeAmount"
+                                       placeholder="e.g. 2500" min="0" step="50">
+                                <div class="field-error-msg" id="err_feeAmount">Please enter a valid fee amount.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Notes <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                                <input class="field-input" id="feeNotes" placeholder="e.g. Includes follow-up">
                             </div>
                         </div>
+                        <button class="btn" id="feeSaveBtn" onclick="saveFee()">
+                            <i class="fas fa-save"></i> Save Fee
+                        </button>
                     </div>
                 </div>
 
-                <!-- ── Right: doctor cards preview ───────────────────────── -->
+                <!-- RIGHT: preview -->
                 <div class="dashboard-box">
                     <div class="dashboard-box-header">
                         <h3><i class="fas fa-user-md"></i> Doctor Schedule Preview</h3>
@@ -110,193 +165,460 @@
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
-                    <div id="previewList">
-                        <div class="empty">Loading...</div>
-                    </div>
+                    <div id="previewList"><div class="empty">Loading...</div></div>
                 </div>
             </div>
         </main>
     </div>
 </div>
 
+<!-- EDIT SLOT MODAL -->
+<div class="modal-backdrop" id="editSlotModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('editSlotModal')"><i class="fas fa-times"></i></button>
+        <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:1.2rem">
+            <i class="fas fa-pen" style="color:var(--accent)"></i> Edit Availability Slot
+        </h3>
+        <input type="hidden" id="editSlotId">
+        <div id="editSlotAlert" class="alert alert-error" style="display:none"></div>
+        <div class="form-row">
+            <div class="form-group" style="grid-column:1/-1">
+                <label>Branch</label>
+                <select class="field-input" id="editBranch">
+                    <option value="">No specific branch</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Day of Week <span style="color:#dc2626">*</span></label>
+                <select class="field-input" id="editDay">
+                    <option value="MONDAY">Monday</option><option value="TUESDAY">Tuesday</option>
+                    <option value="WEDNESDAY">Wednesday</option><option value="THURSDAY">Thursday</option>
+                    <option value="FRIDAY">Friday</option><option value="SATURDAY">Saturday</option>
+                    <option value="SUNDAY">Sunday</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Max Slots</label>
+                <input class="field-input" type="number" id="editMaxSlots" min="1" max="100">
+            </div>
+            <div class="form-group">
+                <label>Start Time <span style="color:#dc2626">*</span></label>
+                <input class="field-input" type="time" id="editStart">
+            </div>
+            <div class="form-group">
+                <label>End Time <span style="color:#dc2626">*</span></label>
+                <input class="field-input" type="time" id="editEnd">
+            </div>
+        </div>
+        <div style="display:flex;gap:.7rem;margin-top:.4rem">
+            <button class="btn" id="editSlotSaveBtn" onclick="saveEditSlot()">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <button class="btn btn-secondary" onclick="closeModal('editSlotModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-backdrop" id="deleteSlotModal">
+    <div class="modal" style="max-width:400px;text-align:center">
+        <button class="modal-close" onclick="closeModal('deleteSlotModal')"><i class="fas fa-times"></i></button>
+        <div style="background:#fee2e2;width:52px;height:52px;border-radius:50%;display:flex;
+                    align-items:center;justify-content:center;margin:0 auto .9rem">
+            <i class="fas fa-trash" style="color:#dc2626;font-size:1.3rem"></i>
+        </div>
+        <h3 style="font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:.4rem">Delete Slot?</h3>
+        <p id="deleteSlotMsg" style="font-size:.88rem;color:var(--text-muted);margin-bottom:1.2rem"></p>
+        <div style="display:flex;gap:.7rem;justify-content:center">
+            <button class="btn" id="deleteSlotConfirmBtn" onclick="confirmDeleteSlot()"
+                    style="background:#dc2626;color:#fff">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            <button class="btn btn-secondary" onclick="closeModal('deleteSlotModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-    const API     = 'http://localhost:8080';
-    const token   = () => localStorage.getItem('token');
-    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+const API     = 'http://localhost:8080';
+const token   = () => localStorage.getItem('token');
+const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
 
-    // function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+let allBranches  = [];
+let pendingDeleteSlotId = null;
 
-    function showAlert(msg, type) {
-        const el = document.getElementById('alert');
-        el.textContent = msg; el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
-        el.style.display = 'flex'; setTimeout(() => el.style.display = 'none', 4500);
-    }
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
-    $(document).ready(function () {
-        if (!token()) { window.location.href = 'login.html'; return; }
-        $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Admin'));
-        loadDoctors();
-        loadPreview();
+function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 4500);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function markError(fieldId, errId, show) {
+    const field = document.getElementById(fieldId);
+    const msg   = document.getElementById(errId);
+    if (show) { field.classList.add('field-error'); msg.style.display = 'block'; }
+    else      { field.classList.remove('field-error'); msg.style.display = 'none'; }
+}
+
+function clearErrors(...fieldIds) {
+    fieldIds.forEach(id => {
+        const f = document.getElementById(id);
+        if (f) f.classList.remove('field-error');
     });
+    document.querySelectorAll('.field-error-msg').forEach(el => el.style.display = 'none');
+}
 
-    function loadDoctors() {
-        $.ajax({ url: API + '/api/doctors/loadAllDct', method:'GET', headers:authHdr(),
-            success: function(r) {
-                ['#avDocSelect','#feeDocSelect'].forEach(id => {
-                    const s = $(id).empty().append('<option value="" disabled selected>Select Doctor</option>');
-                    (r.body||[]).forEach(d => s.append(`<option value="${d.doctorId}">${d.firstName} ${d.lastName}</option>`));
-                });
+$(document).ready(function () {
+    if (!token()) { window.location.href = 'login.html'; return; }
+    $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Admin'));
+    loadDoctors();
+    loadPreview();
+
+    // Live clear errors on input
+    ['avDocSelect','avStart','avEnd'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => clearErrors('avDocSelect','avStart','avEnd'));
+    });
+    ['feeDocSelect','feeAmount'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => clearErrors('feeDocSelect','feeAmount'));
+        document.getElementById(id).addEventListener('change', () => clearErrors('feeDocSelect','feeAmount'));
+    });
+});
+
+function loadDoctors() {
+    $.ajax({ url: API + '/api/doctors/loadAllDct', method:'GET', headers:authHdr(),
+        success: function(r) {
+            ['#avDocSelect','#feeDocSelect'].forEach(sel => {
+                const s = $(sel).empty().append('<option value="" disabled selected>Select Doctor</option>');
+                (r.body||[]).forEach(d => s.append(`<option value="${d.doctorId}">${d.firstName} ${d.lastName}</option>`));
+            });
+        }
+    });
+    $.ajax({ url: API + '/api/clinicBranches/getAllBranches', method:'GET', headers:authHdr(),
+        success: function(r) {
+            allBranches = (r.body||[]).filter(b => b.status === 'ACTIVE');
+            const addOpts = (sel) => {
+                $(sel).empty().append('<option value="">No specific branch</option>');
+                allBranches.forEach(b => $(sel).append(`<option value="${b.branchId}">${b.branchName}</option>`));
+            };
+            addOpts('#avBranchSelect');
+            addOpts('#editBranch');
+        }
+    });
+}
+
+function saveAvailability() {
+    const doctorId = $('#avDocSelect').val();
+    const start    = $('#avStart').val();
+    const end      = $('#avEnd').val();
+    const day      = $('#avDay').val();
+    const slots    = $('#avMaxSlots').val();
+
+    clearErrors('avDocSelect','avStart','avEnd');
+    let valid = true;
+
+    if (!doctorId) { markError('avDocSelect','err_avDoc', true); valid = false; }
+    if (!start)    { markError('avStart','err_avStart', true); valid = false; }
+    if (!end)      { markError('avEnd','err_avEnd', true); valid = false; }
+    if (start && end && end <= start) {
+        document.getElementById('err_avEnd').textContent = 'End time must be after start time.';
+        markError('avEnd','err_avEnd', true); valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('avSaveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    $.ajax({
+        url: API + '/api/availability/save', method:'POST',
+        contentType:'application/json', headers:authHdr(),
+        data: JSON.stringify({
+            doctorId,
+            branchId:  $('#avBranchSelect').val() || null,
+            dayOfWeek: day,
+            startTime: start,
+            endTime:   end,
+            maxSlots:  parseInt(slots) || 20,
+            available: true
+        }),
+        success: function(r) {
+            if (r.status === 0) {
+                $('#avDocSelect').val('');
+                $('#avBranchSelect').val('');
+                $('#avDay').val('MONDAY');
+                $('#avStart').val('');
+                $('#avEnd').val('');
+                $('#avMaxSlots').val('');
+                showAlert('Availability slot saved successfully!', 'success');
+                loadPreview();
+            } else {
+                showAlert(r.message || 'Failed to save slot.', 'error');
             }
-        });
-        $.ajax({ url: API + '/api/clinicBranches/getAllBranches', method:'GET', headers:authHdr(),
-            success: function(r) {
-                const s = $('#avBranchSelect').empty().append('<option value="">No specific branch</option>');
-                (r.body||[]).filter(b => b.status === 'ACTIVE').forEach(b =>
-                    s.append(`<option value="${b.branchId}">${b.branchName}</option>`)
-                );
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i> Add Slot';
+        },
+        error: function(xhr) {
+            let m = 'Error saving slot.'; try { m = JSON.parse(xhr.responseText).message||m; } catch(e){}
+            showAlert(m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i> Add Slot';
+        }
+    });
+}
+
+function saveFee() {
+    const doctorId = $('#feeDocSelect').val();
+    const fee      = $('#feeAmount').val();
+
+    clearErrors('feeDocSelect','feeAmount');
+    let valid = true;
+
+    if (!doctorId)              { markError('feeDocSelect','err_feeDoc', true); valid = false; }
+    if (!fee || parseFloat(fee) <= 0) { markError('feeAmount','err_feeAmount', true); valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('feeSaveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    $.ajax({
+        url: API + '/api/fees/save', method:'POST',
+        contentType:'application/json', headers:authHdr(),
+        data: JSON.stringify({
+            doctorId,
+            consultationFee: parseFloat(fee),
+            currency: 'LKR',
+            notes: $('#feeNotes').val().trim()
+        }),
+        success: function(r) {
+            if (r.status === 0) {
+                $('#feeDocSelect').val('');
+                $('#feeAmount').val('');
+                $('#feeNotes').val('');
+                showAlert('Consultation fee saved successfully!', 'success');
+                loadPreview();
+            } else {
+                showAlert(r.message || 'Failed to save fee.', 'error');
             }
-        });
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Fee';
+        },
+        error: function(xhr) {
+            let m = 'Error saving fee.'; try { m = JSON.parse(xhr.responseText).message||m; } catch(e){}
+            showAlert(m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Fee';
+        }
+    });
+}
+
+function openEditSlot(slotId, day, start, end, maxSlots, branchId) {
+    document.getElementById('editSlotId').value   = slotId;
+    document.getElementById('editDay').value       = day;
+    document.getElementById('editStart').value     = start;
+    document.getElementById('editEnd').value       = end;
+    document.getElementById('editMaxSlots').value  = maxSlots || 20;
+    document.getElementById('editBranch').value    = branchId || '';
+    document.getElementById('editSlotAlert').style.display = 'none';
+    const btn = document.getElementById('editSlotSaveBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    openModal('editSlotModal');
+}
+
+function saveEditSlot() {
+    const slotId = document.getElementById('editSlotId').value;
+    const start  = document.getElementById('editStart').value;
+    const end    = document.getElementById('editEnd').value;
+    const day    = document.getElementById('editDay').value;
+
+    if (!start || !end) {
+        const el = document.getElementById('editSlotAlert');
+        el.textContent = 'Start and end times are required.';
+        el.style.display = 'flex'; return;
+    }
+    if (end <= start) {
+        const el = document.getElementById('editSlotAlert');
+        el.textContent = 'End time must be after start time.';
+        el.style.display = 'flex'; return;
     }
 
-    function saveAvailability() {
-        const doctorId = $('#avDocSelect').val();
-        const day      = $('#avDay').val();
-        const start    = $('#avStart').val();
-        const end      = $('#avEnd').val();
-        const slots    = $('#avMaxSlots').val();
-        if (!doctorId || !day || !start || !end) { showAlert('Please fill all required fields.','error'); return; }
+    const btn = document.getElementById('editSlotSaveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-        $.ajax({
-            url: API + '/api/availability/save', method:'POST',
-            contentType:'application/json', headers:authHdr(),
-            data: JSON.stringify({ doctorId, branchId: $('#avBranchSelect').val() || null,
-                                   dayOfWeek:day, startTime:start, endTime:end,
-                                   maxSlots:parseInt(slots)||20, available:true }),
-            success: function(r) {
-                if (r.status === 0) { showAlert('Availability slot saved!','success'); loadPreview(); }
-                else showAlert(r.message||'Failed.','error');
-            },
-            error: function(xhr) {
-                let m = 'Error saving.'; try{ m = JSON.parse(xhr.responseText).message||m; }catch(e){}
-                showAlert(m,'error');
+    $.ajax({
+        url: `${API}/api/availability/${slotId}`, method:'PUT',
+        contentType:'application/json', headers:authHdr(),
+        data: JSON.stringify({
+            dayOfWeek: day,
+            startTime: start,
+            endTime:   end,
+            maxSlots:  parseInt(document.getElementById('editMaxSlots').value) || 20,
+            available: true,
+            branchId:  document.getElementById('editBranch').value || null
+        }),
+        success: function(r) {
+            if (r.status === 0) {
+                closeModal('editSlotModal');
+                showAlert('Slot updated successfully!', 'success');
+                loadPreview();
+            } else {
+                const el = document.getElementById('editSlotAlert');
+                el.textContent = r.message || 'Update failed.';
+                el.style.display = 'flex';
             }
-        });
-    }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        },
+        error: function(xhr) {
+            let m = 'Update failed.'; try { m = JSON.parse(xhr.responseText).message||m; } catch(e){}
+            const el = document.getElementById('editSlotAlert');
+            el.textContent = m; el.style.display = 'flex';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        }
+    });
+}
 
-    function saveFee() {
-        const doctorId = $('#feeDocSelect').val();
-        const fee      = $('#feeAmount').val();
-        if (!doctorId || !fee) { showAlert('Please select a doctor and enter a fee.','error'); return; }
+function openDeleteSlot(slotId, day, start) {
+    pendingDeleteSlotId = slotId;
+    document.getElementById('deleteSlotMsg').textContent =
+        `${day} — ${start} slot will be permanently removed.`;
+    const btn = document.getElementById('deleteSlotConfirmBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+    openModal('deleteSlotModal');
+}
 
-        $.ajax({
-            url: API + '/api/fees/save', method:'POST',
-            contentType:'application/json', headers:authHdr(),
-            data: JSON.stringify({ doctorId, consultationFee:parseFloat(fee), currency:'LKR',
-                                   notes:$('#feeNotes').val().trim() }),
-            success: function(r) {
-                if (r.status === 0) { showAlert('Fee saved!','success'); loadPreview(); }
-                else showAlert(r.message||'Failed.','error');
-            },
-            error: function(xhr) {
-                let m = 'Error saving fee.'; try{ m = JSON.parse(xhr.responseText).message||m; }catch(e){}
-                showAlert(m,'error');
-            }
-        });
-    }
+function confirmDeleteSlot() {
+    if (!pendingDeleteSlotId) return;
+    const btn = document.getElementById('deleteSlotConfirmBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
 
-    function loadPreview() {
-        $.ajax({ url: API + '/api/doctors/cards', method:'GET', headers:authHdr(),
-            success: function(r) {
-                const list    = r.body || [];
-                const preview = $('#previewList').empty();
-                if (!list.length) {
-                    preview.html('<div class="empty">No doctors found.</div>');
-                    return;
+    $.ajax({
+        url: `${API}/api/availability/${pendingDeleteSlotId}`, method:'DELETE', headers:authHdr(),
+        success: function(r) {
+            closeModal('deleteSlotModal');
+            showAlert('Slot deleted.', 'success');
+            loadPreview();
+            pendingDeleteSlotId = null;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+        },
+        error: function(xhr) {
+            let m = 'Delete failed.'; try { m = JSON.parse(xhr.responseText).message||m; } catch(e){}
+            showAlert(m, 'error');
+            closeModal('deleteSlotModal');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+        }
+    });
+}
+
+
+function loadPreview() {
+    $.ajax({ url: API + '/api/doctors/cards', method:'GET', headers:authHdr(),
+        success: function(r) {
+            const list    = r.body || [];
+            const preview = $('#previewList').empty();
+            if (!list.length) { preview.html('<div class="empty">No doctors found.</div>'); return; }
+
+            list.forEach(d => {
+                const fee = d.consultationFee
+                    ? 'LKR ' + Number(d.consultationFee).toLocaleString('en-LK', {minimumFractionDigits:2})
+                    : 'LKR 2,500.00 (default)';
+
+                const slots = d.availableSlots || [];
+
+                let slotsHtml = '';
+                if (slots.length === 0) {
+                    slotsHtml = '<div style="font-size:.8rem;color:var(--text-muted);font-style:italic;padding:.4rem 0">No schedule set yet</div>';
+                } else {
+                    slotsHtml = '<table class="slot-table"><thead><tr>'
+                        + '<th>Day</th><th>Time</th><th>Slots</th><th>Branch</th><th></th>'
+                        + '</tr></thead><tbody>';
+                    slots.forEach(s => {
+                        // escape values for inline onclick
+                        const day   = (s.dayOfWeek||'').replace(/'/g,"\\'");
+                        const start = (s.startTime||'').replace(/'/g,"\\'");
+                        const end   = (s.endTime||'').replace(/'/g,"\\'");
+                        const avId  = s.availabilityId;
+                        const brId  = (s.branchId||'').replace(/'/g,"\\'");
+                        slotsHtml += `<tr>
+                            <td><strong>${s.dayOfWeek||'—'}</strong></td>
+                            <td>${s.startTime||'—'} – ${s.endTime||'—'}</td>
+                            <td>${s.maxSlots||'—'}</td>
+                            <td>${s.branchName||'<span style="color:#94a3b8">—</span>'}</td>
+                            <td style="white-space:nowrap">
+                                <button class="btn-icon btn-icon-edit" title="Edit"
+                                    onclick="openEditSlot('${avId}','${day}','${start}','${end}',${s.maxSlots||20},'${brId}')">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button class="btn-icon btn-icon-delete" title="Delete"
+                                    onclick="openDeleteSlot('${avId}','${day}','${start}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                    });
+                    slotsHtml += '</tbody></table>';
                 }
 
-                list.forEach(d => {
-                    const fee = d.consultationFee
-                        ? 'LKR ' + Number(d.consultationFee).toLocaleString('en-LK', {minimumFractionDigits:2})
-                        : 'LKR 2,500.00 (default)';
+                let starsHtml = '';
+                const avg = d.averageRating || 0;
+                for (let i = 1; i <= 5; i++)
+                    starsHtml += `<i class="fas fa-star" style="font-size:.8rem;color:${i <= Math.round(avg) ? '#f59e0b' : '#d1d5db'}"></i>`;
 
-                    const byBranch = {};
-                    (d.availableSlots || []).forEach(s => {
-                        const key  = s.branchId  || '__none__';
-                        const name = s.branchName || 'No Branch Assigned';
-                        if (!byBranch[key]) byBranch[key] = { name, slots: [] };
-                        byBranch[key].slots.push(s);
-                    });
-
-                    let scheduleHtml = '';
-                    const branchKeys = Object.keys(byBranch);
-
-                    if (branchKeys.length === 0) {
-                        scheduleHtml = '<div style="font-size:.8rem;color:var(--text-muted);font-style:italic">'
-                            + 'No schedule set yet</div>';
-                    } else {
-                        branchKeys.forEach(key => {
-                            const grp = byBranch[key];
-                            const chips = grp.slots.map(s => {
-                                const day = (s.dayOfWeek || '').substring(0,3);
-                                return '<span class="chip chip-slot">' + day + ' ' + (s.startTime||'') + '\u2013' + (s.endTime||'') + '</span>';
-                            }).join('');
-                            scheduleHtml +=
-                                '<div style="margin-bottom:.5rem">' +
-                                '<div style="font-size:.75rem;font-weight:700;color:var(--navy-light);' +
-                                'text-transform:uppercase;letter-spacing:.4px;margin-bottom:.3rem">' +
-                                '<i class="fas fa-hospital" style="margin-right:.3rem;color:var(--accent)"></i>' +
-                                grp.name + '</div>' +
-                                '<div style="display:flex;flex-wrap:wrap;gap:.25rem">' + chips + '</div>' +
-                                '</div>';
-                        });
-                    }
-
-                    let starsHtml = '';
-                    const avg = d.averageRating || 0;
-                    for (let i = 1; i <= 5; i++) {
-                        starsHtml += '<i class="fas fa-star" style="font-size:.8rem;color:' + (i <= Math.round(avg) ? '#f59e0b' : '#d1d5db') + '"></i>';
-                    }
-
-                    preview.append(
-                        '<div style="border:1px solid var(--border-color);border-radius:var(--radius-md);' +
-                        'padding:1rem 1.1rem;margin-bottom:.8rem;background:#fff;box-shadow:var(--shadow-sm)">' +
-
-                        '<div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem">' +
-                        '<div style="background:linear-gradient(135deg,var(--primary),var(--navy));' +
-                        'color:#fff;width:38px;height:38px;border-radius:10px;' +
-                        'display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">' +
-                        '<i class="fas fa-user-md"></i></div>' +
-                        '<div>' +
-                        '<div style="font-weight:700;color:var(--navy);font-size:.95rem">' + (d.fullName || '—') + '</div>' +
-                        '<div style="font-size:.78rem;color:var(--text-muted)">' +
-                        '<i class="fas fa-stethoscope" style="margin-right:.3rem;color:var(--accent)"></i>' +
-                        (d.specializationName || '—') + '</div>' +
-                        '<div style="margin-top:.2rem">' + starsHtml +
-                        '<span style="font-size:.72rem;color:var(--text-muted)">' +
-                        Number(avg).toFixed(1) + ' (' + (d.totalRatings || 0) + ' reviews)</span></div>' +
-                        '</div></div>' +
-
-                        '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;' +
-                        'padding:.45rem .8rem;margin-bottom:.7rem;font-size:.85rem;font-weight:600;color:#15803d">' +
-                        '<i class="fas fa-tag" style="margin-right:.4rem"></i>' + fee + '</div>' +
-
-                        '<div>' +
-                        '<div style="font-size:.72rem;font-weight:700;color:var(--text-muted);' +
-                        'text-transform:uppercase;letter-spacing:.4px;margin-bottom:.5rem">' +
-                        '<i class="fas fa-calendar-alt" style="margin-right:.3rem"></i>Schedule</div>' +
-                        scheduleHtml +
-                        '</div>' +
-                        '</div>'
-                    );
-                });
-            },
-            error: function() {
-                $('#previewList').html('<div class="empty" style="color:var(--danger)">Failed to load preview.</div>');
-            }
-        });
-    }
+                preview.append(
+                    `<div style="border:1px solid var(--border-color);border-radius:var(--radius-md);
+                                 padding:1rem 1.1rem;margin-bottom:.9rem;background:#fff;box-shadow:var(--shadow-sm)">
+                        <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem">
+                            <div style="background:linear-gradient(135deg,var(--primary),var(--navy));
+                                        color:#fff;width:38px;height:38px;border-radius:10px;
+                                        display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <i class="fas fa-user-md"></i></div>
+                            <div>
+                                <div style="font-weight:700;color:var(--navy);font-size:.95rem">${d.fullName||'—'}</div>
+                                <div style="font-size:.78rem;color:var(--text-muted)">
+                                    <i class="fas fa-stethoscope" style="color:var(--accent);margin-right:.3rem"></i>
+                                    ${d.specializationName||'—'}</div>
+                                <div>${starsHtml}
+                                    <span style="font-size:.72rem;color:var(--text-muted);margin-left:.25rem">
+                                        ${Number(avg).toFixed(1)} (${d.totalRatings||0})
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;
+                                    padding:.4rem .8rem;margin-bottom:.7rem;font-size:.85rem;font-weight:600;color:#15803d">
+                            <i class="fas fa-tag" style="margin-right:.4rem"></i>${fee}
+                        </div>
+                        <div>
+                            <div style="font-size:.72rem;font-weight:700;color:var(--text-muted);
+                                        text-transform:uppercase;letter-spacing:.4px;margin-bottom:.4rem">
+                                <i class="fas fa-calendar-alt" style="margin-right:.3rem"></i>Schedule
+                            </div>
+                            ${slotsHtml}
+                        </div>
+                    </div>`
+                );
+            });
+        },
+        error: function() {
+            $('#previewList').html('<div class="empty" style="color:var(--danger)">Failed to load preview.</div>');
+        }
+    });
+}
 </script>
 </body>
 </html>
-

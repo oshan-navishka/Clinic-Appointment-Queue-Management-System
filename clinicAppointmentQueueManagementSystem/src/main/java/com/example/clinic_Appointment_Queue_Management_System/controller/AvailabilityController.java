@@ -69,6 +69,28 @@ public class AvailabilityController {
         return new CommonResponse(0, "Slot deleted");
     }
 
+    @PutMapping(value = "/{availabilityId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse updateSlot(@PathVariable String availabilityId,
+                                     @RequestBody DoctorAvailabilityDTO dto) {
+        log.info("Updating availability slot {}", availabilityId);
+        DoctorAvailability av = availabilityRepository.findById(availabilityId)
+                .orElseThrow(() -> new RuntimeException("Slot not found: " + availabilityId));
+        av.setDayOfWeek(dto.getDayOfWeek());
+        av.setStartTime(dto.getStartTime());
+        av.setEndTime(dto.getEndTime());
+        av.setMaxSlots(dto.getMaxSlots() != null ? dto.getMaxSlots() : av.getMaxSlots());
+        av.setAvailable(dto.isAvailable());
+        if (dto.getBranchId() != null && !dto.getBranchId().isBlank()) {
+            ClinicBranches branch = branchRepository.findById(dto.getBranchId())
+                    .orElseThrow(() -> new RuntimeException("Branch not found: " + dto.getBranchId()));
+            av.setBranch(branch);
+        } else {
+            av.setBranch(null);
+        }
+        availabilityRepository.save(av);
+        return new CommonResponse(0, "Slot updated successfully");
+    }
+
     private DoctorAvailabilityDTO toDto(DoctorAvailability av) {
         DoctorAvailabilityDTO dto = new DoctorAvailabilityDTO();
         dto.setAvailabilityId(av.getAvailabilityId());
