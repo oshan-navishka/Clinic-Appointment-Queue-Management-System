@@ -75,4 +75,21 @@ public class AppointmentController {
     public CommonResponse getOverview() {
         return new CommonResponse(0, appointmentService.getAdminOverview(), "Overview loaded");
     }
+
+    @PutMapping(value = "/cancel/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse cancelAppointment(@PathVariable String appointmentId,
+                                            @RequestParam String userId,
+                                            @RequestParam(required = false) String reason) {
+        log.info("Patient {} cancelling appointment {}", userId, appointmentId);
+        appointmentService.cancelAppointment(appointmentId, userId, reason);
+        return new CommonResponse(0, "Appointment cancelled successfully");
+    }
+
+    @PutMapping(value = "/adminCancel/{appointmentId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse adminCancelAppointment(@PathVariable String appointmentId,
+                                                 @RequestParam(required = false) String reason) {
+        log.info("Admin cancelling appointment {}", appointmentId);
+        appointmentService.adminCancelAppointment(appointmentId, reason);
+        return new CommonResponse(0, "Appointment cancelled by admin");
+    }
 }

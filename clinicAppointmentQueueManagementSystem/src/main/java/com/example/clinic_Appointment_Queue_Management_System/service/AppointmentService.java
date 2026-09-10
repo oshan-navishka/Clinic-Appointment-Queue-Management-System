@@ -28,5 +28,7 @@ public interface AppointmentService {
 
     DoctorDashboardDTO getDoctorDashboard(String userId);
 
-    AdminOverviewDTO getAdminOverview();
+    void cancelAppointment(String appointmentId, String userId, String reason);
+
+    void adminCancelAppointment(String appointmentId, String reason);
 }

@@ -56,5 +56,7 @@ public class Appointments {
 
     private LocalDateTime paidAt;
 
+    private LocalDateTime cancelledAt;
 
+    private String cancellationReason;
 }

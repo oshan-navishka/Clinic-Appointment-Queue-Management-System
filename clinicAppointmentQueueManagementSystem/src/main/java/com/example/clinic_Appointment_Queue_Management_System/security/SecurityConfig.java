@@ -79,6 +79,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,   "/api/appointments/adminConfirmPayment/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
                         // All appointments list
                         .requestMatchers(HttpMethod.GET,    "/api/appointments/all").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                        // Admin cancel appointment
+                        .requestMatchers(HttpMethod.PUT,    "/api/appointments/adminCancel/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
                         // Read-only data
                         .requestMatchers(HttpMethod.GET,    "/api/clinicBranches/getAllBranches").authenticated()
                         .requestMatchers(HttpMethod.GET,    "/api/availability/**").authenticated()
@@ -112,6 +114,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,   "/api/appointments/bookOnline").hasRole("PATIENT")
                         .requestMatchers(HttpMethod.POST,   "/api/appointments/pay/**").hasRole("PATIENT")
                         .requestMatchers(HttpMethod.GET,    "/api/appointments/myAppointments").hasRole("PATIENT")
+                        .requestMatchers(HttpMethod.PUT,    "/api/appointments/cancel/**").hasRole("PATIENT")
 
                         // AUTHENTICATED (any logged-in role)
                         // Profile look-ups used by all roles after login

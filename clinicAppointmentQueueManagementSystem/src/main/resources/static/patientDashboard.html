@@ -54,6 +54,7 @@
         .empty-row td{text-align:center;color:#94a3b8;padding:2rem}
         .badge{display:inline-block;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600}
         .badge-pending{background:#fef3c7;color:#92400e}.badge-checked{background:#d1fae5;color:#065f46}
+        .badge-cancelled{background:#f1f5f9;color:#475569}
         .badge-paid{background:#dbeafe;color:#1e40af}.badge-unpaid{background:#fee2e2;color:#991b1b}
         .badge-online{background:#ede9fe;color:#5b21b6}.badge-admin{background:#e0f2fe;color:#0369a1}
         .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.1rem;border-radius:9px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:.15s}
@@ -334,6 +335,40 @@
         <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.3rem" onclick="confirmBooking()" id="confirmBookBtn">
             <i class="fas fa-calendar-check"></i> Confirm Booking
         </button>
+    </div>
+</div>
+
+<!-- PATIENT CANCEL MODAL -->
+<div class="modal-backdrop" id="patientCancelModal">
+    <div class="modal" style="max-width:440px">
+        <button class="modal-close" onclick="closeModal('patientCancelModal')"><i class="fas fa-times"></i></button>
+        <div style="text-align:center;margin-bottom:1.2rem">
+            <div style="background:#fee2e2;width:52px;height:52px;border-radius:50%;display:flex;
+                        align-items:center;justify-content:center;margin:0 auto .8rem">
+                <i class="fas fa-times-circle" style="color:#dc2626;font-size:1.4rem"></i>
+            </div>
+            <h3 style="font-size:1rem;font-weight:700;color:#0b2a44;margin-bottom:.3rem">Cancel Appointment?</h3>
+            <p id="patientCancelMsg" style="font-size:.85rem;color:#64748b"></p>
+        </div>
+        <div id="patientCancelAlert" class="alert alert-error" style="display:none"></div>
+        <div class="form-group" style="margin-bottom:1rem">
+            <label style="font-size:.82rem;font-weight:600;color:#374151">
+                Reason <span style="font-weight:400;color:#94a3b8">(optional)</span>
+            </label>
+            <input type="text" id="patientCancelReason" class="form-group input"
+                   style="padding:.65rem .9rem;border:1.5px solid #cbd5e1;border-radius:10px;
+                          font-size:.9rem;font-family:inherit;color:#1e293b;background:#f8fafc;
+                          outline:none;width:100%;margin-top:.35rem"
+                   placeholder="e.g. Schedule conflict...">
+        </div>
+        <div style="display:flex;gap:.7rem;justify-content:center">
+            <button class="btn" id="patientCancelConfirmBtn" onclick="confirmPatientCancel()"
+                    style="background:#ef4444;color:#fff">
+                <i class="fas fa-times-circle"></i> Yes, Cancel
+            </button>
+            <button class="btn" style="background:#e2eaf2;color:#0b2a44"
+                    onclick="closeModal('patientCancelModal')">Back</button>
+        </div>
     </div>
 </div>
 
@@ -629,9 +664,14 @@ function renderApptTable(list) {
     var patId = localStorage.getItem('patientId') || '';
     if (!list.length) { tbody.append('<tr class="empty-row"><td colspan="10">No appointments found.</td></tr>'); return; }
     list.forEach(function(a) {
-        var stateBadge = a.appointmentState === 'CHECKED'
-            ? '<span class="badge badge-checked">Checked</span>'
-            : '<span class="badge badge-pending">Pending</span>';
+        var stateBadge;
+        if (a.appointmentState === 'CHECKED') {
+            stateBadge = '<span class="badge badge-checked">Checked</span>';
+        } else if (a.appointmentState === 'CANCELLED') {
+            stateBadge = '<span class="badge badge-cancelled">Cancelled</span>';
+        } else {
+            stateBadge = '<span class="badge badge-pending">Pending</span>';
+        }
         var payBadge = a.paymentStatus === 'PAID'
             ? '<span class="badge badge-paid">Paid</span>'
             : '<span class="badge badge-unpaid">Unpaid</span>';
@@ -643,23 +683,32 @@ function renderApptTable(list) {
             : '—';
 
         var actions = '';
-        if (a.paymentStatus === 'UNPAID') {
-            actions += '<button class="btn btn-pay btn-sm" style="margin-right:.3rem" data-id="' + a.appointmentId + '" onclick="payAppointment(this.dataset.id)">'
-                     + '<i class="fas fa-credit-card"></i> Pay</button>';
-        }
-        if (a.paymentStatus === 'PAID') {
-            actions += '<button class="btn btn-sm" style="background:#0b2a44;color:#fff;margin-right:.3rem" data-id="' + a.appointmentId + '" onclick="printInvoiceById(this.dataset.id)">'
-                     + '<i class="fas fa-file-invoice"></i> Invoice</button>';
-        }
-        if (a.appointmentState === 'CHECKED') {
-            actions += '<button class="btn btn-rate btn-sm" id="rateBtn_' + a.appointmentId + '"'
-                     + ' data-appt="' + a.appointmentId + '" data-doc="' + a.doctorId + '"'
-                     + ' data-pat="' + patId + '" onclick="openRatingModalFromBtn(this)">'
-                     + '<i class="fas fa-star"></i> Rate</button>';
+        if (a.appointmentState === 'CANCELLED') {
+            actions = '<span style="font-size:.75rem;color:#94a3b8">Cancelled</span>';
+        } else {
+            if (a.paymentStatus === 'UNPAID' && a.appointmentState !== 'CHECKED') {
+                actions += '<button class="btn btn-pay btn-sm" style="margin-right:.3rem" data-id="' + a.appointmentId + '" onclick="payAppointment(this.dataset.id)">'
+                         + '<i class="fas fa-credit-card"></i> Pay</button>';
+            }
+            if (a.paymentStatus === 'PAID') {
+                actions += '<button class="btn btn-sm" style="background:#0b2a44;color:#fff;margin-right:.3rem" data-id="' + a.appointmentId + '" onclick="printInvoiceById(this.dataset.id)">'
+                         + '<i class="fas fa-file-invoice"></i> Invoice</button>';
+            }
+            if (a.appointmentState === 'CHECKED') {
+                actions += '<button class="btn btn-rate btn-sm" id="rateBtn_' + a.appointmentId + '"'
+                         + ' data-appt="' + a.appointmentId + '" data-doc="' + a.doctorId + '"'
+                         + ' data-pat="' + patId + '" onclick="openRatingModalFromBtn(this)">'
+                         + '<i class="fas fa-star"></i> Rate</button>';
+            }
+            if (a.appointmentState === 'PENDING' && a.paymentStatus === 'UNPAID') {
+                actions += '<button class="btn btn-sm" style="background:#ef4444;color:#fff;margin-left:.3rem"'
+                         + ' data-id="' + a.appointmentId + '" onclick="openPatientCancelModal(this.dataset.id)">'
+                         + '<i class="fas fa-times-circle"></i> Cancel</button>';
+            }
         }
         if (!actions) actions = '—';
 
-        tbody.append('<tr>'
+        tbody.append('<tr' + (a.appointmentState === 'CANCELLED' ? ' style="opacity:.55"' : '') + '>'
             + '<td><strong>#' + (a.appointmentNumber||'—') + '</strong></td>'
             + '<td>' + (a.doctorName||'—') + '</td>'
             + '<td>' + (a.doctorSpecialization||'—') + '</td>'
@@ -956,6 +1005,59 @@ function saveProfile() {
         error: function(xhr) {
             var m = 'Update failed.'; try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
             showAlert('profileAlert', m, 'error');
+        }
+    });
+}
+
+var _pendingCancelApptId = null;
+
+function openPatientCancelModal(apptId) {
+    _pendingCancelApptId = apptId;
+    var appt = allApptList.find(function(a) { return a.appointmentId === apptId; });
+    var msg = apptId;
+    if (appt) msg = 'Appointment #' + (appt.appointmentNumber||apptId) + ' on ' + (appt.appointmentDate||'');
+    document.getElementById('patientCancelMsg').textContent = msg;
+    document.getElementById('patientCancelReason').value = '';
+    document.getElementById('patientCancelAlert').style.display = 'none';
+    var btn = document.getElementById('patientCancelConfirmBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-times-circle"></i> Yes, Cancel';
+    openModal('patientCancelModal');
+}
+
+function confirmPatientCancel() {
+    if (!_pendingCancelApptId) return;
+    var reason = document.getElementById('patientCancelReason').value.trim();
+    var btn = document.getElementById('patientCancelConfirmBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+
+    var url = API + '/api/appointments/cancel/' + _pendingCancelApptId + '?userId=' + userId();
+    if (reason) url += '&reason=' + encodeURIComponent(reason);
+
+    $.ajax({
+        url: url, method: 'PUT', headers: authHdr(),
+        success: function(res) {
+            if (res.status === 0) {
+                closeModal('patientCancelModal');
+                showAlert('apptAlert', 'Appointment cancelled successfully.', 'success');
+                loadMyAppointments();
+            } else {
+                var el = document.getElementById('patientCancelAlert');
+                el.textContent = res.message || 'Cancellation failed.';
+                el.style.display = 'block';
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-times-circle"></i> Yes, Cancel';
+        },
+        error: function(xhr) {
+            var m = 'Cancellation failed.';
+            try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+            var el = document.getElementById('patientCancelAlert');
+            el.textContent = m;
+            el.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-times-circle"></i> Yes, Cancel';
         }
     });
 }

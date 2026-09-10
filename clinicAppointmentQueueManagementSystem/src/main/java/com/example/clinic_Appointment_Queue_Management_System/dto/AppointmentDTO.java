@@ -36,4 +36,6 @@ public class AppointmentDTO {
     private LocalDateTime paidAt;
     private String doctorSpecialization;
     private String patientContact;
+    private LocalDateTime cancelledAt;
+    private String cancellationReason;
 }

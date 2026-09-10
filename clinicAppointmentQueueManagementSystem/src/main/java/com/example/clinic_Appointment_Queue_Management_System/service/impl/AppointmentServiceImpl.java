@@ -459,18 +459,100 @@ public class AppointmentServiceImpl implements AppointmentService {
         dto.setPaymentStatus(a.getPaymentStatus());
         dto.setPaymentAmount(a.getPaymentAmount());
         dto.setPaidAt(a.getPaidAt());
+        dto.setCancelledAt(a.getCancelledAt());
+        dto.setCancellationReason(a.getCancellationReason());
         if (a.getClinicBranches() != null)
             dto.setBranchId(a.getClinicBranches().getBranchId());
         return dto;
     }
 
-    private Patient resolvePatient(AppointmentDTO dto) {
-        if (dto.getPatientId() != null && !dto.getPatientId().isBlank())
+    private Patient resolvePatient(AppointmentDTO dto) {        if (dto.getPatientId() != null && !dto.getPatientId().isBlank())
             return patientRepository.findById(dto.getPatientId())
                     .orElseThrow(() -> new CustomException(404, "Patient not found"));
         if (dto.getUserId() != null && !dto.getUserId().isBlank())
             return patientRepository.findByUser_UserId(dto.getUserId())
                     .orElseThrow(() -> new CustomException(404, "Patient profile not found. Please complete patient details first."));
         throw new CustomException(400, "Patient is required");
+    }
+
+    @Override
+    @Transactional
+    public void cancelAppointment(String appointmentId, String userId, String reason) {
+        log.info("Patient {} cancelling appointment {}", userId, appointmentId);
+        try {
+            Appointments appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new CustomException(404, "Appointment not found"));
+
+            Patient patient = patientRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new CustomException(404, "Patient profile not found"));
+
+            if (!appointment.getPatient().getPatientId().equals(patient.getPatientId())) {
+                throw new CustomException(403, "You can only cancel your own appointments");
+            }
+            if (appointment.getAppointmentState() == AppointmentState.CANCELLED) {
+                throw new CustomException(400, "Appointment is already cancelled");
+            }
+            if (appointment.getAppointmentState() == AppointmentState.CHECKED) {
+                throw new CustomException(400, "Cannot cancel a completed appointment");
+            }
+            if (appointment.getPaymentStatus() == PaymentStatus.PAID) {
+                throw new CustomException(400, "Cannot cancel a paid appointment. Please contact the clinic.");
+            }
+
+            appointment.setAppointmentState(AppointmentState.CANCELLED);
+            appointment.setCancelledAt(LocalDateTime.now());
+            appointment.setCancellationReason(reason != null && !reason.isBlank() ? reason : "Cancelled by patient");
+            appointmentRepository.save(appointment);
+
+            notificationService.createNotification(
+                    userId,
+                    "Appointment Cancelled",
+                    "Your appointment #" + appointmentId + " on " + appointment.getAppointmentDate() + " has been cancelled.",
+                    "APPOINTMENT_CANCELLED",
+                    appointmentId
+            );
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error cancelling appointment {}", appointmentId, e);
+            throw new CustomException(500, "Error occurred while cancelling appointment");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void adminCancelAppointment(String appointmentId, String reason) {
+        log.info("Admin cancelling appointment {}", appointmentId);
+        try {
+            Appointments appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new CustomException(404, "Appointment not found"));
+
+            if (appointment.getAppointmentState() == AppointmentState.CANCELLED) {
+                throw new CustomException(400, "Appointment is already cancelled");
+            }
+            if (appointment.getAppointmentState() == AppointmentState.CHECKED) {
+                throw new CustomException(400, "Cannot cancel a completed appointment");
+            }
+
+            appointment.setAppointmentState(AppointmentState.CANCELLED);
+            appointment.setCancelledAt(LocalDateTime.now());
+            appointment.setCancellationReason(reason != null && !reason.isBlank() ? reason : "Cancelled by admin");
+            appointmentRepository.save(appointment);
+
+            String patientUserId = appointment.getPatient().getUser().getUserId();
+            notificationService.createNotification(
+                    patientUserId,
+                    "Appointment Cancelled by Clinic",
+                    "Your appointment #" + appointmentId + " on " + appointment.getAppointmentDate()
+                            + " has been cancelled by the clinic. Reason: " + (reason != null ? reason : "Not specified"),
+                    "APPOINTMENT_CANCELLED",
+                    appointmentId
+            );
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error cancelling appointment {} by admin", appointmentId, e);
+            throw new CustomException(500, "Error occurred while cancelling appointment");
+        }
     }
 }

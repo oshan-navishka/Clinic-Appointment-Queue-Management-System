@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Payments</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+    <style>
+        .badge { display:inline-block; padding:.22rem .65rem; border-radius:999px; font-size:.75rem; font-weight:600; }
+        .badge-paid   { background:#dbeafe; color:#1e40af; }
+        .badge-unpaid { background:#fee2e2; color:#991b1b; }
+        .empty { text-align:center; color:var(--text-muted); padding:2rem; }
+        .tab-row { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.2rem; }
+        .tab-btn { padding:.5rem 1.2rem; border:none; border-radius:var(--radius-sm); font-size:.88rem;
+                   font-weight:600; cursor:pointer; background:var(--info-bg); color:var(--navy);
+                   transition:var(--transition); font-family:inherit; }
+        .tab-btn.active { background:var(--accent-grad); color:#fff; box-shadow:0 3px 10px rgba(0,180,219,.2); }
+        .tab-btn:hover:not(.active) { background:#d0ebf7; }
+        .confirm-btn { background:#16a34a; color:#fff; }
+        .confirm-btn:hover { background:#15803d; }
+        .invoice-btn { background:var(--navy); color:#fff; }
+        .invoice-btn:hover { background:#154a72; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+    </aside>
+
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2><i class="fas fa-credit-card" style="color:var(--accent)"></i> Payment Management</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert" style="display:none"></div>
+
+            <!-- Stats row -->
+            <div class="cards" style="margin-bottom:1.5rem">
+                <div class="card card-blue">
+                    <div class="card-header-icon"><h3>Total</h3>
+                        <div class="icon-wrapper"><i class="fas fa-list"></i></div></div>
+                    <div class="num" id="sTotal">—</div>
+                </div>
+                <div class="card card-red">
+                    <div class="card-header-icon"><h3>Unpaid</h3>
+                        <div class="icon-wrapper"><i class="fas fa-hourglass-half"></i></div></div>
+                    <div class="num" id="sUnpaid">—</div>
+                </div>
+                <div class="card card-emerald">
+                    <div class="card-header-icon"><h3>Paid</h3>
+                        <div class="icon-wrapper"><i class="fas fa-check-circle"></i></div></div>
+                    <div class="num" id="sPaid">—</div>
+                </div>
+            </div>
+
+            <!-- Workflow info -->
+            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius-md);
+                        padding:1rem 1.2rem;margin-bottom:1.2rem;font-size:.9rem;color:#92400e">
+                <strong><i class="fas fa-info-circle"></i> Workflow:</strong>
+                Patient pays online → Admin confirms → Patient can download invoice receipt.
+            </div>
+
+            <!-- Payments table -->
+            <div class="dashboard-box">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-credit-card"></i> All Payments</h3>
+                    <div style="display:flex;gap:.5rem;align-items:center">
+                        <button class="btn btn-sm btn-secondary" onclick="loadPayments()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter tabs -->
+                <div class="tab-row">
+                    <button class="tab-btn active" onclick="filterPay('all',this)">All</button>
+                    <button class="tab-btn" onclick="filterPay('unpaid',this)">Unpaid</button>
+                    <button class="tab-btn" onclick="filterPay('paid',this)">Paid</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Appt ID</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Fee</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="payTable">
+                        <tr><td colspan="7" class="empty">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+const API     = 'http://localhost:8080';
+const token   = () => localStorage.getItem('token');
+const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+let allAppts = [];
+
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 5000);
+}
+
+$(document).ready(function () {
+    if (!token()) { window.location.href = 'login.html'; return; }
+    document.getElementById('who').textContent = 'Logged in as: ' + (localStorage.getItem('username') || 'Admin');
+    loadPayments();
+});
+
+function loadPayments() {
+    $.ajax({
+        url: API + '/api/appointments/all', method: 'GET', headers: authHdr(),
+        success: function (res) {
+            allAppts = res.body || [];
+            updateStats(allAppts);
+            renderTable(allAppts);
+        },
+        error: function (xhr) {
+            if (xhr.status === 401 || xhr.status === 403) { logout(); return; }
+            showAlert('Failed to load payments.', 'error');
+        }
+    });
+}
+
+function updateStats(list) {
+    const paid   = list.filter(a => a.paymentStatus === 'PAID').length;
+    const unpaid = list.filter(a => a.paymentStatus === 'UNPAID').length;
+    $('#sTotal').text(list.length);
+    $('#sUnpaid').text(unpaid);
+    $('#sPaid').text(paid);
+}
+
+function filterPay(tab, el) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    let filtered = allAppts;
+    if (tab === 'unpaid') filtered = allAppts.filter(a => a.paymentStatus === 'UNPAID');
+    else if (tab === 'paid') filtered = allAppts.filter(a => a.paymentStatus === 'PAID');
+    renderTable(filtered);
+}
+
+function renderTable(list) {
+    const tbody = $('#payTable').empty();
+    if (!list.length) {
+        tbody.html('<tr><td colspan="7" class="empty">No records found.</td></tr>');
+        return;
+    }
+    list.forEach(a => {
+        const fee = a.paymentAmount
+            ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK', {minimumFractionDigits:2})
+            : '—';
+        const badge = a.paymentStatus === 'PAID'
+            ? '<span class="badge badge-paid">Paid</span>'
+            : '<span class="badge badge-unpaid">Unpaid</span>';
+
+        let actions = '';
+        if (a.paymentStatus === 'UNPAID') {
+            actions += `<button class="btn btn-sm confirm-btn" style="margin-right:.3rem"
+                onclick="confirmPayment('${a.appointmentId}','${(a.patientName||'').replace(/'/g,'')}')">
+                <i class="fas fa-check"></i> Confirm</button>`;
+        }
+        if (a.paymentStatus === 'PAID') {
+            actions += `<button class="btn btn-sm invoice-btn"
+                onclick="printInvoice(${JSON.stringify(a).replace(/"/g,'&quot;')})">
+                <i class="fas fa-file-invoice"></i> Invoice</button>`;
+        }
+        if (!actions) actions = '<span style="color:#94a3b8;font-size:.78rem">—</span>';
+
+        tbody.append(`<tr>
+            <td><strong>${a.appointmentId}</strong></td>
+            <td>${a.patientName||'—'}</td>
+            <td>${a.doctorName||'—'}</td>
+            <td>${a.appointmentDate||'—'}</td>
+            <td><strong>${fee}</strong></td>
+            <td>${badge}</td>
+            <td style="white-space:nowrap">${actions}</td>
+        </tr>`);
+    });
+}
+
+function confirmPayment(apptId, patientName) {
+    if (!confirm('Confirm payment for appointment ' + apptId + ' (' + patientName + ')?')) return;
+    const appt = allAppts.find(a => a.appointmentId === apptId);
+    $.ajax({
+        url: `${API}/api/appointments/adminConfirmPayment/${apptId}`,
+        method: 'POST', headers: authHdr(),
+        success: function (res) {
+            if (res.status === 0) {
+                showAlert('Payment confirmed! Patient notified.', 'success');
+                loadPayments();
+                if (appt) setTimeout(() => printInvoice(Object.assign({}, appt, { paymentStatus: 'PAID' })), 500);
+            } else showAlert(res.message || 'Failed.', 'error');
+        },
+        error: function (xhr) {
+            let m = 'Failed.'; try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+            showAlert(m, 'error');
+        }
+    });
+}
+
+function printInvoice(a) {
+    if (typeof a === 'string') { try { a = JSON.parse(a); } catch(e){ return; } }
+    const invoiceNum = 'INV-' + a.appointmentId;
+    const fee = a.paymentAmount ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK',{minimumFractionDigits:2}) : 'LKR 2,500.00';
+    const paidAt = a.paidAt ? new Date(a.paidAt).toLocaleString('en-LK') : new Date().toLocaleString('en-LK');
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${invoiceNum}</title>
+<style>body{font-family:'Segoe UI',sans-serif;margin:0;padding:0}.page{max-width:680px;margin:0 auto;padding:40px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #0b2a44}
+.bicon{background:#0b2a44;color:#fff;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:12px}
+.bname{font-size:22px;font-weight:700;color:#0b2a44}.bname span{font-weight:400;color:#1f6e9c}
+.amt{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;margin:20px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}td{padding:10px 14px;border-bottom:1px solid #f1f5f9}
+.no-print{text-align:center;margin-top:22px}.footer{margin-top:36px;padding-top:14px;border-top:1px solid #e2eaf2;text-align:center;font-size:12px;color:#94a3b8}
+@media print{.no-print{display:none}@page{margin:15mm;size:A4}}</style></head><body><div class="page">
+<div class="hdr"><div style="display:flex;align-items:center"><div class="bicon">&#x2665;</div>
+<div><div class="bname">Clinic<span>Q</span></div><div style="font-size:12px;color:#64748b">Clinic Appointment Queue Management System</div></div></div>
+<div style="text-align:right"><h2 style="margin:0;font-size:18px;color:#0b2a44">PAYMENT RECEIPT</h2>
+<div style="font-size:13px;color:#64748b">${invoiceNum}</div>
+<span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-top:5px">&#x2713; PAID</span></div></div>
+<table>
+<tr><td style="color:#64748b">Patient</td><td><strong>${a.patientName||'—'}</strong></td><td style="color:#64748b">Appointment ID</td><td><strong>${a.appointmentId}</strong></td></tr>
+<tr><td style="color:#64748b">Doctor</td><td>Dr. ${a.doctorName||'—'}</td><td style="color:#64748b">Specialization</td><td>${a.doctorSpecialization||'—'}</td></tr>
+<tr><td style="color:#64748b">Date</td><td>${a.appointmentDate||'—'}</td><td style="color:#64748b">Queue#</td><td><strong>#${a.appointmentNumber||'—'}</strong></td></tr>
+<tr><td style="color:#64748b">Reason</td><td colspan="3">${a.reason||'—'}</td></tr>
+</table>
+<div class="amt"><div style="font-size:13px;font-weight:600;color:#15803d">&#x1F4B3; Consultation Fee Paid</div><div style="font-size:22px;font-weight:700;color:#15803d">${fee}</div></div>
+<table><tr><td style="color:#64748b">Payment Date</td><td>${paidAt}</td><td style="color:#64748b">Confirmed By</td><td>Admin</td></tr></table>
+<div class="no-print">
+<button onclick="window.print()" style="background:#0b2a44;color:#fff;border:none;padding:12px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;margin-right:10px">&#x1F4F4; Download PDF</button>
+<button onclick="window.close()" style="background:#e2eaf2;color:#0b2a44;border:none;padding:12px 24px;border-radius:50px;font-size:14px;cursor:pointer">Close</button></div>
+<div class="footer">ClinicQ | Computer-generated receipt | Admin Confirmed</div>
+</div></body></html>`;
+    const w = window.open('', '_blank', 'width=750,height=900,scrollbars=yes');
+    if (w) { w.document.open(); w.document.write(html); w.document.close(); w.onload = () => setTimeout(() => w.print(), 400); }
+}
+</script>
+</body>
+</html>

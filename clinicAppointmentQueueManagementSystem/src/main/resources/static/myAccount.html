@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - My Account</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+    <style>
+        .field-input { width:100%; padding:.72rem 1rem; border:1.5px solid var(--border-color);
+                       border-radius:var(--radius-md); font-size:.95rem; font-family:inherit;
+                       background:#f8fafc; color:var(--text-main); outline:none; transition:.2s; }
+        .field-input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(0,180,219,.1); }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+    </aside>
+
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2><i class="fas fa-key" style="color:var(--accent)"></i> My Account</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert" style="display:none"></div>
+
+            <!-- Current user info banner -->
+            <div style="background:linear-gradient(135deg,#0b2a44,#1d6fa4);color:#fff;
+                        border-radius:var(--radius-lg);padding:1.4rem 1.8rem;margin-bottom:1.5rem;
+                        display:flex;align-items:center;gap:1rem">
+                <div style="background:rgba(255,255,255,.15);width:52px;height:52px;border-radius:14px;
+                            display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div>
+                    <div style="font-size:1.05rem;font-weight:700;margin-bottom:.2rem" id="bannerUsername">—</div>
+                    <div style="font-size:.88rem;opacity:.8" id="bannerRole">—</div>
+                </div>
+            </div>
+
+            <!-- Change Credentials card -->
+            <div class="dashboard-box" style="max-width:560px">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-lock" style="color:var(--accent)"></i> Change Credentials</h3>
+                </div>
+
+                <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--radius-md);
+                            padding:.85rem 1rem;margin-bottom:1.2rem;font-size:.88rem;color:#0369a1">
+                    <i class="fas fa-info-circle" style="margin-right:.4rem"></i>
+                    Current password is required. Leave new username or password blank to keep unchanged.
+                </div>
+
+                <div id="formAlert" class="alert" style="display:none"></div>
+
+                <div style="display:grid;gap:.9rem">
+                    <div>
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                      display:block;margin-bottom:.4rem">
+                            Current Password <span style="color:#dc2626">*</span>
+                        </label>
+                        <input class="field-input" type="password" id="currentPw"
+                               placeholder="Enter your current password">
+                    </div>
+                    <div>
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                      display:block;margin-bottom:.4rem">
+                            New Username
+                            <span style="font-weight:400;color:var(--text-muted)">(leave blank to keep current)</span>
+                        </label>
+                        <input class="field-input" type="text" id="newUsername"
+                               placeholder="New username">
+                    </div>
+                    <div>
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                      display:block;margin-bottom:.4rem">
+                            New Password
+                            <span style="font-weight:400;color:var(--text-muted)">(leave blank to keep current)</span>
+                        </label>
+                        <div style="position:relative">
+                            <input class="field-input" type="password" id="newPw"
+                                   placeholder="Min 6 characters" style="padding-right:2.8rem">
+                            <span onclick="togglePwd('newPw','eyeNewPw')" id="eyeNewPw"
+                                  style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);
+                                         cursor:pointer;color:var(--text-muted)">
+                                <i class="fas fa-eye-slash"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:.82rem;font-weight:600;color:var(--navy-light);
+                                      display:block;margin-bottom:.4rem">
+                            Confirm New Password
+                        </label>
+                        <input class="field-input" type="password" id="confirmPw"
+                               placeholder="Re-enter new password">
+                    </div>
+                    <div style="margin-top:.3rem;display:flex;gap:.7rem">
+                        <button class="btn" id="saveBtn" onclick="saveCredentials()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearForm()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+const API     = 'http://localhost:8080';
+const token   = () => localStorage.getItem('token');
+const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 5000);
+}
+
+function showFormAlert(msg, type) {
+    const el = document.getElementById('formAlert');
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 5000);
+}
+
+function togglePwd(inputId, eyeId) {
+    const p = document.getElementById(inputId);
+    const e = document.getElementById(eyeId).querySelector('i');
+    if (p.type === 'password') { p.type = 'text'; e.className = 'fas fa-eye'; }
+    else                       { p.type = 'password'; e.className = 'fas fa-eye-slash'; }
+}
+
+function clearForm() {
+    ['currentPw','newUsername','newPw','confirmPw'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('formAlert').style.display = 'none';
+}
+
+$(document).ready(function () {
+    if (!token()) { window.location.href = 'login.html'; return; }
+    const uname = localStorage.getItem('username') || 'Admin';
+    const role  = localStorage.getItem('userRole')  || '';
+    document.getElementById('who').textContent = 'Logged in as: ' + uname;
+    document.getElementById('bannerUsername').textContent = uname;
+    document.getElementById('bannerRole').textContent = role.replace('_', ' ');
+});
+
+function saveCredentials() {
+    const currentPw  = document.getElementById('currentPw').value.trim();
+    const newUsername = document.getElementById('newUsername').value.trim();
+    const newPw       = document.getElementById('newPw').value;
+    const confirmPw   = document.getElementById('confirmPw').value;
+
+    if (!currentPw) { showFormAlert('Current password is required.', 'error'); return; }
+    if (!newUsername && !newPw) { showFormAlert('Provide a new username or new password to update.', 'error'); return; }
+    if (newPw && newPw !== confirmPw) { showFormAlert('New passwords do not match.', 'error'); return; }
+    if (newPw && newPw.length < 6) { showFormAlert('New password must be at least 6 characters.', 'error'); return; }
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    $.ajax({
+        url: API + '/api/users/changeCredentials', method: 'PUT',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({
+            userId:          localStorage.getItem('userId'),
+            currentPassword: currentPw,
+            newUsername:     newUsername || null,
+            newPassword:     newPw       || null
+        }),
+        success: function (res) {
+            if (res.status === 0) {
+                showFormAlert('Credentials updated successfully!', 'success');
+                if (newUsername) {
+                    localStorage.setItem('username', newUsername);
+                    document.getElementById('who').textContent = 'Logged in as: ' + newUsername;
+                    document.getElementById('bannerUsername').textContent = newUsername;
+                }
+                clearForm();
+                if (newPw) {
+                    showAlert('Password changed. Please log in again.', 'success');
+                    setTimeout(() => { localStorage.clear(); window.location.href = 'login.html'; }, 2000);
+                }
+            } else {
+                showFormAlert(res.message || 'Update failed.', 'error');
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        },
+        error: function (xhr) {
+            let m = 'Update failed.';
+            try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+            showFormAlert(m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        }
+    });
+}
+</script>
+</body>
+</html>
