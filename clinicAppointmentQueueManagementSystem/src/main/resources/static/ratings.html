@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Ratings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+    <style>
+        .field-input { width:100%; padding:.72rem 1rem; border:1.5px solid var(--border-color);
+                       border-radius:var(--radius-md); font-size:.95rem; font-family:inherit;
+                       background:#f8fafc; color:var(--text-main); outline:none; transition:.2s; }
+        .field-input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(0,180,219,.1); }
+        .star-display { color:#f59e0b; font-size:1rem; }
+        .star-empty   { color:#d1d5db; font-size:1rem; }
+        .doctor-card-rating { background:#fff; border:1px solid var(--border-color); border-radius:var(--radius-lg);
+                              padding:1.2rem 1.4rem; cursor:pointer; transition:.2s; }
+        .doctor-card-rating:hover { border-color:var(--accent); box-shadow:var(--shadow-md); }
+        .rating-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1rem; }
+        .empty { text-align:center; color:var(--text-muted); padding:2rem; }
+        .comment-cell { max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+        <!-- nav built by sidebar.js based on role -->
+    </aside>
+
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+            <h2>Doctor Ratings</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert alert-error" style="display:none"></div>
+
+            <!-- Doctor rating cards -->
+            <div class="welcome-banner" style="margin-bottom:1.5rem">
+                <h1>Rating Overview</h1>
+                <p>Select a doctor card to view all patient reviews.</p>
+            </div>
+
+            <div class="rating-grid" id="doctorRatingCards" style="margin-bottom:2rem">
+                <div class="empty" style="grid-column:1/-1">Loading doctors...</div>
+            </div>
+
+            <!-- Ratings table for selected doctor -->
+            <div class="dashboard-box" id="ratingDetailBox" style="display:none">
+                <div class="dashboard-box-header">
+                    <h3 id="ratingDetailTitle"><i class="fas fa-star"></i> Reviews</h3>
+                    <button class="btn btn-sm btn-secondary" onclick="$('#ratingDetailBox').hide()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr><th>Patient</th><th>Stars</th><th>Comment</th><th>Date</th></tr>
+                        </thead>
+                        <tbody id="ratingTable"><tr><td colspan="4" class="empty">Select a doctor.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    function stars(avg) {
+        let h = '';
+        for (let i = 1; i <= 5; i++)
+            h += `<i class="fas fa-star ${i <= Math.round(avg) ? 'star-display' : 'star-empty'}"></i>`;
+        return h;
+    }
+
+    $(document).ready(function () {
+        if (!token()) { window.location.href = 'login.html'; return; }
+        $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Admin'));
+        loadDoctorCards();
+    });
+
+    function loadDoctorCards() {
+        $.ajax({ url: API + '/api/doctors/cards', method:'GET', headers:authHdr(),
+            success: function(r) {
+                const grid = $('#doctorRatingCards').empty();
+                const list = r.body || [];
+                if (!list.length) { grid.html('<div class="empty" style="grid-column:1/-1">No doctors.</div>'); return; }
+                list.forEach(d => {
+                    const avg = d.averageRating || 0;
+                    grid.append(`
+                        <div class="doctor-card-rating" onclick="loadDoctorRatings('${d.doctorId}','${d.fullName||''}')">
+                            <div style="font-weight:700;color:var(--navy);margin-bottom:.25rem">${d.fullName||'—'}</div>
+                            <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:.6rem">${d.specializationName||'—'}</div>
+                            <div>${stars(avg)}</div>
+                            <div style="font-size:.82rem;color:var(--text-muted);margin-top:.3rem">
+                                ${Number(avg).toFixed(1)} / 5 &nbsp;·&nbsp; ${d.totalRatings||0} reviews
+                            </div>
+                        </div>
+                    `);
+                });
+            },
+            error: function() { $('#doctorRatingCards').html('<div class="empty">Failed to load.</div>'); }
+        });
+    }
+
+    function loadDoctorRatings(doctorId, name) {
+        $('#ratingDetailTitle').html(`<i class="fas fa-star"></i> Reviews — ${name}`);
+        $('#ratingDetailBox').show();
+        $('#ratingTable').html('<tr><td colspan="4" class="empty"><i class="fas fa-spinner fa-spin"></i></td></tr>');
+        $.ajax({ url: `${API}/api/ratings/doctor/${doctorId}`, method:'GET', headers:authHdr(),
+            success: function(r) {
+                const tbody = $('#ratingTable').empty();
+                const list  = r.body || [];
+                if (!list.length) { tbody.html('<tr><td colspan="4" class="empty">No reviews yet.</td></tr>'); return; }
+                list.forEach(rt => {
+                    const date = rt.ratedAt ? new Date(rt.ratedAt).toLocaleDateString() : '—';
+                    tbody.append(`<tr>
+                        <td>${rt.patientName||'—'}</td>
+                        <td>${stars(rt.stars)} <small>(${rt.stars}/5)</small></td>
+                        <td class="comment-cell" title="${rt.comment||''}">${rt.comment||'—'}</td>
+                        <td>${date}</td>
+                    </tr>`);
+                });
+            },
+            error: function() { $('#ratingTable').html('<tr><td colspan="4" class="empty">Failed to load.</td></tr>'); }
+        });
+    }
+</script>
+</body>
+</html>
+
