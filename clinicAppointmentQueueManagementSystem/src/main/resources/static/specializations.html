@@ -39,7 +39,7 @@
                 </form>
                 <div class="table-wrap" style="margin-top:1rem;">
                     <table>
-                        <thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Name</th><th>Description</th></tr></thead>
                         <tbody id="specTable"></tbody>
                     </table>
                 </div>
@@ -98,7 +98,7 @@
                         <tr>
                             <td>${specialization.specializationId}</td>
                             <td>${specialization.name}</td>
-                            <td>${specialization.status}</td>
+                            <td>${specialization.description}</td>
                         </tr>
                     `);
                     row.on("click", function () {
