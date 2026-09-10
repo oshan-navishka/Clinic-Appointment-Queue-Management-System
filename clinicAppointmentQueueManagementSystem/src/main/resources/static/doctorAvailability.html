@@ -282,7 +282,6 @@ $(document).ready(function () {
     loadDoctors();
     loadPreview();
 
-    // Live clear errors on input
     ['avDocSelect','avStart','avEnd'].forEach(id => {
         document.getElementById(id).addEventListener('change', () => clearErrors('avDocSelect','avStart','avEnd'));
     });
@@ -548,7 +547,6 @@ function loadPreview() {
                         + '<th>Day</th><th>Time</th><th>Slots</th><th>Branch</th><th></th>'
                         + '</tr></thead><tbody>';
                     slots.forEach(s => {
-                        // escape values for inline onclick
                         const day   = (s.dayOfWeek||'').replace(/'/g,"\\'");
                         const start = (s.startTime||'').replace(/'/g,"\\'");
                         const end   = (s.endTime||'').replace(/'/g,"\\'");
