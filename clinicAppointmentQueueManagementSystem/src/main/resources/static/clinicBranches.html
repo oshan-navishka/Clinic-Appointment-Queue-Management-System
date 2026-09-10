@@ -1,0 +1,288 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicQ - Clinic Branches</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
+        </div>
+        <!-- nav built by sidebar.js based on role -->
+    </aside>
+
+    <div class="content">
+        <header class="topbar">
+            <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2>Clinic Branches</h2>
+            <div id="who"></div>
+        </header>
+
+        <main class="page">
+            <div id="alert" class="alert alert-error" style="display:none"></div>
+
+            <!-- Stats -->
+            <div class="cards">
+                <div class="card card-blue">
+                    <div class="card-header-icon">
+                        <h3>Total Branches</h3>
+                        <div class="icon-wrapper"><i class="fas fa-hospital"></i></div>
+                    </div>
+                    <div class="num" id="cTotal">0</div>
+                </div>
+                <div class="card card-green">
+                    <div class="card-header-icon">
+                        <h3>Active</h3>
+                        <div class="icon-wrapper"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                    <div class="num" id="cActive">0</div>
+                </div>
+                <div class="card card-red">
+                    <div class="card-header-icon">
+                        <h3>Inactive</h3>
+                        <div class="icon-wrapper"><i class="fas fa-times-circle"></i></div>
+                    </div>
+                    <div class="num" id="cInactive">0</div>
+                </div>
+            </div>
+
+            <!-- Form card -->
+            <div class="dashboard-box">
+                <div class="dashboard-box-header">
+                    <h3 id="formTitle"><i class="fas fa-plus-circle"></i> Add New Branch</h3>
+                    <button class="btn btn-sm btn-secondary" onclick="clearForm()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+
+                <form id="branchForm" class="form-grid">
+                    <input type="hidden" id="branchId">
+
+                    <input class="field-input" id="branchName" placeholder="Branch name *" required>
+                    <input class="field-input" id="address"    placeholder="Address *" required>
+                    <input class="field-input" id="phone"      placeholder="Phone number">
+                    <input class="field-input" id="email"      placeholder="Email address" type="email">
+
+                    <div style="grid-column:1/-1;display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.3rem">
+                        <button class="btn" type="button" onclick="saveBranch()">
+                            <i class="fas fa-plus"></i> Add Branch
+                        </button>
+                        <button class="btn btn-secondary" type="button" onclick="updateBranch()">
+                            <i class="fas fa-pen"></i> Update Branch
+                        </button>
+                        <button class="btn btn-danger" type="button" onclick="deleteBranch()">
+                            <i class="fas fa-trash"></i> Delete Branch
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Table -->
+            <div class="dashboard-box">
+                <div class="dashboard-box-header">
+                    <h3><i class="fas fa-list"></i> All Branches</h3>
+                    <button class="btn btn-sm btn-secondary" onclick="loadBranches()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Branch Name</th>
+                            <th>Address</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="branchTable">
+                        <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:1.5rem">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.textContent   = msg;
+        el.className     = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+        el.style.display = 'flex';
+        setTimeout(() => el.style.display = 'none', 4000);
+    }
+
+    function clearForm() {
+        document.getElementById('branchForm').reset();
+        document.getElementById('branchId').value = '';
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Add New Branch';
+    }
+
+    $(document).ready(function () {
+        if (!token()) { window.location.href = 'login.html'; return; }
+        $('#who').text('Logged in as: ' + (localStorage.getItem('username') || 'Admin'));
+        loadBranches();
+    });
+
+    function loadBranches() {
+        $.ajax({
+            url: API + '/api/clinicBranches/getAllBranches',
+            method: 'GET', headers: authHdr(),
+            success: function (res) {
+                const list  = res.body || [];
+                const tbody = $('#branchTable').empty();
+
+                const active   = list.filter(b => b.status === 'ACTIVE').length;
+                const inactive = list.length - active;
+                $('#cTotal').text(list.length);
+                $('#cActive').text(active);
+                $('#cInactive').text(inactive);
+
+                if (!list.length) {
+                    tbody.html('<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:1.5rem">No branches found.</td></tr>');
+                    return;
+                }
+
+                list.forEach(b => {
+                    const statusBadge = b.status === 'ACTIVE'
+                        ? '<span style="color:#16a34a;font-weight:600;font-size:.82rem">● Active</span>'
+                        : '<span style="color:#dc2626;font-weight:600;font-size:.82rem">● Inactive</span>';
+                    const row = $(`
+                        <tr style="cursor:pointer">
+                            <td><strong>${b.branchId}</strong></td>
+                            <td>${b.branchName || '—'}</td>
+                            <td>${b.address    || '—'}</td>
+                            <td>${b.phone      || '—'}</td>
+                            <td>${b.email      || '—'}</td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `);
+                    row.on('click', () => {
+                        $('#branchId').val(b.branchId);
+                        $('#branchName').val(b.branchName);
+                        $('#address').val(b.address);
+                        $('#phone').val(b.phone);
+                        $('#email').val(b.email);
+                        document.getElementById('formTitle').innerHTML =
+                            '<i class="fas fa-pen"></i> Edit Branch — ' + b.branchName;
+                    });
+                    tbody.append(row);
+                });
+            },
+            error: () => showAlert('Failed to load branches.', 'error')
+        });
+    }
+
+    function saveBranch() {
+        const name = $('#branchName').val().trim();
+        const addr = $('#address').val().trim();
+        if (!name || !addr) { showAlert('Branch name and address are required.', 'error'); return; }
+
+        $.ajax({
+            url: API + '/api/clinicBranches/addBranch',
+            method: 'POST', contentType: 'application/json', headers: authHdr(),
+            data: JSON.stringify({
+                branchName: name,
+                address:    addr,
+                phone:      $('#phone').val().trim(),
+                email:      $('#email').val().trim()
+            }),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Branch added successfully!', 'success');
+                    clearForm();
+                    loadBranches();
+                } else {
+                    showAlert(res.message || 'Failed to add branch.', 'error');
+                }
+            },
+            error: function (xhr) {
+                let m = 'Error adding branch.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showAlert(m, 'error');
+            }
+        });
+    }
+
+    function updateBranch() {
+        const branchId = $('#branchId').val().trim();
+        if (!branchId) { showAlert('Please select a branch from the table first.', 'error'); return; }
+
+        $.ajax({
+            url: API + '/api/clinicBranches/updateBranch',
+            method: 'PUT', contentType: 'application/json', headers: authHdr(),
+            data: JSON.stringify({
+                branchId:   branchId,
+                branchName: $('#branchName').val().trim(),
+                address:    $('#address').val().trim(),
+                phone:      $('#phone').val().trim(),
+                email:      $('#email').val().trim()
+            }),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Branch updated successfully!', 'success');
+                    clearForm();
+                    loadBranches();
+                } else {
+                    showAlert(res.message || 'Failed to update branch.', 'error');
+                }
+            },
+            error: function (xhr) {
+                let m = 'Error updating branch.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showAlert(m, 'error');
+            }
+        });
+    }
+
+    function deleteBranch() {
+        const branchId = $('#branchId').val().trim();
+        if (!branchId) { showAlert('Please select a branch from the table first.', 'error'); return; }
+        if (!confirm('Set this branch to INACTIVE?')) return;
+
+        $.ajax({
+            url: API + '/api/clinicBranches/deleteBranch/' + branchId,
+            method: 'DELETE', headers: authHdr(),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Branch deactivated.', 'success');
+                    clearForm();
+                    loadBranches();
+                } else {
+                    showAlert(res.message || 'Failed.', 'error');
+                }
+            },
+            error: function (xhr) {
+                let m = 'Error deleting branch.';
+                try { m = JSON.parse(xhr.responseText).message || m; } catch(e){}
+                showAlert(m, 'error');
+            }
+        });
+    }
+</script>
+</body>
+</html>
+
