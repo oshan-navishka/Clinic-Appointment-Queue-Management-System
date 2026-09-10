@@ -3,53 +3,1147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Dashboard</title>
-
+    <title>ClinicQ · Patient Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #f5f7fa;
-            font-family: Arial, sans-serif;
-        }
-
-        .dashboard {
-            text-align: center;
-        }
-
-        .add-details-btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .add-details-btn:hover {
-            background: #1d4ed8;
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#f0f6fc;color:#1e293b;min-height:100vh}
+        .shell{display:flex;min-height:100vh}
+        .sidebar{width:230px;background:#0b2a44;display:flex;flex-direction:column;padding:1.5rem 1rem;gap:.25rem;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+        .logo-area{display:flex;align-items:center;gap:.7rem;margin-bottom:1.4rem;padding:.5rem}
+        .logo-icon{background:#1f6e9c;color:#fff;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+        .logo-text{color:#fff;font-weight:700;font-size:1.3rem}
+        .logo-text span{font-weight:400;opacity:.7}
+        .nav-link{display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;border-radius:10px;color:rgba(255,255,255,.72);font-size:.88rem;font-weight:500;text-decoration:none;transition:.15s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left}
+        .nav-link:hover,.nav-link.active{background:rgba(255,255,255,.12);color:#fff}
+        .nav-link i{width:1.1rem;text-align:center;font-size:.95rem}
+        .nav-bottom{margin-top:auto;border-top:1px solid rgba(255,255,255,.1);padding-top:.8rem}
+        .notif-dot{background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:.65rem;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;font-weight:700}
+        .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow-y:auto}
+        .topbar{background:#fff;padding:.85rem 1.5rem;display:flex;align-items:center;gap:1rem;border-bottom:1px solid #e2eaf2;position:sticky;top:0;z-index:20}
+        .topbar h2{font-size:1rem;font-weight:700;color:#0b2a44;flex:1}
+        .user-badge{background:#e8f4fd;color:#0b2a44;padding:.35rem .85rem;border-radius:20px;font-size:.82rem;font-weight:600}
+        .page{padding:1.4rem;display:flex;flex-direction:column;gap:1.4rem}
+        .tab-bar{display:flex;gap:.4rem;flex-wrap:wrap}
+        .tab{padding:.5rem 1.1rem;border-radius:9px;font-size:.85rem;font-weight:600;cursor:pointer;color:#64748b;border:none;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+        .tab.active{background:#0b2a44;color:#fff}
+        .tab:hover:not(.active){background:#e8f4fd;color:#0b2a44}
+        .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem}
+        .stat{background:#fff;border-radius:16px;padding:1.1rem 1.3rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+        .stat h4{font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem}
+        .stat .num{font-size:1.9rem;font-weight:700;color:#0b2a44}
+        .stat.blue .num{color:#1d6fa4}.stat.green .num{color:#16a34a}.stat.orange .num{color:#ea7c0a}.stat.red .num{color:#dc2626}
+        .box{background:#fff;border-radius:16px;padding:1.3rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+        .box-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
+        .box-header h3{font-size:.95rem;font-weight:700;color:#0b2a44;display:flex;align-items:center;gap:.5rem}
+        .doctor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+        .doctor-card{background:#fff;border:1.5px solid #e2eaf2;border-radius:16px;padding:1.2rem;transition:.18s}
+        .doctor-card:hover{border-color:#1f6e9c;box-shadow:0 4px 16px rgba(31,110,156,.12);transform:translateY(-2px)}
+        .doc-avatar{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#1d6fa4,#0b2a44);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;margin-bottom:.75rem}
+        .slot-chip{background:#e8f4fd;color:#1d6fa4;font-size:.72rem;font-weight:600;padding:.2rem .55rem;border-radius:20px}
+        .book-btn{width:100%;margin-top:.6rem;padding:.6rem;background:#0b2a44;color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.15s}
+        .book-btn:hover{background:#154a72}
+        .table-wrap{overflow-x:auto}
+        table{width:100%;border-collapse:collapse;font-size:.86rem}
+        th{text-align:left;padding:.65rem 1rem;background:#f1f5f9;color:#475569;font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.4px}
+        td{padding:.7rem 1rem;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:middle}
+        tr:last-child td{border-bottom:none}
+        tr:hover td{background:#f8fafc}
+        .empty-row td{text-align:center;color:#94a3b8;padding:2rem}
+        .badge{display:inline-block;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600}
+        .badge-pending{background:#fef3c7;color:#92400e}.badge-checked{background:#d1fae5;color:#065f46}
+        .badge-paid{background:#dbeafe;color:#1e40af}.badge-unpaid{background:#fee2e2;color:#991b1b}
+        .badge-online{background:#ede9fe;color:#5b21b6}.badge-admin{background:#e0f2fe;color:#0369a1}
+        .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.1rem;border-radius:9px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:.15s}
+        .btn-primary{background:#0b2a44;color:#fff}.btn-primary:hover{background:#154a72}
+        .btn-sm{font-size:.78rem;padding:.4rem .8rem}
+        .btn-pay{background:#16a34a;color:#fff}.btn-pay:hover{background:#15803d}
+        .btn-rate{background:#f59e0b;color:#fff}.btn-rate:hover{background:#d97706}
+        .stars-input{display:flex;gap:.3rem;font-size:1.6rem;cursor:pointer;margin:.5rem 0}
+        .stars-input span{color:#d1d5db;transition:.15s}
+        .stars-input span.active{color:#f59e0b}
+        .stars-input span:hover{color:#f59e0b}
+        .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
+        .modal-backdrop.open{display:flex}
+        .modal{background:#fff;border-radius:20px;padding:1.8rem;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.2);position:relative;max-height:90vh;overflow-y:auto}
+        .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.2rem;color:#64748b;cursor:pointer}
+        .modal-close:hover{color:#0b2a44}
+        .modal h3{font-size:1.1rem;font-weight:700;color:#0b2a44;margin-bottom:1.2rem}
+        .form-group{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.9rem}
+        .form-group label{font-size:.82rem;font-weight:600;color:#374151}
+        .form-group input,.form-group select,.form-group textarea{padding:.65rem .9rem;border:1.5px solid #cbd5e1;border-radius:10px;font-size:.9rem;font-family:inherit;color:#1e293b;background:#f8fafc;outline:none;transition:.15s}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#1f6e9c;background:#fff}
+        .fee-badge{background:#d1fae5;color:#065f46;padding:.5rem 1rem;border-radius:10px;font-weight:700;font-size:1rem;text-align:center;margin:.5rem 0}
+        .notif-item{display:flex;gap:.75rem;padding:.85rem 1rem;border-radius:12px;margin-bottom:.5rem;background:#f8fafc;border:1px solid #e2eaf2}
+        .notif-item.unread{background:#e8f4fd;border-color:#bfdbfe}
+        .notif-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+        .notif-icon.booked{background:#dbeafe;color:#1d4ed8}.notif-icon.paid{background:#d1fae5;color:#065f46}.notif-icon.checked{background:#ede9fe;color:#5b21b6}
+        .notif-text .title{font-weight:600;font-size:.88rem;color:#0b2a44;margin-bottom:.2rem}
+        .notif-text .msg{font-size:.8rem;color:#64748b}
+        .notif-time{font-size:.72rem;color:#94a3b8;margin-top:.25rem}
+        .profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.8rem}
+        .profile-field span{font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+        .profile-field div{font-weight:600;color:#0b2a44;margin-top:.25rem;font-size:.95rem}
+        .alert{padding:.7rem 1rem;border-radius:10px;font-size:.85rem;font-weight:500;display:none;margin-bottom:.5rem}
+        .alert-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+        .alert-success{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+        @media(max-width:768px){.sidebar{display:none}.doctor-grid{grid-template-columns:1fr}}
     </style>
 </head>
-
 <body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="logo-text">Clinic<span>Q</span></div>
+        </div>
+        <button class="nav-link active" onclick="showTab('doctors')"><i class="fas fa-user-md"></i> Find Doctors</button>
+        <button class="nav-link" onclick="showTab('appointments')"><i class="fas fa-calendar-check"></i> My Appointments</button>
+        <button class="nav-link" onclick="showTab('medications')"><i class="fas fa-pills"></i> My Medications</button>
+        <button class="nav-link" onclick="showTab('records')"><i class="fas fa-file-medical"></i> Medical Records</button>
+        <button class="nav-link" onclick="showTab('profile')"><i class="fas fa-user-circle"></i> My Profile</button>
+        <button class="nav-link" onclick="showTab('notifications')" id="navNotif">
+            <i class="fas fa-bell"></i> Notifications
+            <span class="notif-dot" id="notifBadge" style="display:none">0</span>
+        </button>
+        <div class="nav-bottom">
+            <button class="nav-link" onclick="logout()"><i class="fas fa-right-from-bracket"></i> Logout</button>
+        </div>
+    </aside>
 
-<div class="dashboard">
-    <button class="add-details-btn" onclick="addDetails()">
-        <i class="fas fa-user-plus"></i> Add Your Details
-    </button>
+    <div class="main">
+        <header class="topbar">
+            <h2 id="pageTitle"><i class="fas fa-user-md" style="color:#1f6e9c"></i> Find Doctors</h2>
+            <span class="user-badge" id="userBadge">Loading...</span>
+        </header>
+
+        <main class="page">
+            <div id="globalAlert" class="alert"></div>
+
+            <!-- TAB: DOCTORS -->
+            <div id="tabDoctors">
+                <div class="stat-row" style="margin-bottom:1.2rem">
+                    <div class="stat blue"><h4>Total Appointments</h4><div class="num" id="sDoctorTotal">0</div></div>
+                    <div class="stat orange"><h4>Pending</h4><div class="num" id="sDoctorPending">0</div></div>
+                    <div class="stat green"><h4>Checked</h4><div class="num" id="sDoctorChecked">0</div></div>
+                    <div class="stat red"><h4>Unpaid</h4><div class="num" id="sDoctorUnpaid">0</div></div>
+                </div>
+                <div class="box">
+                    <div class="box-header">
+                        <h3><i class="fas fa-user-md" style="color:#1f6e9c"></i> Available Doctors</h3>
+                        <button class="btn btn-primary btn-sm" onclick="loadDoctorCards()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    <div style="margin-bottom:1rem">
+                        <input type="text" id="doctorSearch" placeholder="Search doctor or specialization..."
+                               style="width:100%;padding:.6rem .9rem;border:1.5px solid #cbd5e1;border-radius:10px;font-size:.88rem;outline:none;font-family:inherit">
+                    </div>
+                    <div class="doctor-grid" id="doctorGrid">
+                        <div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:2rem">
+                            <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
+                            <div style="margin-top:.5rem">Loading doctors...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: APPOINTMENTS -->
+            <div id="tabAppointments" style="display:none">
+                <div class="tab-bar" style="margin-bottom:1rem">
+                    <button class="tab active" onclick="switchApptTab('all',this)">All</button>
+                    <button class="tab" onclick="switchApptTab('pending',this)">Pending</button>
+                    <button class="tab" onclick="switchApptTab('checked',this)">Checked</button>
+                    <button class="tab" onclick="switchApptTab('unpaid',this)">Unpaid</button>
+                </div>
+                <div class="box">
+                    <div class="box-header">
+                        <h3 id="apptTabTitle"><i class="fas fa-list-alt" style="color:#1f6e9c"></i> All Appointments</h3>
+                        <button class="btn btn-primary btn-sm" onclick="loadMyAppointments()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    <div id="apptAlert" class="alert"></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr><th>Queue#</th><th>Doctor</th><th>Spec.</th><th>Date</th><th>Time</th><th>Fee</th><th>State</th><th>Payment</th><th>Source</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="apptTableBody"><tr class="empty-row"><td colspan="10">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: MEDICATIONS -->
+            <div id="tabMedications" style="display:none">
+                <div class="box">
+                    <div class="box-header">
+                        <h3><i class="fas fa-pills" style="color:#1f6e9c"></i> My Medications</h3>
+                        <button class="btn btn-primary btn-sm" onclick="loadMyMedications()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem" id="medStats"></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Start</th><th>End</th><th>Status</th></tr>
+                            </thead>
+                            <tbody id="medTableBody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div id="downloadSlipBtn" style="display:none;margin-top:1rem;text-align:right">
+                        <button class="btn btn-primary" onclick="downloadMedicationSlip()">
+                            <i class="fas fa-file-medical"></i> Download Prescription Slip (PDF)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: RECORDS -->
+            <div id="tabRecords" style="display:none">
+                <div class="box">
+                    <div class="box-header">
+                        <h3><i class="fas fa-file-medical" style="color:#0891b2"></i> My Medical Records</h3>
+                        <button class="btn btn-primary btn-sm" onclick="loadMyRecords()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    <div id="recordsTableWrap">
+                        <div style="text-align:center;color:#94a3b8;padding:2rem"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: PROFILE -->
+            <div id="tabProfile" style="display:none">
+                <div class="box">
+                    <div class="box-header">
+                        <h3><i class="fas fa-user-circle" style="color:#1f6e9c"></i> My Profile</h3>
+                        <button class="btn btn-primary btn-sm" onclick="toggleProfileEdit()" id="profileToggleBtn"><i class="fas fa-pen"></i> Edit</button>
+                    </div>
+                    <div id="profileView" class="profile-grid">
+                        <div class="profile-field"><span>Name</span><div id="pvName">—</div></div>
+                        <div class="profile-field"><span>Email</span><div id="pvEmail">—</div></div>
+                        <div class="profile-field"><span>Contact</span><div id="pvContact">—</div></div>
+                        <div class="profile-field"><span>Age</span><div id="pvAge">—</div></div>
+                        <div class="profile-field"><span>Gender</span><div id="pvGender">—</div></div>
+                        <div class="profile-field"><span>Address</span><div id="pvAddress">—</div></div>
+                        <div class="profile-field"><span>Emergency Contact</span><div id="pvEmergency">—</div></div>
+                    </div>
+                    <div id="profileEdit" style="display:none;margin-top:1.2rem">
+                        <div id="profileAlert" class="alert"></div>
+                        <input type="hidden" id="profilePatientId">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.9rem">
+                            <div class="form-group"><label>First Name</label><input type="text" id="profFirstName" placeholder="First name"></div>
+                            <div class="form-group"><label>Last Name</label><input type="text" id="profLastName" placeholder="Last name"></div>
+                            <div class="form-group"><label>Age</label><input type="number" id="profAge" placeholder="Age" min="1" max="120"></div>
+                            <div class="form-group"><label>Gender</label>
+                                <select id="profGender"><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select>
+                            </div>
+                            <div class="form-group"><label>Contact</label><input type="text" id="profContact" placeholder="077 123 4567"></div>
+                            <div class="form-group"><label>Address</label><input type="text" id="profAddress" placeholder="No 10, Main St"></div>
+                            <div class="form-group" style="grid-column:1/-1"><label>Emergency Contact</label><input type="text" id="profEmergency" placeholder="Name and phone"></div>
+                        </div>
+                        <div style="display:flex;gap:.7rem;margin-top:.5rem">
+                            <button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save"></i> Save Changes</button>
+                            <button class="btn" style="background:#e2eaf2;color:#0b2a44" onclick="toggleProfileEdit()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: NOTIFICATIONS -->
+            <div id="tabNotifications" style="display:none">
+                <div class="box">
+                    <div class="box-header">
+                        <h3><i class="fas fa-bell" style="color:#1f6e9c"></i> Notifications</h3>
+                        <button class="btn btn-primary btn-sm" onclick="markAllRead()"><i class="fas fa-check-double"></i> Mark all read</button>
+                    </div>
+                    <div id="notifList"><div style="text-align:center;color:#94a3b8;padding:2rem">Loading...</div></div>
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
 
-<script>
-    function addDetails() {
-        window.location.href = "patients.html";
-    }
-</script>
+<!-- BOOKING MODAL -->
+<div class="modal-backdrop" id="bookingModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('bookingModal')"><i class="fas fa-times"></i></button>
+        <h3><i class="fas fa-calendar-plus" style="color:#1f6e9c"></i> Book Appointment</h3>
+        <div id="bookAlert" class="alert"></div>
+        <div style="background:#f8fafc;border-radius:12px;padding:.9rem 1rem;margin-bottom:1rem;border:1px solid #e2eaf2">
+            <div style="font-weight:700;color:#0b2a44;margin-bottom:.25rem" id="bookDocName">—</div>
+            <div style="font-size:.82rem;color:#64748b" id="bookDocSpec">—</div>
+        </div>
+        <div class="fee-badge" id="bookFeeLabel">Consultation Fee: LKR 2,500.00</div>
+        <div class="form-group" style="margin-top:.9rem">
+            <label>Select Branch</label>
+            <select id="bookBranchSelect" style="padding:.65rem .9rem;border:1.5px solid #cbd5e1;border-radius:10px;font-size:.9rem;font-family:inherit;color:#1e293b;background:#f8fafc;outline:none;width:100%">
+                <option value="">-- No specific branch --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Appointment Date</label>
+            <input type="date" id="bookDate" required>
+        </div>
+        <div class="form-group">
+            <label>Reason for Visit</label>
+            <textarea id="bookReason" rows="2" placeholder="Describe your symptoms..."></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.3rem" onclick="confirmBooking()" id="confirmBookBtn">
+            <i class="fas fa-calendar-check"></i> Confirm Booking
+        </button>
+    </div>
+</div>
 
+<!-- RATING MODAL -->
+<div class="modal-backdrop" id="ratingModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('ratingModal')"><i class="fas fa-times"></i></button>
+        <h3><i class="fas fa-star" style="color:#f59e0b"></i> Rate Your Doctor</h3>
+        <div id="rateAlert" class="alert"></div>
+        <div id="rateApptInfo" style="background:#f8fafc;border-radius:12px;padding:.9rem 1rem;margin-bottom:1rem;border:1px solid #e2eaf2;font-size:.88rem;color:#374151"></div>
+        <input type="hidden" id="rateApptId">
+        <input type="hidden" id="rateDoctorId">
+        <input type="hidden" id="ratePatientId">
+        <div class="form-group">
+            <label>Your Rating</label>
+            <div class="stars-input" id="starsInput">
+                <span data-val="1">&#9733;</span><span data-val="2">&#9733;</span>
+                <span data-val="3">&#9733;</span><span data-val="4">&#9733;</span>
+                <span data-val="5">&#9733;</span>
+            </div>
+            <input type="hidden" id="selectedStars" value="0">
+        </div>
+        <div class="form-group">
+            <label>Comment (optional)</label>
+            <textarea id="rateComment" rows="2" placeholder="Share your experience..."></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="submitRating()" id="submitRateBtn">
+            <i class="fas fa-paper-plane"></i> Submit Rating
+        </button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+var API = 'http://localhost:8080';
+function token()   { return localStorage.getItem('token'); }
+function userId()  { return localStorage.getItem('userId'); }
+function authHdr() { return { 'Authorization': 'Bearer ' + token() }; }
+
+var allApptList    = [];
+var selectedDoctor = null;
+var activeApptTab  = 'all';
+window._myMedicationsList = [];
+
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+function showAlert(id, msg, type) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+    el.style.display = 'block';
+    setTimeout(function() { el.style.display = 'none'; }, 4500);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+var tabIds = ['tabDoctors','tabAppointments','tabMedications','tabRecords','tabProfile','tabNotifications'];
+var tabMap = {
+    doctors:'tabDoctors', appointments:'tabAppointments', medications:'tabMedications',
+    records:'tabRecords', profile:'tabProfile', notifications:'tabNotifications'
+};
+var tabTitles = {
+    doctors:       '<i class="fas fa-user-md" style="color:#1f6e9c"></i> Find Doctors',
+    appointments:  '<i class="fas fa-calendar-check" style="color:#1f6e9c"></i> My Appointments',
+    medications:   '<i class="fas fa-pills" style="color:#1f6e9c"></i> My Medications',
+    records:       '<i class="fas fa-file-medical" style="color:#0891b2"></i> Medical Records',
+    profile:       '<i class="fas fa-user-circle" style="color:#1f6e9c"></i> My Profile',
+    notifications: '<i class="fas fa-bell" style="color:#1f6e9c"></i> Notifications'
+};
+
+function showTab(name) {
+    tabIds.forEach(function(id) { document.getElementById(id).style.display = 'none'; });
+    document.getElementById(tabMap[name]).style.display = 'block';
+    document.getElementById('pageTitle').innerHTML = tabTitles[name];
+    document.querySelectorAll('.nav-link').forEach(function(l) {
+        var fn = l.getAttribute('onclick') || '';
+        l.classList.toggle('active', fn.indexOf("'" + name + "'") !== -1);
+    });
+    if (name === 'appointments')  loadMyAppointments();
+    if (name === 'notifications') loadNotifications();
+    if (name === 'medications')   loadMyMedications();
+    if (name === 'records')       loadMyRecords();
+}
+
+$(document).ready(function() {
+    if (!token()) { window.location.href = 'login.html'; return; }
+    $('#userBadge').text(localStorage.getItem('username') || 'Patient');
+    document.getElementById('bookDate').min = new Date().toISOString().split('T')[0];
+
+    document.querySelectorAll('#starsInput span').forEach(function(s) {
+        s.addEventListener('click', function() {
+            var val = parseInt(s.dataset.val);
+            document.getElementById('selectedStars').value = val;
+            document.querySelectorAll('#starsInput span').forEach(function(star, i) {
+                star.classList.toggle('active', i < val);
+            });
+        });
+    });
+
+    $('#doctorSearch').on('input', function() {
+        var kw = $(this).val().toLowerCase();
+        renderDoctorGrid((window._allDoctorCards || []).filter(function(d) {
+            return (d.fullName||'').toLowerCase().indexOf(kw) !== -1
+                || (d.specializationName||'').toLowerCase().indexOf(kw) !== -1;
+        }));
+    });
+
+    loadDoctorCards();
+    loadMyAppointments();
+    loadProfile();
+    loadUnreadCount();
+});
+
+window._allDoctorCards = [];
+
+function loadDoctorCards() {
+    $('#doctorGrid').html('<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:2rem">'
+        + '<i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>'
+        + '<div style="margin-top:.5rem">Loading doctors...</div></div>');
+    $.ajax({
+        url: API + '/api/doctors/cards', method: 'GET', headers: authHdr(),
+        success: function(res) {
+            window._allDoctorCards = res.body || [];
+            renderDoctorGrid(window._allDoctorCards);
+        },
+        error: function() {
+            $('#doctorGrid').html('<div style="grid-column:1/-1;text-align:center;color:#dc2626;padding:2rem">Failed to load doctors. Please refresh.</div>');
+        }
+    });
+}
+
+function renderDoctorGrid(list) {
+    var grid = $('#doctorGrid').empty();
+    if (!list || !list.length) {
+        grid.html('<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:2rem">No doctors found.</div>');
+        return;
+    }
+    list.forEach(function(d) {
+        var starsHtml = '';
+        for (var i = 1; i <= 5; i++) {
+            starsHtml += '<i class="fas fa-star" style="font-size:.85rem;color:'
+                + (i <= Math.round(d.averageRating||0) ? '#f59e0b' : '#d1d5db') + '"></i>';
+        }
+        var fee = d.consultationFee
+            ? 'LKR ' + Number(d.consultationFee).toLocaleString('en-LK', {minimumFractionDigits:2})
+            : 'LKR 2,500.00';
+
+        var slots = d.availableSlots || [];
+        var byBranch = {};
+        slots.forEach(function(s) {
+            var key = s.branchId || '__none__';
+            var nm  = s.branchName || 'Main Branch';
+            if (!byBranch[key]) byBranch[key] = { name: nm, slots: [] };
+            byBranch[key].slots.push(s);
+        });
+        var scheduleHtml = '';
+        if (Object.keys(byBranch).length === 0) {
+            scheduleHtml = '<div style="font-size:.78rem;color:#94a3b8;font-style:italic">No schedule available</div>';
+        } else {
+            Object.values(byBranch).forEach(function(grp) {
+                var chips = grp.slots.map(function(s) {
+                    return '<span class="slot-chip">' + (s.dayOfWeek||'').substring(0,3) + ' ' + (s.startTime||'') + '–' + (s.endTime||'') + '</span>';
+                }).join('');
+                scheduleHtml += '<div style="margin-bottom:.4rem">'
+                    + '<div style="font-size:.72rem;font-weight:700;color:#0b2a44;text-transform:uppercase;letter-spacing:.3px;margin-bottom:.25rem">'
+                    + '<i class="fas fa-hospital" style="color:#1f6e9c;margin-right:.3rem"></i>' + grp.name + '</div>'
+                    + '<div style="display:flex;flex-wrap:wrap;gap:.25rem">' + chips + '</div>'
+                    + '</div>';
+            });
+        }
+
+        var card = $('<div class="doctor-card"></div>');
+        card.html(
+            '<div style="display:flex;align-items:flex-start;gap:.8rem;margin-bottom:.8rem">'
+            + '<div class="doc-avatar"><i class="fas fa-user-md"></i></div>'
+            + '<div style="flex:1"><div style="font-size:1rem;font-weight:700;color:#0b2a44;margin-bottom:.15rem">' + (d.fullName||'—') + '</div>'
+            + '<div style="font-size:.8rem;color:#64748b;font-weight:500;margin-bottom:.3rem"><i class="fas fa-stethoscope" style="color:#1f6e9c;margin-right:.3rem;font-size:.75rem"></i>' + (d.specializationName||'—') + '</div>'
+            + '<div style="display:flex;align-items:center;gap:.35rem">' + starsHtml
+            + '<span style="font-size:.78rem;color:#64748b">' + Number(d.averageRating||0).toFixed(1) + ' (' + (d.totalRatings||0) + ')</span></div>'
+            + '</div></div>'
+            + '<div style="background:#f8fafc;border-radius:10px;padding:.7rem .9rem;margin-bottom:.75rem;border:1px solid #e2eaf2">'
+            + '<div style="font-size:.72rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.4px;margin-bottom:.3rem"><i class="fas fa-tag" style="margin-right:.3rem"></i>Consultation Fee</div>'
+            + '<div style="font-size:1.05rem;font-weight:700;color:#0b2a44">' + fee + '</div>'
+            + '</div>'
+            + '<div style="margin-bottom:.8rem"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:.5rem"><i class="fas fa-calendar-alt" style="margin-right:.3rem"></i>Schedule</div>' + scheduleHtml + '</div>'
+            + '<button class="book-btn"><i class="fas fa-calendar-plus"></i> Book Appointment</button>'
+        );
+        card[0]._doctorData = d;
+        card.find('.book-btn').on('click', function(e) { e.stopPropagation(); openBookingModal(d); });
+        grid.append(card);
+    });
+}
+
+function openBookingModal(d) {
+    selectedDoctor = d;
+    $('#bookDocName').text(d.fullName || 'Doctor');
+    $('#bookDocSpec').text(d.specializationName || '');
+    var fee = d.consultationFee
+        ? 'LKR ' + Number(d.consultationFee).toLocaleString('en-LK', {minimumFractionDigits:2})
+        : 'LKR 2,500.00';
+    $('#bookFeeLabel').text('Consultation Fee: ' + fee);
+
+    var branchSel = $('#bookBranchSelect').empty().append('<option value="">-- No specific branch --</option>');
+    var seen = {};
+    (d.availableSlots || []).forEach(function(s) {
+        if (s.branchId && !seen[s.branchId]) {
+            seen[s.branchId] = true;
+            branchSel.append('<option value="' + s.branchId + '">' + (s.branchName || s.branchId) + '</option>');
+        }
+    });
+    if (Object.keys(seen).length === 1) branchSel.val(Object.keys(seen)[0]);
+
+    $('#bookDate').val('');
+    $('#bookReason').val('');
+    $('#bookAlert').hide();
+    var btn = document.getElementById('confirmBookBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-calendar-check"></i> Confirm Booking';
+    openModal('bookingModal');
+}
+
+function confirmBooking() {
+    var date     = $('#bookDate').val();
+    var reason   = $('#bookReason').val().trim();
+    var branchId = $('#bookBranchSelect').val() || null;
+    if (!date) { showAlert('bookAlert', 'Please select a date.', 'error'); return; }
+    if (!selectedDoctor) { showAlert('bookAlert', 'No doctor selected.', 'error'); return; }
+
+    var btn = document.getElementById('confirmBookBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+
+    $.ajax({
+        url: API + '/api/appointments/bookOnline', method: 'POST',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({
+            userId: userId(), doctorId: selectedDoctor.doctorId,
+            appointmentDate: date, reason: reason,
+            branchId: branchId, paymentAmount: selectedDoctor.consultationFee || 2500
+        }),
+        success: function(res) {
+            if (res.status === 0) {
+                showAlert('bookAlert', 'Appointment booked! Check your email.', 'success');
+                setTimeout(function() { closeModal('bookingModal'); showTab('appointments'); }, 1800);
+            } else {
+                showAlert('bookAlert', res.message || 'Booking failed.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-calendar-check"></i> Confirm Booking';
+            }
+        },
+        error: function(xhr) {
+            var m = 'Booking failed.'; try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
+            showAlert('bookAlert', m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-calendar-check"></i> Confirm Booking';
+        }
+    });
+}
+
+function loadMyAppointments() {
+    $.ajax({
+        url: API + '/api/appointments/myAppointments?userId=' + userId(),
+        method: 'GET', headers: authHdr(),
+        success: function(res) {
+            allApptList = res.body || [];
+            renderApptTable(filterAppt(activeApptTab));
+            updateStats();
+        },
+        error: function() { showAlert('apptAlert', 'Failed to load appointments.', 'error'); }
+    });
+}
+
+function switchApptTab(tab, el) {
+    activeApptTab = tab;
+    document.querySelectorAll('#tabAppointments .tab').forEach(function(t) { t.classList.remove('active'); });
+    el.classList.add('active');
+    var titles = { all:'All Appointments', pending:'Pending', checked:'Checked', unpaid:'Unpaid' };
+    $('#apptTabTitle').html('<i class="fas fa-list-alt" style="color:#1f6e9c"></i> ' + titles[tab]);
+    renderApptTable(filterAppt(tab));
+}
+
+function filterAppt(tab) {
+    if (tab === 'pending') return allApptList.filter(function(a) { return a.appointmentState === 'PENDING'; });
+    if (tab === 'checked') return allApptList.filter(function(a) { return a.appointmentState === 'CHECKED'; });
+    if (tab === 'unpaid')  return allApptList.filter(function(a) { return a.paymentStatus === 'UNPAID'; });
+    return allApptList;
+}
+
+function renderApptTable(list) {
+    var tbody = $('#apptTableBody').empty();
+    var patId = localStorage.getItem('patientId') || '';
+    if (!list.length) { tbody.append('<tr class="empty-row"><td colspan="10">No appointments found.</td></tr>'); return; }
+    list.forEach(function(a) {
+        var stateBadge = a.appointmentState === 'CHECKED'
+            ? '<span class="badge badge-checked">Checked</span>'
+            : '<span class="badge badge-pending">Pending</span>';
+        var payBadge = a.paymentStatus === 'PAID'
+            ? '<span class="badge badge-paid">Paid</span>'
+            : '<span class="badge badge-unpaid">Unpaid</span>';
+        var src = a.bookingSource === 'ONLINE'
+            ? '<span class="badge badge-online">Online</span>'
+            : '<span class="badge badge-admin">Admin</span>';
+        var fee = a.paymentAmount
+            ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK', {minimumFractionDigits:2})
+            : '—';
+
+        var actions = '';
+        if (a.paymentStatus === 'UNPAID') {
+            actions += '<button class="btn btn-pay btn-sm" style="margin-right:.3rem" data-id="' + a.appointmentId + '" onclick="payAppointment(this.dataset.id)">'
+                     + '<i class="fas fa-credit-card"></i> Pay</button>';
+        }
+        if (a.paymentStatus === 'PAID') {
+            actions += '<button class="btn btn-sm" style="background:#0b2a44;color:#fff;margin-right:.3rem" data-id="' + a.appointmentId + '" onclick="printInvoiceById(this.dataset.id)">'
+                     + '<i class="fas fa-file-invoice"></i> Invoice</button>';
+        }
+        if (a.appointmentState === 'CHECKED') {
+            actions += '<button class="btn btn-rate btn-sm" id="rateBtn_' + a.appointmentId + '"'
+                     + ' data-appt="' + a.appointmentId + '" data-doc="' + a.doctorId + '"'
+                     + ' data-pat="' + patId + '" onclick="openRatingModalFromBtn(this)">'
+                     + '<i class="fas fa-star"></i> Rate</button>';
+        }
+        if (!actions) actions = '—';
+
+        tbody.append('<tr>'
+            + '<td><strong>#' + (a.appointmentNumber||'—') + '</strong></td>'
+            + '<td>' + (a.doctorName||'—') + '</td>'
+            + '<td>' + (a.doctorSpecialization||'—') + '</td>'
+            + '<td>' + (a.appointmentDate||'—') + '</td>'
+            + '<td>' + (a.appointmentTime||'—') + '</td>'
+            + '<td>' + fee + '</td>'
+            + '<td>' + stateBadge + '</td>'
+            + '<td>' + payBadge + '</td>'
+            + '<td>' + src + '</td>'
+            + '<td style="white-space:nowrap">' + actions + '</td>'
+            + '</tr>');
+
+        if (a.appointmentState === 'CHECKED') {
+            var rb = document.getElementById('rateBtn_' + a.appointmentId);
+            if (rb) { rb.dataset.docname = a.doctorName || ''; rb.dataset.spec = a.doctorSpecialization || ''; }
+        }
+    });
+
+    list.filter(function(a) { return a.appointmentState === 'CHECKED'; }).forEach(function(a) {
+        $.ajax({
+            url: API + '/api/ratings/hasRated/' + a.appointmentId, method: 'GET', headers: authHdr(),
+            success: function(res) {
+                if (res.body === true) {
+                    var btn = document.getElementById('rateBtn_' + a.appointmentId);
+                    if (btn) { btn.textContent = 'Rated'; btn.disabled = true; btn.style.background = '#94a3b8'; }
+                }
+            }, error: function() {}
+        });
+    });
+}
+
+function updateStats() {
+    $('#sDoctorTotal').text(allApptList.length);
+    $('#sDoctorPending').text(allApptList.filter(function(a) { return a.appointmentState === 'PENDING'; }).length);
+    $('#sDoctorChecked').text(allApptList.filter(function(a) { return a.appointmentState === 'CHECKED'; }).length);
+    $('#sDoctorUnpaid').text(allApptList.filter(function(a) { return a.paymentStatus === 'UNPAID'; }).length);
+}
+
+function payAppointment(apptId) {
+    if (!confirm('Confirm payment for this appointment?')) return;
+    $.ajax({
+        url: API + '/api/appointments/pay/' + apptId + '?userId=' + userId(),
+        method: 'POST', headers: authHdr(),
+        success: function(res) {
+            if (res.status === 0) {
+                showAlert('apptAlert', 'Payment successful! Check your email.', 'success');
+                loadMyAppointments();
+                setTimeout(function() { downloadInvoice(apptId); }, 800);
+            } else showAlert('apptAlert', res.message || 'Payment failed.', 'error');
+        },
+        error: function(xhr) {
+            var m = 'Payment failed.'; try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
+            showAlert('apptAlert', m, 'error');
+        }
+    });
+}
+
+function downloadInvoice(apptId) {
+    $.ajax({
+        url: API + '/api/appointments/myAppointments?userId=' + userId(),
+        method: 'GET', headers: authHdr(),
+        success: function(res) {
+            allApptList = res.body || [];
+            for (var i = 0; i < allApptList.length; i++) {
+                if (allApptList[i].appointmentId === apptId) { openInvoicePrint(allApptList[i]); break; }
+            }
+            renderApptTable(filterAppt(activeApptTab));
+            updateStats();
+        }
+    });
+}
+
+function printInvoiceById(apptId) {
+    for (var i = 0; i < allApptList.length; i++) {
+        if (allApptList[i].appointmentId === apptId) { openInvoicePrint(allApptList[i]); return; }
+    }
+    downloadInvoice(apptId);
+}
+
+function openInvoicePrint(a) {
+    var patientName = a.patientName || localStorage.getItem('username') || 'Patient';
+    var fee = a.paymentAmount ? 'LKR ' + Number(a.paymentAmount).toLocaleString('en-LK',{minimumFractionDigits:2}) : 'LKR 2,500.00';
+    var paidAt = a.paidAt ? new Date(a.paidAt).toLocaleString('en-LK') : new Date().toLocaleString('en-LK');
+    var invoiceNum = 'INV-' + a.appointmentId;
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + invoiceNum + '</title>'
+        + '<style>body{font-family:Segoe UI,sans-serif;margin:0;padding:0}.page{max-width:680px;margin:0 auto;padding:40px}'
+        + '.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;padding-bottom:18px;border-bottom:2px solid #0b2a44}'
+        + '.bicon{background:#0b2a44;color:#fff;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:12px}'
+        + '.bname{font-size:22px;font-weight:700;color:#0b2a44}.bname span{font-weight:400;color:#1f6e9c}'
+        + '.amt{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;margin:20px 0}'
+        + '.lbl{font-size:13px;font-weight:600;color:#15803d}.val{font-size:22px;font-weight:700;color:#15803d}'
+        + 'table{width:100%;border-collapse:collapse;font-size:14px}td{padding:10px 14px;border-bottom:1px solid #f1f5f9}'
+        + '.footer{margin-top:36px;padding-top:14px;border-top:1px solid #e2eaf2;text-align:center;font-size:12px;color:#94a3b8}'
+        + '.no-print{text-align:center;margin-top:22px}@media print{.no-print{display:none}@page{margin:15mm;size:A4}}'
+        + '</style></head><body><div class="page">'
+        + '<div class="hdr"><div style="display:flex;align-items:center"><div class="bicon">&#x2665;</div>'
+        + '<div><div class="bname">Clinic<span>Q</span></div><div style="font-size:12px;color:#64748b">Clinic Appointment Queue Management System</div></div></div>'
+        + '<div style="text-align:right"><h2 style="margin:0;font-size:18px;color:#0b2a44">PAYMENT RECEIPT</h2>'
+        + '<div style="font-size:13px;color:#64748b">' + invoiceNum + '</div>'
+        + '<span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-top:5px">&#x2713; PAID</span></div></div>'
+        + '<table><tr><td style="color:#64748b">Patient</td><td><strong>' + patientName + '</strong></td>'
+        + '<td style="color:#64748b">Appointment ID</td><td><strong>' + a.appointmentId + '</strong></td></tr>'
+        + '<tr><td style="color:#64748b">Doctor</td><td>Dr. ' + (a.doctorName||'—') + '</td>'
+        + '<td style="color:#64748b">Specialization</td><td>' + (a.doctorSpecialization||'—') + '</td></tr>'
+        + '<tr><td style="color:#64748b">Date</td><td>' + (a.appointmentDate||'—') + '</td>'
+        + '<td style="color:#64748b">Queue#</td><td><strong>#' + (a.appointmentNumber||'—') + '</strong></td></tr>'
+        + '<tr><td style="color:#64748b">Reason</td><td colspan="3">' + (a.reason||'—') + '</td></tr></table>'
+        + '<div class="amt"><div class="lbl">&#x1F4B3; Consultation Fee Paid</div><div class="val">' + fee + '</div></div>'
+        + '<table><tr><td style="color:#64748b">Payment Date</td><td>' + paidAt + '</td>'
+        + '<td style="color:#64748b">Method</td><td>Online</td></tr></table>'
+        + '<div class="no-print"><button onclick="window.print()" style="background:#0b2a44;color:#fff;border:none;padding:12px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;margin-right:10px">&#x1F4F4; Download PDF</button>'
+        + '<button onclick="window.close()" style="background:#e2eaf2;color:#0b2a44;border:none;padding:12px 24px;border-radius:50px;font-size:14px;cursor:pointer">Close</button></div>'
+        + '<div class="footer">ClinicQ | Computer-generated receipt</div></div></body></html>';
+    var w = window.open('', '_blank', 'width=750,height=900,scrollbars=yes');
+    if (w) { w.document.open(); w.document.write(html); w.document.close(); w.onload = function() { setTimeout(function() { w.print(); }, 400); }; }
+}
+
+function openRatingModalFromBtn(btn) {
+    openRatingModal(btn.dataset.appt, btn.dataset.doc, btn.dataset.pat, btn.dataset.docname || '', btn.dataset.spec || '');
+}
+
+function openRatingModal(apptId, docId, patId, docName, spec) {
+    $('#rateApptId').val(apptId); $('#rateDoctorId').val(docId); $('#ratePatientId').val(patId);
+    $('#rateApptInfo').html('<strong>' + docName + '</strong><br><span style="color:#64748b;font-size:.8rem">' + spec + '</span>');
+    document.getElementById('selectedStars').value = 0;
+    document.querySelectorAll('#starsInput span').forEach(function(s) { s.classList.remove('active'); });
+    $('#rateComment').val('');
+    $('#rateAlert').hide();
+    var btn = document.getElementById('submitRateBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Rating';
+    openModal('ratingModal');
+}
+
+function submitRating() {
+    var stars   = parseInt($('#selectedStars').val());
+    var apptId  = $('#rateApptId').val();
+    var docId   = $('#rateDoctorId').val();
+    var patId   = $('#ratePatientId').val();
+    var comment = $('#rateComment').val().trim();
+    if (!stars || stars < 1) { showAlert('rateAlert', 'Please select a star rating.', 'error'); return; }
+    var btn = document.getElementById('submitRateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    $.ajax({
+        url: API + '/api/ratings/save', method: 'POST',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({ appointmentId: apptId, doctorId: docId, patientId: patId, stars: stars, comment: comment }),
+        success: function(res) {
+            if (res.status === 0) {
+                showAlert('rateAlert', 'Thank you for your rating!', 'success');
+                setTimeout(function() { closeModal('ratingModal'); loadMyAppointments(); loadDoctorCards(); }, 1500);
+            } else {
+                showAlert('rateAlert', res.message || 'Failed.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Rating';
+            }
+        },
+        error: function(xhr) {
+            var m = 'Failed.'; try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
+            showAlert('rateAlert', m, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Rating';
+        }
+    });
+}
+
+function loadProfile() {
+    $.ajax({
+        url: API + '/api/patients/byUser/' + userId(), method: 'GET', headers: authHdr(),
+        success: function(res) {
+            if (res.status !== 0 || !res.body) return;
+            var p = res.body;
+            $('#profilePatientId').val(p.patientId);
+            $('#pvName').text((p.firstName||'') + ' ' + (p.lastName||''));
+            $('#pvEmail').text(p.userEmail||'—');
+            $('#pvContact').text(p.contact||'—');
+            $('#pvAge').text(p.age||'—');
+            $('#pvGender').text(p.gender||'—');
+            $('#pvAddress').text(p.address||'—');
+            $('#pvEmergency').text(p.emergencyContact||'—');
+            $('#profFirstName').val(p.firstName||''); $('#profLastName').val(p.lastName||'');
+            $('#profAge').val(p.age||''); $('#profGender').val(p.gender||'MALE');
+            $('#profContact').val(p.contact||''); $('#profAddress').val(p.address||'');
+            $('#profEmergency').val(p.emergencyContact||'');
+            localStorage.setItem('patientId', p.patientId);
+            if (!p.address || !p.emergencyContact) {
+                showAlert('globalAlert', 'Please complete your profile — address and emergency contact are missing.', 'error');
+            }
+        }, error: function() {}
+    });
+}
+
+function toggleProfileEdit() {
+    var editing = $('#profileEdit').is(':visible');
+    if (editing) {
+        $('#profileEdit').hide(); $('#profileView').show();
+        $('#profileToggleBtn').html('<i class="fas fa-pen"></i> Edit');
+    } else {
+        $('#profileView').hide(); $('#profileEdit').show();
+        $('#profileToggleBtn').html('<i class="fas fa-times"></i> Cancel');
+    }
+}
+
+function saveProfile() {
+    var patientId = $('#profilePatientId').val().trim();
+    if (!patientId) { showAlert('profileAlert', 'Profile not loaded.', 'error'); return; }
+    var fn = $('#profFirstName').val().trim();
+    var ln = $('#profLastName').val().trim();
+    if (!fn || !ln) { showAlert('profileAlert', 'First and last name required.', 'error'); return; }
+    $.ajax({
+        url: API + '/api/patients/updatePatient', method: 'PUT',
+        contentType: 'application/json', headers: authHdr(),
+        data: JSON.stringify({
+            patientId: patientId, firstName: fn, lastName: ln,
+            age: $('#profAge').val() ? parseInt($('#profAge').val()) : null,
+            gender: $('#profGender').val(), contact: $('#profContact').val().trim(),
+            address: $('#profAddress').val().trim(), emergencyContact: $('#profEmergency').val().trim()
+        }),
+        success: function(res) {
+            if (res.status === 0) {
+                showAlert('profileAlert', 'Profile updated!', 'success');
+                loadProfile();
+                setTimeout(toggleProfileEdit, 1200);
+            } else showAlert('profileAlert', res.message || 'Update failed.', 'error');
+        },
+        error: function(xhr) {
+            var m = 'Update failed.'; try { m = JSON.parse(xhr.responseText).message || m; } catch(e) {}
+            showAlert('profileAlert', m, 'error');
+        }
+    });
+}
+
+function loadMyMedications() {
+    $('#medTableBody').html('<tr class="empty-row"><td colspan="6"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
+    $('#medStats').empty();
+    document.getElementById('downloadSlipBtn').style.display = 'none';
+    $.ajax({
+        url: API + '/api/medications/myMedications?userId=' + userId(),
+        method: 'GET', headers: authHdr(),
+        success: function(res) { renderMedTable(res.body || []); },
+        error: function() {
+            $('#medTableBody').html('<tr class="empty-row"><td colspan="6" style="color:#dc2626">Failed to load medications.</td></tr>');
+        }
+    });
+}
+
+function renderMedTable(list) {
+    var tbody = $('#medTableBody').empty();
+    var active    = list.filter(function(m) { return m.status === 'ACTIVE'; }).length;
+    var completed = list.filter(function(m) { return m.status === 'COMPLETED'; }).length;
+    var stopped   = list.filter(function(m) { return m.status === 'STOPPED'; }).length;
+
+    $('#medStats').html(
+        '<span style="background:#e8f4fd;color:#0b2a44;padding:.35rem .9rem;border-radius:20px;font-size:.82rem;font-weight:600"><i class="fas fa-pills" style="margin-right:.4rem"></i>Total: ' + list.length + '</span>'
+        + '<span style="background:#d1fae5;color:#065f46;padding:.35rem .9rem;border-radius:20px;font-size:.82rem;font-weight:600">Active: ' + active + '</span>'
+        + '<span style="background:#dbeafe;color:#1e40af;padding:.35rem .9rem;border-radius:20px;font-size:.82rem;font-weight:600">Completed: ' + completed + '</span>'
+        + '<span style="background:#fee2e2;color:#991b1b;padding:.35rem .9rem;border-radius:20px;font-size:.82rem;font-weight:600">Stopped: ' + stopped + '</span>'
+    );
+
+    if (!list.length) {
+        tbody.html('<tr class="empty-row"><td colspan="6">No approved medications yet.</td></tr>');
+        document.getElementById('downloadSlipBtn').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('downloadSlipBtn').style.display = 'block';
+    window._myMedicationsList = list;
+
+    var st = { 'ACTIVE':'background:#d1fae5;color:#065f46', 'COMPLETED':'background:#dbeafe;color:#1e40af', 'STOPPED':'background:#fee2e2;color:#991b1b' };
+    list.forEach(function(m) {
+        tbody.append('<tr>'
+            + '<td><strong>' + (m.medicineName||'—') + '</strong></td>'
+            + '<td>' + (m.dosage||'—') + '</td>'
+            + '<td>' + (m.frequency||'—') + '</td>'
+            + '<td>' + (m.startDate||'—') + '</td>'
+            + '<td>' + (m.endDate||'—') + '</td>'
+            + '<td><span style="display:inline-block;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;' + (st[m.status]||'') + '">' + (m.status||'—') + '</span></td>'
+            + '</tr>');
+    });
+}
+
+function downloadMedicationSlip() {
+    var list = window._myMedicationsList || [];
+    if (!list.length) { showAlert('globalAlert', 'No medications to download.', 'error'); return; }
+
+    var patientName = document.getElementById('pvName').textContent || localStorage.getItem('username') || 'Patient';
+    var slipDate    = new Date().toLocaleDateString('en-LK', { year:'numeric', month:'long', day:'numeric' });
+    var slipNum     = 'RX-' + Date.now().toString().slice(-8);
+    var active    = list.filter(function(m) { return m.status === 'ACTIVE'; }).length;
+    var completed = list.filter(function(m) { return m.status === 'COMPLETED'; }).length;
+    var stopped   = list.filter(function(m) { return m.status === 'STOPPED'; }).length;
+
+    var medRows = '';
+    list.forEach(function(m, i) {
+        var bg  = m.status === 'ACTIVE' ? '#d1fae5' : m.status === 'COMPLETED' ? '#dbeafe' : '#fee2e2';
+        var col = m.status === 'ACTIVE' ? '#065f46' : m.status === 'COMPLETED' ? '#1e40af' : '#991b1b';
+        medRows += '<tr style="background:' + (i%2===0?'#fff':'#f8fafc') + '">'
+            + '<td style="padding:11px 14px;font-weight:600;color:#0b2a44;border-bottom:1px solid #e2eaf2">' + (i+1) + '. ' + (m.medicineName||'—') + '</td>'
+            + '<td style="padding:11px 14px;color:#374151;border-bottom:1px solid #e2eaf2">' + (m.dosage||'—') + '</td>'
+            + '<td style="padding:11px 14px;color:#374151;border-bottom:1px solid #e2eaf2">' + (m.frequency||'—') + '</td>'
+            + '<td style="padding:11px 14px;color:#374151;border-bottom:1px solid #e2eaf2">' + (m.startDate||'—') + '</td>'
+            + '<td style="padding:11px 14px;color:#374151;border-bottom:1px solid #e2eaf2">' + (m.endDate||'—') + '</td>'
+            + '<td style="padding:11px 14px;border-bottom:1px solid #e2eaf2"><span style="background:' + bg + ';color:' + col + ';padding:.2rem .65rem;border-radius:20px;font-size:.78rem;font-weight:600">' + (m.status||'—') + '</span></td>'
+            + '</tr>';
+    });
+
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Prescription Slip ' + slipNum + '</title>'
+        + '<style>body{font-family:Segoe UI,sans-serif;margin:0;padding:0}.page{max-width:720px;margin:0 auto;padding:40px}'
+        + '.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:2.5px solid #0b2a44}'
+        + '.bicon{background:#0b2a44;color:#fff;width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-right:12px}'
+        + '.chips{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}'
+        + '.chip{padding:.35rem .9rem;border-radius:20px;font-size:13px;font-weight:600}'
+        + 'table{width:100%;border-collapse:collapse;margin-bottom:20px}'
+        + 'th{background:#0b2a44;color:#fff;padding:10px 14px;text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}'
+        + '.note{background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:12px 16px;font-size:13px;color:#92400e;margin-bottom:16px}'
+        + '.footer{margin-top:32px;padding-top:14px;border-top:1px solid #e2eaf2;text-align:center;font-size:12px;color:#94a3b8}'
+        + '.no-print{text-align:center;margin:24px 0}@media print{.no-print{display:none}@page{margin:15mm;size:A4}}'
+        + '</style></head><body><div class="page">'
+        + '<div class="hdr">'
+        + '<div style="display:flex;align-items:center"><div class="bicon">&#x2665;</div>'
+        + '<div><div style="font-size:24px;font-weight:700;color:#0b2a44">Clinic<span style="font-weight:400;color:#1f6e9c">Q</span></div>'
+        + '<div style="font-size:12px;color:#64748b;margin-top:2px">Clinic Appointment Queue Management System</div></div></div>'
+        + '<div style="text-align:right"><h2 style="margin:0;font-size:18px;color:#0b2a44">PRESCRIPTION SLIP</h2>'
+        + '<div style="font-size:13px;color:#64748b">' + slipNum + '</div>'
+        + '<span style="background:#ede9fe;color:#5b21b6;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;display:inline-block;margin-top:6px">&#x1F48A; Admin Approved</span></div></div>'
+        + '<div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
+        + '<div><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Patient</div><div style="font-size:15px;font-weight:700;color:#0b2a44;margin-top:3px">' + patientName + '</div></div>'
+        + '<div><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Date</div><div style="font-size:15px;font-weight:700;color:#0b2a44;margin-top:3px">' + slipDate + '</div></div>'
+        + '<div><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Total Medicines</div><div style="font-size:15px;font-weight:700;color:#7c3aed;margin-top:3px">' + list.length + '</div></div>'
+        + '</div>'
+        + '<div class="chips"><span class="chip" style="background:#d1fae5;color:#065f46">Active: ' + active + '</span>'
+        + '<span class="chip" style="background:#dbeafe;color:#1e40af">Completed: ' + completed + '</span>'
+        + '<span class="chip" style="background:#fee2e2;color:#991b1b">Stopped: ' + stopped + '</span></div>'
+        + '<div class="note"><strong>&#x26A0; Important:</strong> Take all medicines as prescribed by your doctor. Do not stop medication without consulting your doctor. Contact the clinic if you experience side effects.</div>'
+        + '<table><thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Start</th><th>End</th><th>Status</th></tr></thead>'
+        + '<tbody>' + medRows + '</tbody></table>'
+        + '<div class="no-print">'
+        + '<button onclick="window.print()" style="background:#0b2a44;color:#fff;border:none;padding:12px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(11,42,68,.2);font-family:inherit;margin-right:10px">&#x1F4F4; Download / Print PDF</button>'
+        + '<button onclick="window.close()" style="background:#e2eaf2;color:#0b2a44;border:none;padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Close</button></div>'
+        + '<div class="footer">ClinicQ | Prescription issued after admin verification | Keep this slip for your records</div>'
+        + '</div></body></html>';
+
+    var w = window.open('', '_blank', 'width=780,height=1000,scrollbars=yes');
+    if (w) { w.document.open(); w.document.write(html); w.document.close(); w.onload = function() { setTimeout(function() { w.print(); }, 400); }; }
+}
+
+function loadUnreadCount() {
+    $.ajax({
+        url: API + '/api/notifications/unreadCount?userId=' + userId(),
+        method: 'GET', headers: authHdr(),
+        success: function(res) {
+            var count = res.body || 0;
+            var badge = document.getElementById('notifBadge');
+            if (count > 0) { badge.textContent = count; badge.style.display = 'inline-flex'; }
+            else badge.style.display = 'none';
+        }, error: function() {}
+    });
+}
+
+function loadNotifications() {
+    $('#notifList').html('<div style="text-align:center;color:#94a3b8;padding:2rem"><i class="fas fa-spinner fa-spin"></i></div>');
+    $.ajax({
+        url: API + '/api/notifications/myNotifications?userId=' + userId(),
+        method: 'GET', headers: authHdr(),
+        success: function(res) {
+            var list = res.body || [];
+            var container = $('#notifList').empty();
+            if (!list.length) { container.html('<div style="text-align:center;color:#94a3b8;padding:2rem">No notifications yet.</div>'); return; }
+            list.forEach(function(n) {
+                var iconCls = n.type === 'PAYMENT_DONE' ? 'paid' : (n.type === 'CHECKED' ? 'checked' : 'booked');
+                var icon    = n.type === 'PAYMENT_DONE' ? 'fa-check-circle' : (n.type === 'CHECKED' ? 'fa-user-check' : 'fa-calendar-check');
+                var time    = n.createdAt ? new Date(n.createdAt).toLocaleString() : '';
+                container.append('<div class="notif-item ' + (n.isRead ? '' : 'unread') + '">'
+                    + '<div class="notif-icon ' + iconCls + '"><i class="fas ' + icon + '"></i></div>'
+                    + '<div class="notif-text" style="flex:1"><div class="title">' + (n.title||'') + '</div>'
+                    + '<div class="msg">' + (n.message||'') + '</div><div class="notif-time">' + time + '</div></div></div>');
+            });
+            loadUnreadCount();
+        },
+        error: function() { $('#notifList').html('<div style="color:#dc2626;text-align:center;padding:1rem">Failed to load.</div>'); }
+    });
+}
+
+function markAllRead() {
+    $.ajax({
+        url: API + '/api/notifications/markAllRead?userId=' + userId(),
+        method: 'PUT', headers: authHdr(),
+        success: function() { loadNotifications(); }, error: function() {}
+    });
+}
+function loadMyRecords() {
+    $('#recordsTableWrap').html('<div style="text-align:center;color:#94a3b8;padding:2rem"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+    $.ajax({
+        url: API + '/api/medicalRecords/myRecords?userId=' + userId(),
+        method: 'GET', headers: authHdr(),
+        success: function(res) {
+            var list = res.body || [];
+            renderRecordCards(list);
+        },
+        error: function() {
+            $('#recordsTableWrap').html('<div style="color:#dc2626;text-align:center;padding:2rem">Failed to load medical records.</div>');
+        }
+    });
+}
+
+function renderRecordCards(list) {
+    var wrap = $('#recordsTableWrap').empty();
+    if (!list.length) {
+        wrap.html('<div style="text-align:center;color:#94a3b8;padding:2.5rem">'
+            + '<i class="fas fa-file-medical" style="font-size:2rem;margin-bottom:.8rem;display:block;color:#cbd5e1"></i>'
+            + 'No medical records yet. Records are added by your doctor after consultations.</div>');
+        return;
+    }
+    list.forEach(function(r) {
+        wrap.append(
+            '<div style="border:1px solid #e2eaf2;border-radius:14px;padding:1.2rem;'
+            + 'margin-bottom:1rem;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.05)">'
+
+            + '<div style="display:flex;align-items:flex-start;justify-content:space-between;'
+            + 'flex-wrap:wrap;gap:.6rem;margin-bottom:.9rem">'
+            + '<div>'
+            + '<div style="font-weight:700;font-size:.95rem;color:#0b2a44">'
+            + '<i class="fas fa-calendar" style="color:#0891b2;margin-right:.4rem"></i>'
+            + (r.visitDate || '—') + '</div>'
+            + '<div style="font-size:.82rem;color:#64748b;margin-top:.2rem">'
+            + 'Dr. ' + (r.doctorName||'—')
+            + (r.specializationName ? ' &nbsp;·&nbsp; <span style="color:#0891b2">' + r.specializationName + '</span>' : '')
+            + '</div>'
+            + '<div style="font-size:.75rem;color:#94a3b8;margin-top:.15rem">Record ID: ' + r.recordId + '</div>'
+            + '</div>'
+            + '<button class="btn btn-primary btn-sm" onclick="downloadMedicalReport(' + JSON.stringify(r).replace(/"/g, '&quot;') + ')">'
+            + '<i class="fas fa-file-pdf"></i> Download Report</button>'
+            + '</div>'
+
+            + '<div style="margin-bottom:.7rem">'
+            + '<div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+            + 'letter-spacing:.4px;margin-bottom:.3rem">Diagnosis</div>'
+            + '<div style="background:#fef9ff;border-left:3px solid #0891b2;padding:.6rem .9rem;'
+            + 'border-radius:0 8px 8px 0;font-size:.9rem;color:#1e293b">' + (r.diagnosis||'—') + '</div>'
+            + '</div>'
+
+            + (r.treatment ? '<div style="margin-bottom:.7rem">'
+            + '<div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+            + 'letter-spacing:.4px;margin-bottom:.3rem">Treatment</div>'
+            + '<div style="background:#f0fdf4;border-left:3px solid #16a34a;padding:.6rem .9rem;'
+            + 'border-radius:0 8px 8px 0;font-size:.9rem;color:#1e293b">' + r.treatment + '</div>'
+            + '</div>' : '')
+
+            + (r.notes ? '<div>'
+            + '<div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+            + 'letter-spacing:.4px;margin-bottom:.3rem">Notes</div>'
+            + '<div style="background:#f8fafc;border-left:3px solid #94a3b8;padding:.6rem .9rem;'
+            + 'border-radius:0 8px 8px 0;font-size:.88rem;color:#64748b">' + r.notes + '</div>'
+            + '</div>' : '')
+
+            + '</div>'
+        );
+    });
+}
+
+function downloadMedicalReport(r) {
+    if (typeof r === 'string') { try { r = JSON.parse(r); } catch(e) { return; } }
+
+    var patientName = document.getElementById('pvName').textContent || localStorage.getItem('username') || 'Patient';
+    var reportNum   = 'MR-' + r.recordId;
+    var printDate   = new Date().toLocaleDateString('en-LK', { year:'numeric', month:'long', day:'numeric' });
+
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + reportNum + '</title>'
+        + '<style>'
+        + 'body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:0;background:#fff;color:#1e293b}'
+        + '.page{max-width:720px;margin:0 auto;padding:40px}'
+        + '.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:2.5px solid #0891b2}'
+        + '.bicon{background:#0b2a44;color:#fff;width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-right:12px}'
+        + '.bname{font-size:24px;font-weight:700;color:#0b2a44}'
+        + '.bname span{font-weight:400;color:#1f6e9c}'
+        + '.section{margin-bottom:20px}'
+        + '.section-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #e2eaf2}'
+        + '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}'
+        + '.field label{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px}'
+        + '.field div{font-size:14px;color:#1e293b;margin-top:3px;font-weight:500}'
+        + '.content-box{padding:14px 16px;border-radius:10px;font-size:14px;line-height:1.6;color:#1e293b;margin-bottom:16px}'
+        + '.diag{background:#f0f9ff;border-left:4px solid #0891b2}'
+        + '.treat{background:#f0fdf4;border-left:4px solid #16a34a}'
+        + '.notes{background:#f8fafc;border-left:4px solid #94a3b8;color:#64748b}'
+        + '.footer{margin-top:36px;padding-top:14px;border-top:1px solid #e2eaf2;text-align:center;font-size:12px;color:#94a3b8}'
+        + '.no-print{text-align:center;margin:24px 0}@media print{.no-print{display:none}@page{margin:15mm;size:A4}}'
+        + '</style></head><body><div class="page">'
+
+        + '<div class="hdr">'
+        + '<div style="display:flex;align-items:center"><div class="bicon">&#x2665;</div>'
+        + '<div><div class="bname">Clinic<span>Q</span></div>'
+        + '<div style="font-size:12px;color:#64748b;margin-top:2px">Clinic Appointment Queue Management System</div></div></div>'
+        + '<div style="text-align:right">'
+        + '<h2 style="margin:0;font-size:18px;color:#0b2a44">MEDICAL REPORT</h2>'
+        + '<div style="font-size:13px;color:#64748b">' + reportNum + '</div>'
+        + '<span style="background:#e0f2fe;color:#0369a1;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-top:5px">&#x1F4CB; Clinical Record</span>'
+        + '</div></div>'
+
+        + '<div class="info-grid">'
+        + '<div class="field"><label>Patient Name</label><div>' + patientName + '</div></div>'
+        + '<div class="field"><label>Visit Date</label><div>' + (r.visitDate||'—') + '</div></div>'
+        + '<div class="field"><label>Doctor</label><div>Dr. ' + (r.doctorName||'—') + '</div></div>'
+        + '<div class="field"><label>Specialization</label><div>' + (r.specializationName||'—') + '</div></div>'
+        + '<div class="field"><label>Appointment ID</label><div>' + (r.appointmentId||'—') + '</div></div>'
+        + '<div class="field"><label>Report Printed</label><div>' + printDate + '</div></div>'
+        + '</div>'
+
+        + '<div class="section"><div class="section-title">Diagnosis</div>'
+        + '<div class="content-box diag">' + (r.diagnosis||'No diagnosis recorded') + '</div></div>'
+
+        + (r.treatment ? '<div class="section"><div class="section-title">Treatment / Prescription</div>'
+        + '<div class="content-box treat">' + r.treatment + '</div></div>' : '')
+
+        + (r.notes ? '<div class="section"><div class="section-title">Doctor Notes</div>'
+        + '<div class="content-box notes">' + r.notes + '</div></div>' : '')
+
+        + '<div class="no-print">'
+        + '<button onclick="window.print()" style="background:#0b2a44;color:#fff;border:none;padding:12px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(11,42,68,.2);font-family:inherit;margin-right:10px">&#x1F4F4; Download / Print PDF</button>'
+        + '<button onclick="window.close()" style="background:#e2eaf2;color:#0b2a44;border:none;padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>'
+        + '</div>'
+
+        + '<div class="footer">ClinicQ &nbsp;|&nbsp; This is an official medical record issued by the clinic.<br>For queries contact your clinic. Keep this document for your records.</div>'
+        + '</div></body></html>';
+
+    var w = window.open('', '_blank', 'width=780,height:1050,scrollbars=yes');
+    if (w) { w.document.open(); w.document.write(html); w.document.close(); w.onload = function() { setTimeout(function() { w.print(); }, 400); }; }
+}
+</script>
 </body>
 </html>
