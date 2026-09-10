@@ -47,6 +47,7 @@ public class Appointments {
     private BookingSource bookingSource;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "VARCHAR(20)")
     private AppointmentState appointmentState;
 
     @Enumerated(EnumType.STRING)
