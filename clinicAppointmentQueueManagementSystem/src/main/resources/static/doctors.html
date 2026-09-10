@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,73 +8,65 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
 </head>
 <body>
 <div class="app-shell">
     <aside class="sidebar" id="sidebar">
-        <div class="logo-area" style="margin-bottom:1.2rem;">
+        <div class="logo-area">
             <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
-            <div class="logo-text" style="color:white;">Clinic<span>Q</span></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
         </div>
-        <a class="staff-only" href="dashboard.html"><i class="fas fa-gauge-high"></i> Dashboard</a>
-        <a class="staff-only" href="patients.html"><i class="fas fa-user-injured"></i> Patients</a>
-        <a class="active" href="doctors.html"><i class="fas fa-user-doctor"></i> Doctors</a>
-        <a class="" href="specializations.html"><i class="fas fa-stethoscope"></i> Specializations</a>
-        <a class="" href="clinic-branches.html"><i class="fas fa-hospital"></i> Branches</a>
-        <a class="staff-only" href="doctor-schedules.html"><i class="fas fa-clock"></i> Schedules</a>
-        <a class="staff-only" href="appointments.html"><i class="fas fa-calendar-check"></i> Appointments</a>
-        <a class="staff-only" href="queues.html"><i class="fas fa-list-ol"></i> Queue</a>
-        <a class="staff-only" href="medical-records.html"><i class="fas fa-notes-medical"></i> Records</a>
-        <a class="staff-only" href="prescriptions.html"><i class="fas fa-prescription"></i> Prescriptions</a>
-        <a class="staff-only" href="medications.html"><i class="fas fa-pills"></i> Medications</a>
-        <a class="staff-only" href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
-        <a class="staff-only" href="invoices.html"><i class="fas fa-file-invoice"></i> Invoices</a>
-        <a class="staff-only" href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
-        <a class="staff-only" href="doctor-reviews.html"><i class="fas fa-star"></i> Reviews</a>
-        <a class="admin-only" href="users.html"><i class="fas fa-users-gear"></i> Users</a>
-        <a class="admin-only" href="audit-logs.html"><i class="fas fa-clipboard-list"></i> Audit logs</a>
-        <a href="#" onclick="logout(); return false;"><i class="fas fa-right-from-bracket"></i> Logout</a>
+        <!-- nav built by sidebar.js based on role -->
     </aside>
+
     <div class="content">
         <header class="topbar">
             <button class="menu-btn" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
             <h2>Doctors</h2>
             <div id="who"></div>
         </header>
+
         <main class="page">
             <div id="alert" class="alert alert-error" style="display:none;"></div>
+
             <div class="card">
-                <form id="doctorForm" class="form-grid admin-only">
-                    <div>
-                        <label>User ID</label>
+                <h3 style="margin-bottom:1rem;color:#0b2a44;font-size:1rem" id="formTitle">Add New Doctor</h3>
+                <form id="doctorForm" class="form-grid">
+                    <input type="hidden" id="doctorId">
 
-                        <input
-                                class="field-input"
-                                id="userIdDisplay"
-                                type="text"
-                                readonly
-                                placeholder="Logged User ID"
-                        >
+                    <!-- Login credentials (required when adding) -->
+                    <fieldset style="grid-column:1/-1;border:1px solid #e2eaf2;border-radius:10px;padding:.8rem 1rem;margin-bottom:.3rem">
+                        <legend style="font-size:.82rem;font-weight:700;color:#1f6e9c;padding:0 .4rem">Login Credentials (required for new doctor)</legend>
+                        <div class="form-grid" style="margin-top:.5rem">
+                            <input class="field-input" id="username"  placeholder="Username" autocomplete="new-password">
+                            <input class="field-input" id="userEmail" placeholder="Login Email" type="email">
+                            <input class="field-input" id="password"  placeholder="Password" type="password" autocomplete="new-password">
+                        </div>
+                    </fieldset>
 
-                        <input
-                                id="userId"
-                                type="hidden"
-                        >
-                    </div>
-                    <input class="field-input" id="firstName" placeholder="First name" required>
-                    <input class="field-input" id="lastName" placeholder="Last name" required>
+                    <!-- Doctor profile -->
+                    <input class="field-input" id="firstName"     placeholder="First name" required>
+                    <input class="field-input" id="lastName"      placeholder="Last name"  required>
                     <select class="field-input" id="specializationId" required>
                         <option value="" disabled selected>Select Specialization</option>
                     </select>
-                    <input class="field-input" id="licenseNumber" placeholder="License number" required>
-                    <input class="field-input" id="phoneNumber" placeholder="Phone">
-                    <input class="field-input" id="email" placeholder="Email">
-                    <button class="btn" type="button" onclick="handleDoctorSave()">Add doctor</button>
-                    <button class="btn" type="button">Update doctor</button>
+                    <input class="field-input" id="licenseNumber" placeholder="License number">
+                    <input class="field-input" id="phoneNumber"   placeholder="Phone">
+                    <input class="field-input" id="email"         placeholder="Contact Email">
+
+                    <div style="grid-column:1/-1;display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.4rem">
+                        <button class="btn" type="button" onclick="handleDoctorSave()"><i class="fas fa-plus"></i> Add Doctor</button>
+                        <button class="btn btn-secondary" type="button" onclick="handleDoctorUpdate()"><i class="fas fa-pen"></i> Update Doctor</button>
+                        <button class="btn btn-secondary" type="button" onclick="clearForm()"><i class="fas fa-times"></i> Clear</button>
+                    </div>
                 </form>
-                <div class="table-wrap" style="margin-top:1rem;">
+
+                <div class="table-wrap" style="margin-top:1.5rem">
                     <table>
-                        <thead><tr><th>ID</th><th>Name</th><th>License Number</th><th>Specialization</th><th>Phone</th><th>Email</th></tr></thead>
+                        <thead>
+                        <tr><th>ID</th><th>Name</th><th>License</th><th>Specialization</th><th>Phone</th><th>Email</th><th>Status</th></tr>
+                        </thead>
                         <tbody id="doctorTable"></tbody>
                     </table>
                 </div>
@@ -82,108 +74,183 @@
         </main>
     </div>
 </div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-    $(document).ready(function() {
-        const loggedUserId = localStorage.getItem("userId");
-        if (loggedUserId) {
-            $("#userIdDisplay").val(loggedUserId);
-            $("#userId").val(loggedUserId);
-            loadSpecializationsDropdown();
-            loadDoctorsTable();
-        }
-    });
-function handleDoctorSave(){
-    const data = {
-        userId: document.getElementById("userId").value,
-        firstName: document.getElementById("firstName").value,
-        lastName: document.getElementById("lastName").value,
-        specializationId: document.getElementById("specializationId").value,
-        licenseNumber: document.getElementById("licenseNumber").value,
-        phoneNumber: document.getElementById("phoneNumber").value,
-        email: document.getElementById("email").value
-    };
-    $.ajax({
-        url: "http://localhost:8080/api/doctors/addDct",
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(data),
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        success: function (response){
-            alert(response.message || "Doctor added successfully!");
-            console.log("Doctor saved successfully!!!", response);
-            $("#doctorForm")[0].reset();
-        },
-        error: function (response){
-            console.error("Error saving doctor", response);
-            alert("Error saving doctor")
-        }
-    })
-}
+    const API     = 'http://localhost:8080';
+    const token   = () => localStorage.getItem('token');
+    const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
 
-function loadDoctorsTable(){
-    $.ajax({
-        url: "http://localhost:8080/api/doctors/loadAllDct",
-        method: "GET",
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        success: function (response) {
-            const tableBody = $("#doctorTable");
-            tableBody.empty();
-            response.body.forEach(doctor => {
-                const row = $(`
-                    <tr>
-                        <td>${doctor.doctorId}</td>
-                        <td>${doctor.firstName} ${doctor.lastName}</td>
-                        <td>${doctor.licenseNumber}</td>
-                        <td>${doctor.specializationName}</td>
-                        <td>${doctor.phoneNumber}</td>
-                        <td>${doctor.email}</td>
-                    </tr>
-                `);
-                row.on("click", function () {
-                    $("#doctorId").val(doctor.doctorId);
-                    $("#userId").val(doctor.userId);
-                    $("#firstName").val(doctor.firstName);
-                    $("#lastName").val(doctor.lastName);
-                    $("#licenseNumber").val(doctor.licenseNumber);
-                    $("#phoneNumber").val(doctor.phoneNumber);
-                    $("#specializationId").val(doctor.specializationId);
-                    $("#email").val(doctor.email);
-                })
-                tableBody.append(row);
-            });
-        },
-        error: function (response) {
-            console.error("Error saving doctor", response);
-            alert("Error saving doctor")
-        }
-    });
-}
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
-function loadSpecializationsDropdown(){
-    $.ajax({
-        url: "http://localhost:8080/api/specializations/getAllSpecializations",
-        method: "GET",
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        success: function (response){
-            const select = $("#specializationId");
-            select.empty();
-            select.append('<option value="" disabled selected>Select Specialization</option>');
-            response.body.forEach(spec => {
-                select.append(`<option value="${spec.specializationId}">${spec.name}</option>`);
-            });
-        },
-        error: function (){
-            alert("Error loading specializations");
-        }
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.textContent  = msg;
+        el.className    = 'alert ' + (type === 'success' ? '' : 'alert-error');
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 4000);
+    }
+
+    $(document).ready(function () {
+        if (!token()) { window.location.href = 'login.html'; return; }
+        loadSpecializationsDropdown();
+        loadDoctorsTable();
     });
-}
+
+    function clearForm() {
+        $('#doctorForm')[0].reset();
+        $('#doctorId').val('');
+        document.getElementById('formTitle').textContent = 'Add New Doctor';
+    }
+
+    function handleDoctorSave() {
+        const username  = $('#username').val().trim();
+        const userEmail = $('#userEmail').val().trim();
+        const password  = $('#password').val().trim();
+        const firstName = $('#firstName').val().trim();
+        const lastName  = $('#lastName').val().trim();
+        const specId    = $('#specializationId').val();
+
+        if (!firstName || !lastName || !specId) {
+            showAlert('First name, last name, and specialization are required.', 'error'); return;
+        }
+        if (!username || !password) {
+            showAlert('Username and password are required to create a doctor account.', 'error'); return;
+        }
+
+        const data = {
+            username:        username,
+            userEmail:       userEmail,
+            password:        password,
+            firstName:       firstName,
+            lastName:        lastName,
+            specializationId: specId,
+            licenseNumber:   $('#licenseNumber').val().trim(),
+            phoneNumber:     $('#phoneNumber').val().trim(),
+            email:           $('#email').val().trim()
+        };
+
+        $.ajax({
+            url: API + '/api/doctors/addDct',
+            method: 'POST',
+            contentType: 'application/json',
+            headers: authHdr(),
+            data: JSON.stringify(data),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Doctor added successfully!', 'success');
+                    clearForm();
+                    loadDoctorsTable();
+                } else {
+                    showAlert(res.message || 'Failed to add doctor.', 'error');
+                }
+            },
+            error: function (xhr) {
+                let msg = 'Error adding doctor.';
+                try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e){}
+                showAlert(msg, 'error');
+            }
+        });
+    }
+
+    function handleDoctorUpdate() {
+        const doctorId = $('#doctorId').val().trim();
+        if (!doctorId) { showAlert('Please select a doctor from the table first.', 'error'); return; }
+
+        const data = {
+            doctorId:        doctorId,
+            firstName:       $('#firstName').val().trim(),
+            lastName:        $('#lastName').val().trim(),
+            specializationId: $('#specializationId').val(),
+            licenseNumber:   $('#licenseNumber').val().trim(),
+            phoneNumber:     $('#phoneNumber').val().trim(),
+            email:           $('#email').val().trim()
+        };
+
+        $.ajax({
+            url: API + '/api/doctors/updateDoctor',
+            method: 'PUT',
+            contentType: 'application/json',
+            headers: authHdr(),
+            data: JSON.stringify(data),
+            success: function (res) {
+                if (res.status === 0) {
+                    showAlert('Doctor updated successfully!', 'success');
+                    clearForm();
+                    loadDoctorsTable();
+                } else {
+                    showAlert(res.message || 'Failed to update doctor.', 'error');
+                }
+            },
+            error: function (xhr) {
+                let msg = 'Error updating doctor.';
+                try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e){}
+                showAlert(msg, 'error');
+            }
+        });
+    }
+
+    function loadDoctorsTable() {
+        $.ajax({
+            url: API + '/api/doctors/loadAllDct',
+            method: 'GET',
+            headers: authHdr(),
+            success: function (res) {
+                const tbody = $('#doctorTable');
+                tbody.empty();
+                const list = res.body || [];
+                if (list.length === 0) {
+                    tbody.append('<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:1.5rem">No doctors found</td></tr>');
+                    return;
+                }
+                list.forEach(d => {
+                    const row = $(`
+                        <tr style="cursor:pointer">
+                            <td>${d.doctorId}</td>
+                            <td><strong>${d.firstName} ${d.lastName}</strong></td>
+                            <td>${d.licenseNumber || '—'}</td>
+                            <td>${d.specializationName || '—'}</td>
+                            <td>${d.phoneNumber || '—'}</td>
+                            <td>${d.email || '—'}</td>
+                            <td>${d.status || '—'}</td>
+                        </tr>
+                    `);
+                    row.on('click', function () {
+                        $('#doctorId').val(d.doctorId);
+                        $('#firstName').val(d.firstName);
+                        $('#lastName').val(d.lastName);
+                        $('#specializationId').val(d.specializationId);
+                        $('#licenseNumber').val(d.licenseNumber);
+                        $('#phoneNumber').val(d.phoneNumber);
+                        $('#email').val(d.email);
+                        $('#username').val('');
+                        $('#userEmail').val('');
+                        $('#password').val('');
+                        document.getElementById('formTitle').textContent = 'Edit Doctor — ' + d.firstName + ' ' + d.lastName;
+                    });
+                    tbody.append(row);
+                });
+            },
+            error: function () { showAlert('Failed to load doctors.', 'error'); }
+        });
+    }
+
+    function loadSpecializationsDropdown() {
+        $.ajax({
+            url: API + '/api/specializations/getAllSpecializations',
+            method: 'GET',
+            headers: authHdr(),
+            success: function (res) {
+                const sel = $('#specializationId');
+                sel.empty().append('<option value="" disabled selected>Select Specialization</option>');
+                (res.body || []).forEach(s => {
+                    sel.append(`<option value="${s.specializationId}">${s.name}</option>`);
+                });
+            },
+            error: function () { showAlert('Failed to load specializations.', 'error'); }
+        });
+    }
 </script>
 </body>
 </html>
+
