@@ -9,4 +9,5 @@ public interface UserService {
     UserDTO getUserDetails(String username, String password);
     List<UserDTO> getAllUsers();
     void updateUser(UserDTO userDTO);
+    void deleteUser(String userId);
 }

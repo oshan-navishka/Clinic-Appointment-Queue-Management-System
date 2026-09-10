@@ -144,4 +144,24 @@ public class UserServiceImpl implements UserService {
             throw e;
         }
     }
+
+    @Override
+    public void deleteUser(String userId) {
+        log.info("Deleting user with id {}", userId);
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (userOptional.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+            User user = userOptional.get();
+            if (user.getUserRole() == com.example.clinic_Appointment_Queue_Management_System.enumaration.UserRole.SUPER_ADMIN) {
+                throw new RuntimeException("Cannot delete a SUPER_ADMIN account");
+            }
+            userRepository.deleteById(userId);
+            log.info("User {} deleted successfully", userId);
+        } catch (Exception e) {
+            log.error("Error deleting user {}", userId);
+            throw e;
+        }
+    }
 }

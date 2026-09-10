@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,   "/api/users/register").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.GET,    "/api/users/allUsers").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.PUT,    "/api/users/updateUsers").hasRole("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/deleteUser/**").hasRole("SUPER_ADMIN")
                         // Admin overview
                         .requestMatchers(HttpMethod.GET,    "/api/appointments/overview").hasAnyRole("SUPER_ADMIN", "ADMIN")
                         // Doctor management — SUPER_ADMIN only

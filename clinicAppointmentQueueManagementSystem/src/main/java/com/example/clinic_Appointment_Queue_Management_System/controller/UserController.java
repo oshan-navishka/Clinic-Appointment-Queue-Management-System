@@ -69,4 +69,10 @@ public class UserController {
         return new CommonResponse(0, "User has been updated successfully");
     }
 
+    @DeleteMapping(value = "deleteUser/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse deleteUser(@PathVariable String userId){
+        userService.deleteUser(userId);
+        return new CommonResponse(0, "User has been deleted successfully");
+    }
+
 }
