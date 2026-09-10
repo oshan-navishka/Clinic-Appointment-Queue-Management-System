@@ -125,7 +125,7 @@
     const token   = () => localStorage.getItem('token');
     const authHdr = () => ({ 'Authorization': 'Bearer ' + token() });
 
-    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+    // function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
     function showAlert(msg, type) {
         const el = document.getElementById('alert');
