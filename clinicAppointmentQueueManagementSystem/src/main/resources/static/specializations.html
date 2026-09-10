@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,32 +8,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/sidebar.js" defer></script>
 </head>
 <body>
 <div class="app-shell">
     <aside class="sidebar" id="sidebar">
-        <div class="logo-area" style="margin-bottom:1.2rem;">
+        <div class="logo-area">
             <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
-            <div class="logo-text" style="color:white;">Clinic<span>Q</span></div>
+            <div class="logo-text" style="color:white">Clinic<span>Q</span></div>
         </div>
-        <a class="staff-only" href="dashboard.html"><i class="fas fa-gauge-high"></i> Dashboard</a>
-        <a class="staff-only" href="patients.html"><i class="fas fa-user-injured"></i> Patients</a>
-        <a class="" href="doctors.html"><i class="fas fa-user-doctor"></i> Doctors</a>
-        <a class="active" href="specializations.html"><i class="fas fa-stethoscope"></i> Specializations</a>
-        <a class="" href="clinic-branches.html"><i class="fas fa-hospital"></i> Branches</a>
-        <a class="staff-only" href="doctor-schedules.html"><i class="fas fa-clock"></i> Schedules</a>
-        <a class="staff-only" href="appointments.html"><i class="fas fa-calendar-check"></i> Appointments</a>
-        <a class="staff-only" href="queues.html"><i class="fas fa-list-ol"></i> Queue</a>
-        <a class="staff-only" href="medical-records.html"><i class="fas fa-notes-medical"></i> Records</a>
-        <a class="staff-only" href="prescriptions.html"><i class="fas fa-prescription"></i> Prescriptions</a>
-        <a class="staff-only" href="medications.html"><i class="fas fa-pills"></i> Medications</a>
-        <a class="staff-only" href="payments.html"><i class="fas fa-credit-card"></i> Payments</a>
-        <a class="staff-only" href="invoices.html"><i class="fas fa-file-invoice"></i> Invoices</a>
-        <a class="staff-only" href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
-        <a class="staff-only" href="doctor-reviews.html"><i class="fas fa-star"></i> Reviews</a>
-        <a class="admin-only" href="users.html"><i class="fas fa-users-gear"></i> Users</a>
-        <a class="admin-only" href="audit-logs.html"><i class="fas fa-clipboard-list"></i> Audit logs</a>
-        <a href="#" onclick="logout(); return false;"><i class="fas fa-right-from-bracket"></i> Logout</a>
+        <!-- nav built by sidebar.js based on role -->
     </aside>
     <div class="content">
         <header class="topbar">
@@ -66,8 +50,13 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
     $(document).ready(function() {
+        if (!localStorage.getItem('token')) { window.location.href = 'login.html'; return; }
+        const uname = localStorage.getItem('username') || '';
+        if (uname) document.getElementById('who').textContent = 'Logged in as: ' + uname;
         loadSpecializations();
     });
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
     function saveSpecialization(){
         const data = {
