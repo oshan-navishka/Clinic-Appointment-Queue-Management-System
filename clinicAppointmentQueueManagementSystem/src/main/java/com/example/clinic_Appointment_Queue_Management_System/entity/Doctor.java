@@ -42,8 +42,5 @@ public class Doctor {
     private Status status;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
-    private List<DoctorSchedules> doctorSchedules;
-
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
     private List<Appointments> appointments;
 }

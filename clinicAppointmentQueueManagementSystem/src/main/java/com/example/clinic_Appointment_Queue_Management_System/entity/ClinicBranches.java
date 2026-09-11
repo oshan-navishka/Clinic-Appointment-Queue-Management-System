@@ -26,8 +26,5 @@ public class ClinicBranches {
     private Status status;
 
     @OneToMany(mappedBy = "clinicBranches", cascade = CascadeType.ALL)
-    private List<DoctorSchedules> doctorSchedules;
-
-    @OneToMany(mappedBy = "clinicBranches", cascade = CascadeType.ALL)
     private List<Appointments> appointmentsList;
 }
